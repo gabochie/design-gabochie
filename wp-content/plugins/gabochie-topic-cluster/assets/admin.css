@@ -1,0 +1,14 @@
+.gtc-wrap { max-width: 1100px; margin: 20px 0; }
+.gtc-cards { display: flex; gap: 14px; flex-wrap: wrap; margin: 16px 0; }
+.gtc-card { background: #fff; border: 1px solid #c3c4c7; border-radius: 6px; padding: 14px 20px; min-width: 120px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+.gtc-card strong { display: block; font-size: 22px; }
+.gtc-card span { font-size: 12px; color: #787c82; }
+.gtc-segment-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin: 12px 0; }
+.gtc-segment-card { background: #fff; border: 1px solid #c3c4c7; border-radius: 6px; padding: 14px 16px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+.gtc-segment-card h3 { margin: 0 0 6px; font-size: 14px; display: flex; justify-content: space-between; }
+.gtc-segment-card .gtc-count { background: #f0f0f1; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.gtc-segment-card .gtc-stats { font-size: 11px; color: #787c82; margin-bottom: 8px; display: flex; gap: 12px; flex-wrap: wrap; }
+.gtc-link-picker select { margin-right: 8px; }
+#gtc-suggestions-results { margin-top: 16px; }
+#gtc-suggestions-results h3 { margin-bottom: 8px; }
+#gtc-suggestions-results .button-small { margin: 2px; }

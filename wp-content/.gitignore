@@ -1,0 +1,68 @@
+# Ignore everything at wp-content root by default
+/*
+# ...except these
+!/.gitignore
+!/index.php
+!/themes/
+!/plugins/
+!/mu-plugins/
+!/.github/
+!/bin/
+
+# --- Themes ---
+/themes/*
+!/themes/gabochie-design/
+!/themes/gabochie-block/
+!/themes/gabochie-saas/
+
+# --- Plugins: custom only ---
+/plugins/*
+!/plugins/buildcostgh-calculator/
+!/plugins/gabochiedesign-ai-studio/
+!/plugins/ghbc/
+!/plugins/gabochie-ad-rpm/
+!/plugins/gabochie-ai-agentic-bridge/
+!/plugins/gabochie-ai-sync/
+!/plugins/gabochie-authority-builder/
+!/plugins/gabochie-auto-blog/
+!/plugins/gabochie-content-importer/
+!/plugins/gabochie-content-pipeline/
+!/plugins/gabochie-content-refresh/
+!/plugins/gabochie-maintenance/
+!/plugins/gabochie-rank-gap/
+!/plugins/gabochie-saas-tools/
+!/plugins/gabochie-sync/
+!/plugins/gabochie-topic-cluster/
+!/plugins/ai-agentic-maintenance-mode-pro/
+
+# --- Must-use plugins (track only our consolidator) ---
+/mu-plugins/*
+!/mu-plugins/gabochie-menu-consolidator.php
+
+# --- Exclude logs, temps, and utilities within tracked dirs ---
+**/error_log
+**/*.log
+**/final-verify.txt
+**/snapshot*.txt
+**/test-*.php
+**/*.zip
+themes/*/gabochie-sync.php
+themes/*/includesclass-*.php
+themes/gabochie-design/includes/
+**/flush-opcache.php
+**/hub-checker.php
+**/option-setter.php
+**/set-options.php
+**/template-hub-checker.php
+
+# --- Composer vendor dirs within tracked plugins ---
+**/vendor/
+
+# --- Never track these ---
+uploads/
+upgrade/
+upgrade-temp-backup/
+ai1wm-backups/
+blog-exports/
+cache/
+wp-rocket-config/

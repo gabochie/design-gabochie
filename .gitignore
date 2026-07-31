@@ -1,0 +1,38 @@
+# Local / secret — never ship
+/wp-config.php
+/wp-config-local.php
+/wp-cli.phar
+/wp-cli*.yml
+
+# Debug / logs
+**/error_log
+**/*.log
+**/*.bak
+**/debug.log
+
+# Backups / caches (not source of truth)
+wp-content/uploads/
+wp-content/cache/
+wp-content/upgrade/
+wp-content/upgrade-temp-backup/
+wp-content/ai1wm-backups/
+wp-content/blog-exports/
+wp-content/gabochie-wp-content/
+wp-content/litespeed/
+wp-content/wp-rocket-config/
+wp-content/advanced-cache.php
+wp-content/db.php
+wp-content/object-cache.php
+
+# Server environment artifacts (created by cPanel/ACME)
+.user.ini
+.well-known/
+cgi-bin/
+
+# AI-Growth-OS dev-only vendor (phpstan binaries; plugin disabled on staging)
+wp-content/plugins/AI-Growth-OS/vendor/
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini

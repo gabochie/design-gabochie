@@ -1,0 +1,19 @@
+/* Gabochie Block — Editor styles */
+
+body {
+    font-family: 'Jost', system-ui, -apple-system, sans-serif;
+    color: #1A1A1A;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', Georgia, serif;
+}
+
+.wp-block { max-width: 800px; }
+
+.editor-styles-wrapper a {
+    color: #0D5C52;
+}
+.editor-styles-wrapper a:hover {
+    color: #C9A96E;
+}

@@ -1,0 +1,8 @@
+.grg-wrap { max-width: 1100px; margin: 20px 0; }
+.grg-cards { display: flex; gap: 14px; flex-wrap: wrap; margin: 16px 0; }
+.grg-card { background: #fff; border: 1px solid #c3c4c7; border-radius: 6px; padding: 14px 20px; min-width: 120px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+.grg-card strong { display: block; font-size: 22px; }
+.grg-card span { font-size: 12px; color: #787c82; }
+.grg-clusters-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; margin: 16px 0; }
+.grg-cluster-card { background: #fff; border: 1px solid #c3c4c7; border-radius: 6px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+.grg-cluster-card h3 { margin: 0 0 8px; font-size: 14px; }

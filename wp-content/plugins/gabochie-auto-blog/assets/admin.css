@@ -1,0 +1,31 @@
+.gab-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin: 20px 0;
+}
+.gab-card {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+    padding: 14px 18px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+.gab-card strong {
+    display: block;
+    font-size: 18px;
+    line-height: 1.3;
+    color: #1d2327;
+}
+.gab-card span {
+    font-size: 12px;
+    color: #787c82;
+}
+.gab-dashboard h1 {
+    font-size: 23px;
+    font-weight: 400;
+    margin: 10px 0;
+}
+.gab-manual-gen input[type=text] {
+    max-width: 300px;
+}

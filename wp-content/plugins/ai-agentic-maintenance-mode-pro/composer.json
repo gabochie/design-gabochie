@@ -1,0 +1,12 @@
+{
+  "name": "apexdigital/ai-agentic-maintenance-mode-pro",
+  "description": "Enterprise WordPress AI Maintenance Mode & Digital Receptionist Suite",
+  "type": "wordpress-plugin",
+  "version": "1.0.0",
+  "license": "GPL-2.0-or-later",
+  "autoload": {
+    "psr-4": {
+      "AIAgenticMaintenancePro\\": "src/"
+    }
+  }
+}

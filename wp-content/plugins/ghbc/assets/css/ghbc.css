@@ -1,0 +1,116 @@
+.ghbc-chat-container, .ghbc-exam-container, .ghbc-sb-container {
+  max-width: 700px; margin: 20px 0; border-radius: var(--r, 16px);
+  border: 1px solid var(--border, #D4E8E4); background: var(--cream, #FAF7F2); font-family: 'Jost', sans-serif;
+  overflow: hidden;
+}
+.ghbc-chat-header, .ghbc-exam-header, .ghbc-sb-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 14px 18px; background: var(--teal-dark, #072E28); color: var(--cream, #FAF7F2); font-weight: 600;
+}
+.ghbc-chat-icon { font-size: 20px; }
+.ghbc-chat-title { flex: 1; }
+.ghbc-remaining { font-size: 12px; opacity: 0.8; }
+.ghbc-chat-messages { height: 400px; overflow-y: auto; padding: 16px; }
+.ghbc-message { display: flex; gap: 10px; margin-bottom: 14px; }
+.ghbc-message.ghbc-user { flex-direction: row-reverse; }
+.ghbc-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--teal-light, #E8F4F2);
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+  flex-shrink: 0; }
+.ghbc-user .ghbc-avatar { background: var(--teal, #0D5C52); color: var(--cream, #FAF7F2); }
+.ghbc-bubble {
+  max-width: 80%; padding: 10px 14px; border-radius: var(--r-sm, 10px);
+  background: var(--teal-light, #E8F4F2); font-size: 14px; line-height: 1.6; white-space: pre-wrap;
+}
+.ghbc-user .ghbc-bubble { background: var(--teal, #0D5C52); color: var(--cream, #FAF7F2); }
+.ghbc-bubble strong { font-weight: 600; }
+.ghbc-bubble em { font-style: italic; color: var(--mist, #6B8A84); }
+.ghbc-examples { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px; }
+.ghbc-example-btn {
+  background: transparent; border: 1px solid var(--border, #D4E8E4); border-radius: 12px;
+  padding: 4px 10px; font-size: 12px; color: var(--teal, #0D5C52); cursor: pointer;
+}
+.ghbc-example-btn:hover { background: var(--teal-light, #E8F4F2); }
+.ghbc-chat-input {
+  display: flex; padding: 10px; gap: 8px; border-top: 1px solid var(--border, #D4E8E4);
+  background: var(--ivory, #FDFCF9);
+}
+.ghbc-input {
+  flex: 1; border: 1px solid var(--border, #D4E8E4); border-radius: 8px; padding: 10px 14px;
+  font-size: 14px; resize: none; outline: none; font-family: inherit;
+}
+.ghbc-input:focus { border-color: var(--teal, #0D5C52); box-shadow: 0 0 0 2px var(--gold-pale, #FBF5E8); }
+.ghbc-send {
+  width: 40px; height: 40px; border: none; border-radius: 8px;
+  background: var(--teal, #0D5C52); color: var(--cream, #FAF7F2); font-size: 18px; cursor: pointer;
+}
+.ghbc-send:hover { background: var(--teal-deep, #0A4840); }
+.ghbc-disclaimer { padding: 8px 14px; font-size: 11px; color: var(--mist, #6B8A84); background: var(--teal-pale, #F2FAF8); text-align: center; border-top: 1px solid var(--border, #D4E8E4); }
+.ghbc-typing .ghbc-bubble::after {
+  content: "..."; animation: ghbc-blink 1.5s infinite;
+}
+@keyframes ghbc-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.ghbc-citation { font-size: 12px; color: var(--mist, #6B8A84); border-left: 3px solid var(--teal-mid, #1A7A6E); padding-left: 8px; margin: 4px 0; }
+.ghbc-error { color: #c62828; background: #ffebee; padding: 8px 12px; border-radius: 6px; font-size: 13px; }
+.ghbc-exam-stats { display: flex; gap: 16px; font-size: 13px; }
+.ghbc-exam-body { padding: 20px; min-height: 200px; }
+.ghbc-option { display: block; width: 100%; padding: 10px 14px; margin-bottom: 6px;
+  border: 1px solid var(--border, #D4E8E4); border-radius: 8px; background: var(--ivory, #FDFCF9);
+  text-align: left; font-size: 14px; cursor: pointer;
+}
+.ghbc-option:hover { border-color: var(--teal, #0D5C52); background: var(--teal-light, #E8F4F2); }
+.ghbc-option.selected { border-color: var(--teal, #0D5C52); background: var(--teal-pale, #F2FAF8); }
+.ghbc-option.correct { border-color: #2e7d32; background: #e8f5e9; }
+.ghbc-option.wrong { border-color: #c62828; background: #ffebee; }
+.ghbc-exam-actions { padding: 14px 18px; border-top: 1px solid var(--border, #D4E8E4); }
+.ghbc-btn {
+  padding: 10px 24px; border: none; border-radius: 8px;
+  background: var(--teal, #0D5C52); color: var(--cream, #FAF7F2); font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.ghbc-btn:hover { background: var(--teal-deep, #0A4840); }
+.ghbc-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.ghbc-sb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+.ghbc-sb-input {
+  display: block; width: 100%; margin-top: 4px; padding: 8px 12px;
+  border: 1px solid var(--border, #D4E8E4); border-radius: 6px; font-size: 14px;
+}
+.ghbc-sb-result { padding: 20px; margin: 16px; border-radius: 8px; }
+.ghbc-sb-result.pass { background: #e8f5e9; border: 1px solid #a5d6a7; }
+.ghbc-sb-result.fail { background: #ffebee; border: 1px solid #ef9a9a; }
+
+.ghbc-fs-container, .ghbc-td-container, .ghbc-ew-container { max-width: 700px; margin: 20px 0; border-radius: var(--r, 16px); border: 1px solid var(--border, #D4E8E4); background: var(--cream, #FAF7F2); font-family: 'Jost', sans-serif; overflow: hidden; }
+.ghbc-fs-header { display: flex; align-items: center; gap: 8px; padding: 14px 18px; background: #bf360c; color: #fff; font-weight: 600; }
+.ghbc-td-container .ghbc-fs-header { background: #1565c0; }
+.ghbc-ew-container .ghbc-fs-header { background: #2e7d32; }
+.ghbc-fr-container .ghbc-fs-header { background: #bf360c; }
+.ghbc-sc-container .ghbc-fs-header { background: #e65100; }
+.ghbc-cs-container .ghbc-fs-header { background: #4a148c; }
+.ghbc-cl-container .ghbc-fs-header { background: #00695c; }
+.ghbc-fs-form { padding: 18px; }
+.ghbc-fs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+.ghbc-fs-input { display: block; width: 100%; margin-top: 4px; padding: 8px 12px; border: 1px solid var(--border, #D4E8E4); border-radius: 6px; font-size: 14px; }
+.ghbc-fs-checks { display: flex; flex-direction: column; gap: 6px; margin: 12px 0; font-size: 14px; }
+.ghbc-fs-result { padding: 18px; margin: 16px; border-radius: 8px; background: var(--ivory, #FDFCF9); border: 1px solid var(--border, #D4E8E4); }
+.ghbc-fs-section { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-light, #EAF3F1); }
+.ghbc-fs-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.ghbc-fs-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.ghbc-fs-table th { background: var(--teal-pale, #F2FAF8); text-align: left; padding: 6px 10px; border-bottom: 2px solid var(--border, #D4E8E4); }
+.ghbc-fs-table td { padding: 6px 10px; border-bottom: 1px solid var(--border-light, #EAF3F1); }
+.ghbc-fs-disclaimer { margin-top: 12px; font-size: 11px; color: var(--mist, #6B8A84); text-align: center; }
+
+.ghbc-hub-container { max-width: 800px; margin: 20px 0; border-radius: var(--r, 16px); border: 1px solid var(--border, #D4E8E4); background: var(--cream, #FAF7F2); font-family: 'Jost', sans-serif; overflow: hidden; }
+.ghbc-hub-header { display: flex; align-items: center; gap: 12px; padding: 20px 24px; background: linear-gradient(135deg,var(--teal-dark, #072E28),var(--teal, #0D5C52)); color: var(--cream, #FAF7F2); }
+.ghbc-hub-icon { font-size: 32px; }
+.ghbc-hub-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 20px; }
+.ghbc-hub-card { display: flex; gap: 12px; padding: 16px; background: var(--ivory, #FDFCF9); border: 1px solid var(--border, #D4E8E4); border-radius: var(--r-sm, 10px); text-decoration: none; color: inherit; transition: all .15s; }
+.ghbc-hub-card:hover { border-color: var(--gold, #C9A96E); box-shadow: 0 2px 8px rgba(201,169,110,.15); transform: translateY(-1px); }
+.ghbc-hub-card.dim { opacity: .55; }
+.ghbc-hub-card-icon { font-size: 24px; flex-shrink: 0; margin-top: 2px; }
+.ghbc-hub-card-body h3 { margin: 0 0 4px; font-size: 15px; color: var(--teal, #0D5C52); }
+.ghbc-hub-card-body p { margin: 0 0 8px; font-size: 13px; color: var(--mist, #6B8A84); line-height: 1.5; }
+.ghbc-hub-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.ghbc-hub-badge.live { background: #e8f5e9; color: #2e7d32; }
+.ghbc-hub-badge.pending { background: #fff3e0; color: #e65100; }
+.ghbc-hub-footer { padding: 14px 24px; background: var(--teal-pale, #F2FAF8); border-top: 1px solid var(--border, #D4E8E4); font-size: 13px; }
+.ghbc-hub-footer a { color: var(--teal, #0D5C52); }
+.ghbc-hub-footer a:hover { color: var(--gold, #C9A96E); }
+@media (max-width:600px) { .ghbc-hub-grid { grid-template-columns: 1fr; } }
