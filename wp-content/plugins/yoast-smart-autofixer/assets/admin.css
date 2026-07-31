@@ -1,0 +1,239 @@
+/* ═══════════════════════════════════════════════════════
+   Yoast Auto-Fixer Dashboard — admin.css v3.0.0
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Reset & Base ── */
+#yaf-app { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif; margin-top: 20px; }
+#yaf-app h1 { font-size: 24px; font-weight: 700; margin: 0; }
+#yaf-app .subtitle, #yaf-app .yaf-subtitle { color: #646970; font-size: 13px; margin: 2px 0 0; font-weight: 400; }
+
+/* ── Header ── */
+.yaf-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #e0e0e0; }
+.yaf-header-left { display: flex; align-items: center; gap: 12px; }
+.yaf-header-right { display: flex; gap: 8px; }
+.yaf-logo { font-size: 36px; width: 36px; height: 36px; color: #a0429f; background: linear-gradient(135deg, #f3e8f4, #e8d5f0); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+
+/* ── Stats Grid ── */
+.yaf-stats-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; margin-bottom: 16px; }
+.yaf-stat-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; transition: box-shadow .2s, border-color .2s; }
+.yaf-stat-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+.yaf-stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.yaf-stat-total .yaf-stat-icon { background: #eef1fe; color: #3b5ccc; }
+.yaf-stat-good .yaf-stat-icon { background: #e6f4ea; color: #137333; }
+.yaf-stat-bad .yaf-stat-icon { background: #fce8e6; color: #c5221f; }
+.yaf-stat-gscc .yaf-stat-icon { background: #e8f0fe; color: #1967d2; }
+.yaf-stat-gscc-good .yaf-stat-icon { background: #e6f4ea; color: #137333; }
+.yaf-stat-gscc-bad .yaf-stat-icon { background: #fce8e6; color: #c5221f; }
+.yaf-stat-score .yaf-stat-icon { background: #fef7e0; color: #b06000; }
+.yaf-stat-info { display: flex; flex-direction: column; }
+.yaf-stat-num { font-size: 24px; font-weight: 700; line-height: 1.1; color: #1d2327; }
+.yaf-stat-label { font-size: 11px; color: #646970; font-weight: 500; text-transform: uppercase; letter-spacing: .3px; }
+
+/* ── Progress Bar ── */
+.yaf-progress-wrap { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.yaf-progress-bar { flex: 1; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden; }
+.yaf-progress-fill { height: 100%; background: linear-gradient(90deg, #a0429f, #6ec1a0); border-radius: 4px; transition: width .6s ease; width: 0%; }
+.yaf-progress-text { font-size: 13px; font-weight: 700; color: #1d2327; min-width: 40px; }
+
+/* ── Issues Bar ── */
+.yaf-issues-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.yaf-issue-pill { display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: default; transition: transform .15s; }
+.yaf-issue-pill:hover { transform: scale(1.03); }
+.yaf-pill-seo { background: #eef1fe; color: #3b5ccc; }
+.yaf-pill-content { background: #e6f4ea; color: #137333; }
+.yaf-pill-readability { background: #fef7e0; color: #b06000; }
+.yaf-pill-social { background: #f3e8f4; color: #a0429f; }
+.yaf-pill-technical { background: #f0f0f1; color: #50575e; }
+.yaf-pill-gscc { background: #e8f0fe; color: #1967d2; }
+.yaf-issue-pill .dashicons { font-size: 14px; width: 14px; height: 14px; }
+
+/* ── Toolbar ── */
+.yaf-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+.yaf-toolbar-left, .yaf-toolbar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.yaf-filters { display: flex; gap: 0; }
+.yaf-filter { padding: 6px 14px; border: 1px solid #c3c4c7; background: #fff; cursor: pointer; font-size: 12px; font-weight: 600; color: #50575e; transition: all .15s; }
+.yaf-filter:first-child { border-radius: 4px 0 0 4px; }
+.yaf-filter:last-child { border-radius: 0 4px 4px 0; }
+.yaf-filter:not(:first-child) { border-left: 0; }
+.yaf-filter.active, .yaf-filter:hover { background: #a0429f; color: #fff; border-color: #833182; }
+.yaf-search-input { padding: 6px 12px; border: 1px solid #c3c4c7; border-radius: 4px; font-size: 13px; width: 200px; }
+.yaf-search-input:focus { border-color: #a0429f; box-shadow: 0 0 0 1px #a0429f; outline: none; }
+.yaf-btn-primary { background: #a0429f !important; border-color: #833182 !important; color: #fff !important; font-weight: 600 !important; }
+.yaf-btn-primary:hover { background: #833182 !important; }
+.yaf-btn-primary .dashicons { color: #fff; }
+#yaf-btn-undo .dashicons, #yaf-btn-history .dashicons { font-size: 16px; }
+
+/* ── Table ── */
+.yaf-table-wrap { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; margin-bottom: 16px; }
+.yaf-table { border-collapse: collapse; }
+.yaf-table thead th { background: #f9f9f9; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; padding: 10px 12px; border-bottom: 2px solid #e0e0e0; color: #50575e; }
+.yaf-table tbody td { padding: 10px 12px; vertical-align: middle; font-size: 13px; border-bottom: 1px solid #f0f0f1; }
+.yaf-table tbody tr:hover { background: #faf7f2; }
+.yaf-col-check { width: 40px; text-align: center; }
+.yaf-col-title { width: 25%; }
+.yaf-col-meta { width: 30%; }
+.yaf-col-issues { width: 15%; }
+.yaf-col-score { width: 60px; text-align: center; }
+.yaf-col-gscc { width: 70px; }
+.yaf-col-actions { width: 200px; text-align: center; }
+.yaf-loading { text-align: center; padding: 40px !important; color: #646970; }
+
+/* ── Issue Badges ── */
+.yaf-issue-badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; margin: 1px 2px; }
+.yaf-badge-error { background: #fce8e6; color: #c5221f; }
+.yaf-badge-warning { background: #fef7e0; color: #b06000; }
+.yaf-badge-info { background: #e8f0fe; color: #1967d2; }
+.yaf-badge-fixable { background: #e6f4ea; color: #137333; }
+.yaf-badge-fixable::before { content: "⚡"; font-size: 10px; }
+
+/* ── Score Badges ── */
+.yaf-score { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 12px; font-weight: 700; text-align: center; min-width: 32px; }
+.yaf-score-good { background: #e6f4ea; color: #137333; }
+.yaf-score-ok { background: #fef7e0; color: #b06000; }
+.yaf-score-bad { background: #fce8e6; color: #c5221f; }
+.yaf-score-na { background: #f0f0f1; color: #646970; }
+
+/* ── GSCC Score Badge ── */
+.yaf-gscc-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; text-align: center; min-width: 30px; }
+.yaf-gscc-good { background: #e6f4ea; color: #137333; }
+.yaf-gscc-ok { background: #fef7e0; color: #b06000; }
+.yaf-gscc-bad { background: #fce8e6; color: #c5221f; }
+.yaf-gscc-na { background: #f0f0f1; color: #646970; }
+
+/* ── Meta Preview in Table ── */
+.yaf-meta-text { font-size: 12px; color: #50575e; line-height: 1.4; max-height: 3em; overflow: hidden; text-overflow: ellipsis; }
+.yaf-meta-empty { color: #c5221f; font-style: italic; font-size: 12px; }
+.yaf-type-badge { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: 700; text-transform: uppercase; margin-left: 6px; background: #f0f0f1; color: #50575e; }
+
+/* ── Action Buttons ── */
+.yaf-btn-fix, .yaf-btn-preview, .yaf-btn-issues { padding: 3px 8px; font-size: 12px; border-radius: 4px; cursor: pointer; border: 1px solid #c3c4c7; background: #fff; color: #50575e; transition: all .15s; }
+.yaf-btn-fix:hover { background: #a0429f; color: #fff; border-color: #833182; }
+.yaf-btn-preview:hover { background: #1967d2; color: #fff; border-color: #1558b0; }
+.yaf-btn-issues { background: #fef7e0; color: #b06000; border-color: #f0d080; }
+.yaf-btn-issues:hover { background: #b06000; color: #fff; }
+.yaf-btn-fix.fixed { background: #e6f4ea; color: #137333; border-color: #137333; }
+
+/* ── Modals ── */
+.yaf-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100100; display: flex; align-items: center; justify-content: center; }
+.yaf-modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,.6); }
+.yaf-modal-content { position: relative; background: #fff; border-radius: 12px; width: 520px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+.yaf-modal-wide { width: 680px; }
+.yaf-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #e0e0e0; }
+.yaf-modal-header h2 { font-size: 16px; font-weight: 700; margin: 0; }
+.yaf-modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #646970; padding: 0 4px; line-height: 1; }
+.yaf-modal-close:hover { color: #c5221f; }
+.yaf-modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+.yaf-modal-footer { padding: 12px 20px; border-top: 1px solid #e0e0e0; display: flex; gap: 8px; justify-content: flex-end; }
+
+/* ── Google SERP Preview ── */
+.yaf-preview-google { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+.yaf-preview-url { font-size: 13px; color: #202124; margin-bottom: 2px; }
+.yaf-preview-title { font-size: 18px; color: #1a0dab; font-weight: 400; line-height: 1.3; margin-bottom: 4px; cursor: pointer; }
+.yaf-preview-title:hover { text-decoration: underline; }
+.yaf-preview-meta { font-size: 14px; color: #4d5156; line-height: 1.45; }
+.yaf-preview-details { margin-top: 12px; }
+.yaf-preview-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid #f0f0f1; }
+.yaf-preview-existing { color: #646970; font-style: italic; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Issue List in Modal ── */
+.yaf-issue-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid #f0f0f1; border-radius: 6px; margin-bottom: 8px; transition: background .15s; }
+.yaf-issue-item:hover { background: #faf7f2; }
+.yaf-issue-item-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.yaf-issue-item-icon.error { background: #fce8e6; color: #c5221f; }
+.yaf-issue-item-icon.warning { background: #fef7e0; color: #b06000; }
+.yaf-issue-item-icon.info { background: #e8f0fe; color: #1967d2; }
+.yaf-issue-item-text { flex: 1; }
+.yaf-issue-item-title { font-size: 13px; font-weight: 600; color: #1d2327; margin-bottom: 2px; }
+.yaf-issue-item-desc { font-size: 12px; color: #646970; line-height: 1.4; }
+.yaf-issue-item-actions { flex-shrink: 0; }
+.yaf-issue-fix-btn { padding: 3px 10px; font-size: 11px; font-weight: 600; border-radius: 4px; border: 1px solid #a0429f; background: #fff; color: #a0429f; cursor: pointer; transition: all .15s; }
+.yaf-issue-fix-btn:hover { background: #a0429f; color: #fff; }
+.yaf-issue-fix-btn:disabled { opacity: .5; cursor: default; }
+.yaf-issue-manual-btn { padding: 3px 10px; font-size: 11px; font-weight: 600; border-radius: 4px; border: 1px solid #c3c4c7; background: #fff; color: #50575e; cursor: pointer; text-decoration: none; display: inline-block; }
+.yaf-issue-manual-btn:hover { background: #f0f0f1; }
+
+/* ── History ── */
+.yaf-history-item { padding: 10px 0; border-bottom: 1px solid #f0f0f1; }
+.yaf-history-item:last-child { border-bottom: none; }
+.yaf-history-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.yaf-history-title { font-size: 13px; font-weight: 600; color: #1d2327; }
+.yaf-history-time { font-size: 11px; color: #646970; }
+.yaf-history-detail { font-size: 12px; color: #50575e; }
+.yaf-history-old { color: #c5221f; text-decoration: line-through; }
+.yaf-history-new { color: #137333; font-weight: 600; }
+.yaf-history-field { font-size: 11px; color: #a0429f; font-weight: 600; text-transform: uppercase; }
+
+/* ── Settings Grid ── */
+.yaf-settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.yaf-settings-section h3 { font-size: 14px; font-weight: 700; margin: 0 0 12px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f1; }
+.yaf-field { margin-bottom: 14px; }
+.yaf-field label { display: block; font-weight: 600; font-size: 12px; margin-bottom: 4px; }
+.yaf-field select, .yaf-field input[type="number"], .yaf-field input[type="password"] { width: 100%; padding: 6px 10px; border: 1px solid #c3c4c7; border-radius: 4px; font-size: 13px; }
+.yaf-field .description { font-size: 11px; color: #646970; margin-top: 4px; }
+.yaf-field input[type="checkbox"] { margin-right: 6px; }
+
+/* ── Pagination ── */
+.yaf-pagination { display: flex; justify-content: center; gap: 4px; margin-top: 8px; }
+.yaf-page-btn { padding: 4px 10px; border: 1px solid #c3c4c7; background: #fff; border-radius: 4px; cursor: pointer; font-size: 12px; }
+.yaf-page-btn.active { background: #a0429f; color: #fff; border-color: #833182; }
+.yaf-page-btn:hover:not(.active) { background: #f0f0f1; }
+
+/* ── Spinner ── */
+.spinner.is-active { display: inline-block; }
+
+/* ── New Action Buttons ── */
+.yaf-btn-image, .yaf-btn-alt, .yaf-btn-links { padding: 3px 8px; font-size: 12px; border-radius: 4px; cursor: pointer; border: 1px solid #c3c4c7; background: #fff; color: #50575e; transition: all .15s; }
+.yaf-btn-image:hover { background: #4285f4; color: #fff; border-color: #3367d6; }
+.yaf-btn-alt:hover { background: #137333; color: #fff; border-color: #0d5e2a; }
+.yaf-btn-links:hover { background: #a0429f; color: #fff; border-color: #833182; }
+
+/* ── Preview Tabs ── */
+.yaf-preview-tabs { display: flex; gap: 0; margin-bottom: 12px; border-bottom: 2px solid #e0e0e0; }
+.yaf-preview-tab { padding: 8px 16px; font-size: 13px; font-weight: 600; border: 1px solid #e0e0e0; background: #f9f9f9; cursor: pointer; color: #50575e; border-bottom: none; border-radius: 4px 4px 0 0; margin-right: 2px; }
+.yaf-preview-tab.active { background: #fff; color: #a0429f; border-bottom: 2px solid #a0429f; margin-bottom: -2px; }
+.yaf-preview-tab:hover:not(.active) { background: #f0f0f1; }
+
+/* ── Reanalysis alert ── */
+.yaf-reanalysis-notice { background: #e8f0fe; border-left: 4px solid #1967d2; padding: 12px 16px; margin-bottom: 16px; border-radius: 0 8px 8px 0; font-size: 13px; }
+.yaf-reanalysis-notice strong { color: #1967d2; }
+
+/* ── Brief Modal ── */
+.yaf-brief-content { font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Consolas', monospace; font-size: 13px; line-height: 1.6; white-space: pre-wrap; background: #f9f9f9; padding: 16px; border-radius: 8px; border: 1px solid #e0e0e0; max-height: 60vh; overflow-y: auto; }
+
+/* ── Enhanced feature checkboxes ── */
+.yaf-feature-grid label { transition: border-color .15s, box-shadow .15s; }
+.yaf-feature-grid label:hover { border-color: #a0429f; box-shadow: 0 0 0 1px #a0429f; }
+
+/* ── Responsive ── */
+@media (max-width: 1200px) {
+    .yaf-stats-grid { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 960px) {
+    .yaf-stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .yaf-toolbar { flex-direction: column; align-items: flex-start; }
+    .yaf-settings-grid { grid-template-columns: 1fr; }
+    .yaf-issues-bar { flex-wrap: wrap; }
+}
+@media (max-width: 600px) {
+    .yaf-stats-grid { grid-template-columns: 1fr; }
+}
+
+/* ── AI Provider Cards ── */
+.yaf-providers-section { grid-column: 1 / -1; }
+.yaf-provider-card { border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 10px; transition: border-color .2s, box-shadow .2s; }
+.yaf-provider-card.yaf-provider-active { border-color: #a0429f; box-shadow: 0 0 0 1px #a0429f; }
+.yaf-provider-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: default; }
+.yaf-provider-toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1; margin: 0; font-weight: 400; }
+.yaf-provider-toggle input { margin: 0; }
+.yaf-provider-name { font-size: 13px; font-weight: 600; color: #1d2327; display: flex; align-items: center; gap: 6px; }
+.yaf-provider-name .dashicons { font-size: 18px; width: 18px; height: 18px; color: #a0429f; }
+.yaf-provider-status { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; margin-left: auto; }
+.yaf-status-ok { background: #e6f4ea; color: #137333; }
+.yaf-status-off { background: #f0f0f1; color: #646970; }
+.yaf-status-error { background: #fce8e6; color: #c5221f; }
+.yaf-provider-body { padding: 0 14px 14px; border-top: 1px solid #f0f0f1; }
+.yaf-provider-body .yaf-field { margin-top: 12px; }
+.yaf-provider-key-row { display: flex; gap: 8px; align-items: center; }
+.yaf-provider-key-row input { flex: 1; }
+.yaf-test-btn { white-space: nowrap; }
+.yaf-settings-grid { grid-template-columns: 1fr 2fr; }

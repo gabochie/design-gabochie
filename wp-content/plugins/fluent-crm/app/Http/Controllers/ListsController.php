@@ -1,0 +1,292 @@
+<?php
+
+namespace FluentCrm\App\Http\Controllers;
+
+use FluentCrm\App\Models\Lists;
+use FluentCrm\App\Models\Subscriber;
+use FluentCrm\App\Services\Helper;
+use FluentCrm\Framework\Support\Arr;
+use FluentCrm\Framework\Http\Request\Request;
+
+/**
+ *  ListsController - REST API Handler Class
+ *
+ *  REST API Handler
+ *
+ * @package FluentCrm\App\Http
+ *
+ * @version 1.0.0
+ */
+class ListsController extends Controller
+{
+    /**
+     * Get all of the lists
+     *
+     * @param \FluentCrm\Framework\Http\Request\Request $request
+     * @return \WP_REST_Response
+     */
+    public function index(Request $request)
+    {
+        $with = $request->get('with', []);
+
+        $order = [
+            'by'    => $request->getSafe('sort_by', 'sanitize_sql_orderby', 'id'),
+            'order' => $request->getSafe('sort_order', 'sanitize_sql_orderby', 'DESC')
+        ];
+        $paginatedLists = Lists::orderBy($order['by'], $order['order'])
+            ->searchBy($request->getSafe('search'))
+            ->paginate();
+        $lists = $paginatedLists->items();
+
+        if (!$request->get('exclude_counts')) {
+            // One grouped pivot-join query for the whole page instead of two
+            // COUNT queries per list.
+            $listIds = [];
+            foreach ($lists as $list) {
+                $listIds[] = $list->id;
+            }
+
+            $counts = [];
+            if ($listIds) {
+                // Raw expressions bypass the query grammar, so the subscribers
+                // table has to be prefixed by hand here.
+                global $wpdb;
+                $subscribersTable = $wpdb->prefix . 'fc_subscribers';
+
+                $countRows = fluentCrmDb()->table('fc_subscriber_pivot')
+                    ->where('fc_subscriber_pivot.object_type', 'FluentCrm\App\Models\Lists')
+                    ->whereIn('fc_subscriber_pivot.object_id', $listIds)
+                    ->leftJoin('fc_subscribers', 'fc_subscribers.id', '=', 'fc_subscriber_pivot.subscriber_id')
+                    ->groupBy('fc_subscriber_pivot.object_id')
+                    ->select([
+                        'fc_subscriber_pivot.object_id',
+                        fluentCrmDb()->raw('COUNT(*) as total_count'),
+                        fluentCrmDb()->raw("SUM(CASE WHEN `{$subscribersTable}`.`status` = 'subscribed' THEN 1 ELSE 0 END) as subscribed_count")
+                    ])
+                    ->get();
+
+                foreach ($countRows as $countRow) {
+                    $counts[$countRow->object_id] = $countRow;
+                }
+            }
+
+            foreach ($lists as $list) {
+                $countRow = isset($counts[$list->id]) ? $counts[$list->id] : null;
+                $list->totalCount = $countRow ? (int)$countRow->total_count : 0;
+                $list->subscribersCount = $countRow ? (int)$countRow->subscribed_count : 0;
+            }
+        }
+
+        $data = [
+            'lists' => $lists,
+            'pagination' => [
+                'total' => $paginatedLists->total(),
+            ]
+        ];
+
+        if ($request->get('all_lists')) {
+            $allLists = Lists::get();
+            $formattedLists = [];
+            foreach ($allLists as $list) {
+                $formattedLists[] = [
+                    'id'          => strval($list->id),
+                    'title'       => $list->title,
+                    'slug'        => $list->slug,
+                    'description' => $list->description
+                ];
+            }
+            $data['all_lists'] = $formattedLists;
+        }
+
+        return $this->send($data);
+    }
+
+    /**
+     * Find a list.
+     *
+     * @param \FluentCrm\Framework\Http\Request\Request $request
+     * @param int $id
+     * @return \WP_REST_Response
+     */
+    public function find(Request $request, $id)
+    {
+        return $this->send(Lists::find($id));
+    }
+
+
+    /**
+     * Store a list.
+     *
+     * @param \FluentCrm\Framework\Http\Request\Request $request
+     * @return \WP_REST_Response
+     */
+    public function create(Request $request)
+    {
+        $allData = $request->all();
+
+        if (empty($allData['slug'])) {
+            if ($allData['title']) {
+                $allData['slug'] = sanitize_text_field($allData['title']);
+            }
+        }
+
+        $data = $this->validate($allData, [
+            'title' => 'required',
+            'slug'  => "required|unique:fc_lists,slug"
+        ]);
+
+        $list = Lists::create([
+            'title'       => sanitize_text_field($allData['title']),
+            'slug'        => sanitize_title($data['slug'], 'display'),
+            'description' => sanitize_textarea_field(Arr::get($allData, 'description'))
+        ]);
+
+        do_action('fluentcrm_list_created', $list->id);
+
+        do_action('fluent_crm/list_created', $list);
+
+        return $this->send([
+            'lists'   => $list,
+            'item' => $list,
+            'message' => __('Successfully saved the list.', 'fluent-crm')
+        ]);
+    }
+
+
+    /**
+     * Store a list.
+     *
+     * @param \FluentCrm\Framework\Http\Request\Request $request
+     * @param $id int
+     * @return \WP_REST_Response
+     */
+    public function update(Request $request, $id)
+    {
+        $allData = $this->validate($request->all(), [
+            'title' => 'required'
+        ]);
+
+        if(!empty($allData['slug'])) {
+            $allData['slug'] = Helper::slugify($allData['title']);
+        }
+
+        if ($id == 0 && $request->get('update_by') == 'slug' && !empty($allData['slug'])) {
+
+            $list = Lists::where('slug', $allData['slug'])->first();
+            if (!$list) {
+                return $this->sendError([
+                    'message' => __('List could not be found', 'fluent-crm')
+                ]);
+            }
+
+            $id = $list->id;
+        } else {
+            $list = Lists::findOrFail($id);
+            if(empty($allData['slug'])) {
+                $allData['slug'] = $list->slug;
+            }
+        }
+
+        if (Lists::where('slug', $allData['slug'])->where('id', '!=', $id)->first()) {
+            return $this->sendError([
+                'message' => __('Provided slug already exists in another list', 'fluent-crm')
+            ]);
+        }
+
+        $list = Lists::where('id', $id)->update([
+            'title'       => sanitize_text_field($allData['title']),
+            'slug'        => $allData['slug'],
+            'description' => sanitize_textarea_field(Arr::get($allData, 'description')),
+        ]);
+
+        do_action('fluentcrm_list_updated', $id);
+
+        do_action('fluent_crm/list_updated', $list);
+
+        return $this->send([
+            'lists'   => $list,
+            'message' => __('Successfully saved the list.', 'fluent-crm'),
+        ]);
+    }
+
+    /**
+     * Bulk store lists.
+     *
+     * @param \FluentCrm\Framework\Http\Request\Request $request
+     * @return \WP_REST_Response
+     */
+    public function storeBulk(Request $request)
+    {
+        $lists = $request->get('lists', []);
+        if (empty($lists)) {
+            $lists = $this->request->get('items', []);
+        }
+
+        $createdIds = [];
+        foreach ($lists as $list) {
+            if (empty($list['title'])) {
+                continue;
+            }
+
+            if (empty($list['slug'])) {
+                $list['slug'] = Helper::slugify($list['title']);
+            }
+
+            $list = Lists::updateOrCreate(
+                ['slug' => sanitize_title($list['slug'], 'display')],
+                ['title' => sanitize_text_field($list['title'])]
+            );
+
+            $createdIds[] = $list->id;
+
+            if($list->wasRecentlyCreated) {
+                do_action('fluentcrm_list_created', $list->id);
+                do_action('fluent_crm/list_created', $list);
+            } else {
+                do_action('fluentcrm_list_updated', $list->id);
+                do_action('fluent_crm/list_updated', $list);
+            }
+        }
+
+        return $this->sendSuccess([
+            'message' => __('Provided Lists have been successfully created', 'fluent-crm'),
+            'ids'     => $createdIds
+        ]);
+    }
+
+    /**
+     * Delete a list
+     *
+     * @param \FluentCrm\Framework\Http\Request\Request $request
+     * @param int $id
+     * @return \WP_REST_Response
+     */
+    public function remove(Request $request, $id)
+    {
+        Lists::where('id', $id)->delete();
+        do_action('fluent_crm/list_deleted', $id);
+        do_action('fluentcrm_list_deleted', $id);
+
+        return $this->send([
+            'message' => __('Successfully removed the list.', 'fluent-crm')
+        ]);
+    }
+
+    public function handleBulkAction(Request $request)
+    {
+        $listIds = array_map('intval', (array)$request->get('listIds', []));
+
+        $listIds = array_unique(array_filter($listIds));
+
+        foreach ($listIds as $listId) {
+            Lists::where('id', $listId)->delete();
+            do_action('fluent_crm/list_deleted', $listId);
+            do_action('fluentcrm_list_deleted', $listId);
+        }
+
+        return $this->sendSuccess([
+            'message' => __('Selected Lists have been removed permanently', 'fluent-crm'),
+        ]);
+
+    }
+}

@@ -1,0 +1,36 @@
+{
+    "name": "ai-growth-os/plugin",
+    "description": "Autonomous AI Business Operating System for WordPress",
+    "type": "wordpress-plugin",
+    "require": {
+        "php": ">=8.2",
+        "composer/installers": "^2.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0",
+        "phpstan/phpstan": "^2.0",
+        "squizlabs/php_codesniffer": "^3.0",
+        "wp-coding-standards/wpcs": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "AIGrowthOS\\": "app/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "AIGrowthOS\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "phpstan": "phpstan analyse --level max app/",
+        "cs": "phpcs --standard=WordPress app/"
+    },
+    "config": {
+        "allow-plugins": {
+            "composer/installers": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    }
+}

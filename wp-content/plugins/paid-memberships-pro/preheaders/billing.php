@@ -1,0 +1,312 @@
+<?php
+
+global $wpdb, $current_user, $pmpro_msg, $pmpro_msgt, $bfirstname, $blastname, $baddress1, $baddress2, $bcity, $bstate, $bzipcode, $bcountry, $bphone, $CardType, $AccountNumber, $ExpirationMonth, $ExpirationYear, $pmpro_requirebilling, $pmpro_billing_subscription, $pmpro_billing_level;
+
+// Redirect non-user to the login page; pass the Billing page as the redirect_to query arg.
+if ( ! is_user_logged_in() ) {
+	$billing_url = pmpro_url( 'billing' );
+    wp_redirect( add_query_arg( 'redirect_to', urlencode( $billing_url ), pmpro_login_url() ) );
+    exit;
+}
+
+// Get the subscription and order that was passed in.
+if ( ! empty( $_REQUEST['pmpro_subscription_id'] ) ) {
+	// A subscription ID was passed. Get the subscription and its order.
+	$pmpro_billing_subscription = PMPro_Subscription::get_subscription( (int)$_REQUEST['pmpro_subscription_id'] );
+} else {
+	// No subscription or order was passed. Check if the user has exactly one active subscription. If so, use it.
+	$subscriptions = PMPro_Subscription::get_subscriptions_for_user( $current_user->ID );
+	if ( count( $subscriptions ) === 1 ) {
+		$pmpro_billing_subscription = $subscriptions[0];
+	}
+}
+
+// Allow updating billing information if we have a single subscription.
+if ( is_a( $pmpro_billing_subscription, 'PMPro_Subscription' ) ) {
+
+	// Make sure the person trying to view the subscription owns it.
+	if ( $current_user->ID !== $pmpro_billing_subscription->get_user_id()) {
+		wp_redirect( pmpro_url( 'account' ) );
+		exit;
+	}
+
+	// Get the most recent successful order for this subscription, if any.
+	$newest_orders = $pmpro_billing_subscription->get_orders(
+		array(
+			'status'  => 'success',
+			'limit'   => 1,
+			'orderby' => '`timestamp` DESC, `id` DESC',
+		)
+	);
+	$pmpro_billing_order = ! empty( $newest_orders ) ? $newest_orders[0] : null;
+
+	// If there is no successful order yet (e.g. the subscription was linked manually in the admin),
+	// build a transient MemberOrder from the subscription so the billing page can still render and
+	// the gateway can update the payment method on the underlying subscription. This order is not
+	// saved to the database; it only carries the fields the gateway's update() method needs.
+	if ( ! is_a( $pmpro_billing_order, 'MemberOrder' ) ) {
+		$pmpro_billing_order                              = new MemberOrder();
+		$pmpro_billing_order->user_id                     = $pmpro_billing_subscription->get_user_id();
+		$pmpro_billing_order->membership_id               = $pmpro_billing_subscription->get_membership_level_id();
+		$pmpro_billing_order->gateway                     = $pmpro_billing_subscription->get_gateway();
+		$pmpro_billing_order->gateway_environment         = $pmpro_billing_subscription->get_gateway_environment();
+		$pmpro_billing_order->subscription_transaction_id = $pmpro_billing_subscription->get_subscription_transaction_id();
+	}
+
+	// Get the user's current membership level.
+	$pmpro_billing_level            = pmpro_getSpecificMembershipLevelForUser( $current_user->ID, $pmpro_billing_subscription->get_membership_level_id() );
+	$current_user->membership_level = $pmpro_billing_level;
+
+	//need to be secure?
+	global $besecure, $gateway, $show_check_payment_instructions;
+	if (empty($pmpro_billing_order->gateway)) {
+		//no order
+		$besecure = false;
+	} elseif( $pmpro_billing_order->gateway == 'check' ) {
+		$show_check_payment_instructions = true;
+	} else {
+		//$besecure = true;
+		$besecure = get_option("pmpro_use_ssl");
+	}
+
+	// this variable is checked sometimes to know if the page should show billing fields
+	$pmpro_requirebilling = true;
+
+	// Set the gateway to the order gateway.
+	if ( ! empty( $pmpro_billing_order->gateway ) ) {
+		$gateway = $pmpro_billing_order->gateway;
+	} else {
+		$gateway = NULL;
+	}
+
+	//enqueue some scripts
+	wp_enqueue_script( 'jquery.creditCardValidator', plugins_url( '/js/jquery.creditCardValidator.js', dirname( __FILE__ ) ), array( 'jquery' ), '1.2' );
+
+	//action to run extra code for gateways/etc
+	do_action( 'pmpro_billing_preheader' );
+
+	//_x stuff in case they clicked on the image button with their mouse
+	if (isset($_REQUEST['update-billing']))
+		$submit = true;
+	else
+		$submit = false;
+
+	if (!$submit && isset($_REQUEST['update-billing_x']))
+		$submit = true;
+
+	if ($submit === "0")
+		$submit = true;
+
+	// If there was a billing submission, verify the nonce before processing.
+	if ( $submit ) {
+		if ( empty( $_REQUEST['pmpro_billing_nonce'] ) || ! wp_verify_nonce( sanitize_key( $_REQUEST['pmpro_billing_nonce'] ), 'pmpro_billing_nonce' ) ) {
+			// The nonce field was added in the 3.7.3 billing template. Skip enforcement only when
+			// the site has explicitly opted in to a pre-3.7.3 custom template via the Page Settings
+			// "Use Custom Page Template" option. In every other case (default template, or custom
+			// template at 3.7.3+, or custom template that pmpro_loadTemplate silently falls back to
+			// the default for) the rendered form includes the nonce field, so we can enforce.
+			$skip_nonce_check = false;
+			if ( 'yes' === get_option( 'pmpro_use_custom_page_template_billing' ) ) {
+				$loaded_path = pmpro_get_template_path_to_load( 'billing' );
+				$loaded_version = pmpro_get_version_for_page_template_at_path( $loaded_path );
+				if ( empty( $loaded_version ) || version_compare( $loaded_version, '3.7.3', '<' ) ) {
+					$skip_nonce_check = true;
+				}
+			}
+			if ( ! $skip_nonce_check ) {
+				$pmpro_msg = __( 'Nonce security check failed.', 'paid-memberships-pro' );
+				$pmpro_msgt = 'pmpro_error';
+				$submit = false;
+			}
+		}
+	}
+
+	//check their fields if they clicked continue
+	if ($submit) {
+		//load em up (other fields)
+		if (isset($_REQUEST['bfirstname']))
+			$bfirstname = trim(sanitize_text_field($_REQUEST['bfirstname']));
+		if (isset($_REQUEST['blastname']))
+			$blastname = trim(sanitize_text_field($_REQUEST['blastname']));
+		if (isset($_REQUEST['fullname']))
+			$fullname = sanitize_text_field($_REQUEST['fullname']); //honeypot for spammers
+		if (isset($_REQUEST['baddress1']))
+			$baddress1 = trim(sanitize_text_field($_REQUEST['baddress1']));
+		if (isset($_REQUEST['baddress2']))
+			$baddress2 = trim(sanitize_text_field($_REQUEST['baddress2']));
+		if (isset($_REQUEST['bcity']))
+			$bcity = trim(sanitize_text_field($_REQUEST['bcity']));
+		if (isset($_REQUEST['bstate']))
+			$bstate = trim(sanitize_text_field($_REQUEST['bstate']));
+		if (isset($_REQUEST['bzipcode']))
+			$bzipcode = trim(sanitize_text_field($_REQUEST['bzipcode']));
+		if (isset($_REQUEST['bcountry']))
+			$bcountry = trim(sanitize_text_field($_REQUEST['bcountry']));
+		if (isset($_REQUEST['bphone']))
+			$bphone = trim(sanitize_text_field($_REQUEST['bphone']));
+		if (isset($_REQUEST['CardType']))
+			$CardType = sanitize_text_field($_REQUEST['CardType']);
+		if (isset($_REQUEST['AccountNumber']))
+			$AccountNumber = trim(sanitize_text_field($_REQUEST['AccountNumber']));
+		if (isset($_REQUEST['ExpirationMonth']))
+			$ExpirationMonth = sanitize_text_field($_REQUEST['ExpirationMonth']);
+		if (isset($_REQUEST['ExpirationYear']))
+			$ExpirationYear = sanitize_text_field($_REQUEST['ExpirationYear']);
+		if (isset($_REQUEST['CVV']))
+			$CVV = trim(sanitize_text_field($_REQUEST['CVV']));
+		
+		//avoid warnings for the required fields
+		if (!isset($bfirstname))
+			$bfirstname = "";
+		if (!isset($blastname))
+			$blastname = "";
+		if (!isset($baddress1))
+			$baddress1 = "";
+		if (!isset($bcity))
+			$bcity = "";
+		if (!isset($bstate))
+			$bstate = "";
+		if (!isset($bzipcode))
+			$bzipcode = "";
+		if (!isset($bphone))
+			$bphone = "";
+		if (!isset($bcountry))
+			$bcountry = "";
+		if (!isset($CardType))
+			$CardType = "";
+		if (!isset($AccountNumber))
+			$AccountNumber = "";
+		if (!isset($ExpirationMonth))
+			$ExpirationMonth = "";
+		if (!isset($ExpirationYear))
+			$ExpirationYear = "";
+		if (!isset($CVV))
+			$CVV = "";
+
+		$pmpro_required_billing_fields = array(
+			"bfirstname" => $bfirstname,
+			"blastname" => $blastname,
+			"baddress1" => $baddress1,
+			"bcity" => $bcity,
+			"bstate" => $bstate,
+			"bzipcode" => $bzipcode,
+			"bphone" => $bphone,
+			"bcountry" => $bcountry,
+			"CardType" => $CardType,
+			"AccountNumber" => $AccountNumber,
+			"ExpirationMonth" => $ExpirationMonth,
+			"ExpirationYear" => $ExpirationYear,
+			"CVV" => $CVV
+		);
+		
+		//filter
+		$pmpro_required_billing_fields = apply_filters("pmpro_required_billing_fields", $pmpro_required_billing_fields);
+		
+		foreach ($pmpro_required_billing_fields as $key => $field) {
+			if (!$field) {            
+				$missing_billing_field = true;
+				break;
+			}
+		}
+
+		/**
+		 * Mirror of pmpro_registration_checks filter for the billing page.
+		 *
+		 * @since 3.2
+		 *
+		 * @param bool $continue_billing_update Whether to continue with the billing update.
+		 */
+		$continue_billing_update = apply_filters( 'pmpro_billing_update_checks', true );
+		
+		if (!empty($missing_billing_field)) {
+			$pmpro_msg = __("Please complete all required fields.", 'paid-memberships-pro' );
+			$pmpro_msgt = "pmpro_error";
+		} elseif ( empty( $continue_billing_update ) || $pmpro_msgt == 'pmpro_error' ) {
+			// Something else threw an error, maybe reCAPTCHA.		
+		} else {
+			//all good. update billing info.
+			$pmpro_msg = __("All good!", 'paid-memberships-pro' );
+
+			$pmpro_billing_order->cardtype = $CardType;
+			$pmpro_billing_order->accountnumber = $AccountNumber;
+			$pmpro_billing_order->expirationmonth = $ExpirationMonth;
+			$pmpro_billing_order->expirationyear = $ExpirationYear;
+
+			//other values
+			$pmpro_billing_order->billing->name = $bfirstname . " " . $blastname;
+			$pmpro_billing_order->billing->street = empty( $baddress1 ) ? '' : trim( $baddress1 );
+			$pmpro_billing_order->billing->street2 = empty( $baddress2 ) ? '' : trim( $baddress2 );
+			$pmpro_billing_order->billing->city = $bcity;
+			$pmpro_billing_order->billing->state = $bstate;
+			$pmpro_billing_order->billing->country = $bcountry;
+			$pmpro_billing_order->billing->zip = $bzipcode;
+			$pmpro_billing_order->billing->phone = $bphone;
+
+			//$gateway = get_option("pmpro_gateway");
+			$pmpro_billing_order->gateway = $gateway;
+			$pmpro_billing_order->setGateway();
+			
+			/**
+			 * Filter the order object.
+			 *
+			 * @since 1.8.13.2
+			 *
+			 * @param object $order the order object used to update billing			 
+			 */
+			$pmpro_billing_order = apply_filters( "pmpro_billing_order", $pmpro_billing_order );
+
+			if ( $pmpro_billing_order->updateBilling() ) {
+				//send email to member
+				$pmproemail = new PMProEmail();
+				$pmproemail->sendBillingEmail($current_user, $pmpro_billing_order);
+
+				//send email to admin
+				$pmproemail = new PMProEmail();
+				$pmproemail->sendBillingAdminEmail($current_user, $pmpro_billing_order);
+
+				//message
+				$pmpro_msg = sprintf(__('Information updated. <a href="%s">&laquo; back to my account</a>', 'paid-memberships-pro' ), pmpro_url("account"));
+				$pmpro_msgt = "pmpro_success";
+				
+				do_action( 'pmpro_after_update_billing', $current_user->ID, $pmpro_billing_order );
+			} else {
+				/**
+				 * Allow running code when the update fails.
+				 *
+				 * @since 2.7
+				 * @param MemberOrder $pmpro_billing_order The order for the sub being updated.
+				 */
+				do_action( 'pmpro_update_billing_failed', $pmpro_billing_order );
+				
+				// Make sure we have an error message.
+				$pmpro_msg = $pmpro_billing_order->error;
+
+				if (!$pmpro_msg)
+					$pmpro_msg = __("Error updating billing information.", 'paid-memberships-pro' );
+				$pmpro_msgt = "pmpro_error";
+			}
+		}
+	} else {
+		// Avoid defaulting billing address fields from user meta. Preserve any values set earlier in this request.
+		$bfirstname = isset( $bfirstname ) ? $bfirstname : '';
+		$blastname  = isset( $blastname ) ? $blastname : '';
+		$baddress1  = isset( $baddress1 ) ? $baddress1 : '';
+		$baddress2  = isset( $baddress2 ) ? $baddress2 : '';
+		$bcity      = isset( $bcity ) ? $bcity : '';
+		$bstate     = isset( $bstate ) ? $bstate : '';
+		$bzipcode   = isset( $bzipcode ) ? $bzipcode : '';
+		$bcountry   = isset( $bcountry ) ? $bcountry : '';
+		$bphone     = isset( $bphone ) ? $bphone : '';
+	}
+} // End of object check.
+
+// We might reach here without an order object, which means it's not needed.
+if ( empty( $pmpro_billing_order ) ) {
+	$pmpro_billing_order = null;
+}
+
+/**
+ * Hook to run actions after the billing page preheader has loaded.
+ * @since 2.1
+ */
+do_action( 'pmpro_billing_after_preheader', $pmpro_billing_order );

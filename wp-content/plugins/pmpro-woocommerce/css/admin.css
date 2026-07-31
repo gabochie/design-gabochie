@@ -1,0 +1,9 @@
+
+#woocommerce-product-data ul.wc-tabs li.pmprowoo_tab a::before {
+	font-family: Dashicons;
+    content: "\f307";
+}
+
+.pmpro_woocommerce_options_panel .options_group h3 {
+	padding: 0px 9px;
+}

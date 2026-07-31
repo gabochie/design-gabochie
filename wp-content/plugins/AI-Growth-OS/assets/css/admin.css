@@ -1,0 +1,79 @@
+:root {
+    --agos-primary: #6366f1;
+    --agos-success: #22c55e;
+    --gos-warning: #f59e0b;
+    --agos-danger: #ef4444;
+    --agos-bg: #0f172a;
+    --agos-card-bg: #1e293b;
+    --agos-text: #f1f5f9;
+    --agos-text-muted: #94a3b8;
+    --agos-border: #334155;
+}
+
+.ai-growth-os-dashboard {
+    margin: 20px 0;
+    color: var(--agos-text);
+}
+
+.ai-growth-os-dashboard h1 {
+    color: var(--agos-primary);
+    font-size: 24px;
+    margin-bottom: 24px;
+}
+
+.ai-growth-os-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.ai-growth-os-metric-card {
+    background: var(--agos-card-bg);
+    border: 1px solid var(--agos-border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    transition: transform 0.2s;
+}
+
+.ai-growth-os-metric-card:hover {
+    transform: translateY(-2px);
+}
+
+.ai-growth-os-metric-card h3 {
+    color: var(--agos-text-muted);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0 0 12px;
+}
+
+.metric-value {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--agos-primary);
+    margin-bottom: 8px;
+}
+
+.metric-trend {
+    font-size: 14px;
+}
+
+.metric-trend.up { color: var(--agos-success); }
+.metric-trend.down { color: var(--agos-danger); }
+.metric-trend.stable { color: var(--agos-text-muted); }
+
+.ai-growth-os-panel {
+    background: var(--agos-card-bg);
+    border: 1px solid var(--agos-border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+}
+
+.ai-growth-os-panel h2 {
+    color: var(--agos-text);
+    font-size: 18px;
+    margin: 0 0 16px;
+}
