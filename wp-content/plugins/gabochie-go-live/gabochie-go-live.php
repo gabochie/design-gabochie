@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Gabochie Go Live
  * Description: Push staging (wp.gabochiedesign.com) to production (gabochiedesign.com) via the server-side promote.sh engine. Staging site only.
- * Version: 1.1.0
+ * Version: 1.2.0
  * Author: Gabochie Design
  * License: GPL-2.0+
  * Text Domain: gabochie-go-live
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) exit;
 
 class Gabochie_Go_Live {
 
-    const VERSION = '1.1.0';
+    const VERSION = '1.2.0';
 
     public static function deploy_dir() {
         return apply_filters('gabochie_go_live_deploy_dir', '/home/gabozvqd/deploy');
@@ -37,6 +37,9 @@ class Gabochie_Go_Live {
         add_action('wp_ajax_gabochie_checklist_toggle', array(__CLASS__, 'ajax_checklist_toggle'));
         add_action('wp_ajax_gabochie_checklist_add', array(__CLASS__, 'ajax_checklist_add'));
         add_action('wp_ajax_gabochie_checklist_delete', array(__CLASS__, 'ajax_checklist_delete'));
+        add_action('wp_ajax_gabochie_recs_get', array(__CLASS__, 'ajax_recs_get'));
+        add_action('wp_ajax_gabochie_compare_get', array(__CLASS__, 'ajax_compare_get'));
+        add_action('wp_ajax_gabochie_compare_probe', array(__CLASS__, 'ajax_compare_probe'));
     }
 
     public static function menu() {
@@ -56,6 +59,14 @@ class Gabochie_Go_Live {
             'manage_options',
             'gabochie-go-live-qa',
             array(__CLASS__, 'render_qa')
+        );
+        add_submenu_page(
+            'gabochie-go-live',
+            'Staging vs Live',
+            'Comparison',
+            'manage_options',
+            'gabochie-go-live-compare',
+            array(__CLASS__, 'render_compare')
         );
     }
 
@@ -496,8 +507,7 @@ class Gabochie_Go_Live {
         return $recs;
     }
 
-    public static function render_recommendations_html() {
-        $recs = self::recommendations();
+    public static function recs_html($recs) {
         if (empty($recs)) {
             return '<div class="notice notice-success" style="max-width:720px;"><p><strong>All checks passed.</strong> No open recommendations.</p></div>';
         }
@@ -521,6 +531,242 @@ class Gabochie_Go_Live {
         return $out;
     }
 
+    public static function render_recommendations_html() {
+        return self::recs_html(self::recommendations());
+    }
+
+    public static function tabs($current = 'golive') {
+        $tabs = array(
+            'golive'  => array('Go Live', admin_url('admin.php?page=gabochie-go-live')),
+            'compare' => array('Comparison', admin_url('admin.php?page=gabochie-go-live-compare')),
+            'qa'      => array('Release QA', admin_url('admin.php?page=gabochie-go-live-qa')),
+        );
+        $out = '<h2 class="nav-tab-wrapper" style="border-bottom:1px solid #c3c4c7;margin-bottom:14px;">';
+        foreach ($tabs as $key => $t) {
+            $cls = $key === $current ? 'nav-tab nav-tab-active' : 'nav-tab';
+            $out .= '<a class="' . $cls . '" href="' . esc_url($t[1]) . '">' . esc_html($t[0]) . '</a>';
+        }
+        $out .= '</h2>';
+        return $out;
+    }
+
+    public static function shared_js() {
+        return '/* Gabochie Go Live shared state (dynamic tabs) */'
+            . 'window.GOLC = (function ($) {'
+            . 'var api = { ajaxUrl: ' . wp_json_encode(admin_url('admin-ajax.php')) . ', nonce: ' . wp_json_encode(wp_create_nonce('gabochie_go_live_nonce')) . ' };'
+            . 'function touch(){ try { localStorage.setItem("gol-touch", String(Date.now())); } catch (e) {} }'
+            . 'function loadRecs(){ var $b = $("#gol-recs"); if (!$b.length) return; $.post(api.ajaxUrl, {action: "gabochie_recs_get", _wpnonce: api.nonce}, function (r) { if (r && r.success && r.data && r.data.html) $b.html(r.data.html); }); }'
+            . 'function loadCmp(){ var $t = $("#gol-cmp"); if (!$t.length) return; $.post(api.ajaxUrl, {action: "gabochie_compare_get", _wpnonce: api.nonce}, function (r) { if (r && r.success && r.data) { if (r.data.table) $t.html(r.data.table); if (r.data.recs) $("#gol-recs").html(r.data.recs); } }); }'
+            . 'function runProbe(){ var $o = $("#gol-probe-out"); if (!$o.length) return; $o.text("running\u2026"); $.post(api.ajaxUrl, {action: "gabochie_compare_probe", _wpnonce: api.nonce}, function (r) { $o.text(r && r.success && r.data ? r.data.output : "probe failed"); }); }'
+            . '$(function () {'
+            . 'if ($("#gol-recs-refresh").length) $("#gol-recs-refresh").on("click", function (e) { e.preventDefault(); loadRecs(); });'
+            . 'if ($("#gol-cmp-refresh").length) $("#gol-cmp-refresh").on("click", function (e) { e.preventDefault(); loadCmp(); });'
+            . 'if ($("#gol-probe").length) $("#gol-probe").on("click", function (e) { e.preventDefault(); runProbe(); });'
+            . 'window.addEventListener("storage", function (ev) { if (ev.key === "gol-touch") { if (window.__golReloadAll) window.__golReloadAll(); else loadRecs(); } });'
+            . 'window.addEventListener("focus", function () { loadRecs(); });'
+            . 'setInterval(loadRecs, 30000);'
+            . '});'
+            . 'return { touch: touch, loadRecs: loadRecs };'
+            . '})(jQuery);';
+    }
+
+    public static function http_json($url) {
+        $res = wp_remote_get($url, array('timeout' => 20, 'sslverify' => false, 'redirection' => 3));
+        if (is_wp_error($res)) return null;
+        $code = (int) wp_remote_retrieve_response_code($res);
+        if ($code < 200 || $code >= 300) return null;
+        $body = wp_remote_retrieve_body($res);
+        $data = json_decode($body, true);
+        return is_array($data) ? $data : null;
+    }
+
+    public static function rest_total($url) {
+        $res = wp_remote_get($url, array('timeout' => 20, 'sslverify' => false, 'redirection' => 3));
+        if (is_wp_error($res)) return false;
+        $code = (int) wp_remote_retrieve_response_code($res);
+        if ($code < 200 || $code >= 300) return false;
+        $h = wp_remote_retrieve_headers($res);
+        try {
+            $tot = isset($h['x-wp-total']) ? $h['x-wp-total'] : null;
+        } catch (\Exception $e) {
+            $tot = null;
+        }
+        if (is_array($tot)) $tot = reset($tot);
+        return is_numeric($tot) ? (int) $tot : null;
+    }
+
+    public static function page_title($url) {
+        $res = wp_remote_get($url, array('timeout' => 20, 'sslverify' => false, 'redirection' => 5));
+        if (is_wp_error($res)) return 'fetch failed';
+        $body = wp_remote_retrieve_body($res);
+        if (preg_match('/<title>(.*?)<\/title>/is', $body, $m)) {
+            return trim(html_entity_decode($m[1], ENT_QUOTES, 'UTF-8'));
+        }
+        return 'no <title>';
+    }
+
+    public static function compare_data() {
+        $live_url = 'https://gabochiedesign.com';
+        $rows = array();
+
+        $idx = self::http_json($live_url . '/wp-json/');
+        $rows[] = array('Site name', get_bloginfo('name'), is_array($idx) && isset($idx['name']) ? $idx['name'] : 'n/a');
+        $rows[] = array('Tagline', get_bloginfo('description'), is_array($idx) && isset($idx['description']) ? $idx['description'] : 'n/a');
+
+        $pages_live = self::rest_total($live_url . '/wp-json/wp/v2/pages?per_page=1&status=publish');
+        $posts_live = self::rest_total($live_url . '/wp-json/wp/v2/posts?per_page=1&status=publish');
+        $media_live = self::rest_total($live_url . '/wp-json/wp/v2/media?per_page=1');
+
+        global $wpdb;
+        $pages_stage = (int) wp_count_posts('page')->publish;
+        $posts_stage = (int) wp_count_posts('post')->publish;
+        $media_stage = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type='attachment' AND post_status NOT IN ('trash','auto-draft')");
+
+        $rows[] = array('Published pages', $pages_stage, is_int($pages_live) ? $pages_live : 'n/a');
+        $rows[] = array('Published posts', $posts_stage, is_int($posts_live) ? $posts_live : 'n/a');
+        $rows[] = array('Media files', $media_stage, is_int($media_live) ? $media_live : 'n/a');
+
+        $rows[] = array('Homepage title', self::page_title(home_url('/')), self::page_title($live_url . '/'));
+
+        return $rows;
+    }
+
+    public static function comparison_recommendations() {
+        $recs = array();
+        $map = array();
+        foreach (self::compare_data() as $r) {
+            $map[$r[0]] = array($r[1], $r[2]);
+        }
+        $check = function ($metric) use ($map) {
+            if (!isset($map[$metric])) return false;
+            $l = $map[$metric][1];
+            if ($l === 'n/a' || $l === 'fetch failed' || $l === 'no <title>') return false;
+            return (string) $map[$metric][0] !== (string) $map[$metric][1];
+        };
+
+        if ($check('Site name')) {
+            $recs[] = array(
+                'severity' => 'info',
+                'title' => 'Site name differs between staging and live',
+                'detail' => 'Staging: "' . $map['Site name'][0] . '" vs live: "' . $map['Site name'][1] . '". After Go Live, live will use the staging name.',
+            );
+        }
+        if ($check('Tagline')) {
+            $recs[] = array(
+                'severity' => 'info',
+                'title' => 'Tagline differs (intentional)',
+                'detail' => 'Staging: "' . $map['Tagline'][0] . '" vs live: "' . $map['Tagline'][1] . '". Left to the owner to confirm before launch.',
+            );
+        }
+        if ($check('Published pages')) {
+            $recs[] = array(
+                'severity' => 'warning',
+                'title' => 'Page counts differ',
+                'detail' => 'Staging has ' . $map['Published pages'][0] . ' published pages; live has ' . $map['Published pages'][1] . '. The cleaned staging set will replace the live set on Go Live.',
+            );
+        }
+        if ($check('Published posts')) {
+            $recs[] = array(
+                'severity' => 'info',
+                'title' => 'Post counts differ',
+                'detail' => 'Staging ' . $map['Published posts'][0] . ' vs live ' . $map['Published posts'][1] . '. Staging is the content source of truth.',
+            );
+        }
+        if ($check('Media files')) {
+            $recs[] = array(
+                'severity' => 'info',
+                'title' => 'Media counts differ',
+                'detail' => 'Staging ' . $map['Media files'][0] . ' vs live ' . $map['Media files'][1] . '. Uploads are copied staging&rarr;live additively, so live keeps any extra files.',
+            );
+        }
+        if ($check('Homepage title')) {
+            $recs[] = array(
+                'severity' => 'warning',
+                'title' => 'Homepage title differs',
+                'detail' => 'Staging: "' . $map['Homepage title'][0] . '" vs live: "' . $map['Homepage title'][1] . '". Confirm this is expected before launch.',
+            );
+        }
+        return $recs;
+    }
+
+    public static function render_compare_html() {
+        $rows = self::compare_data();
+        $out = '<table class="widefat striped" style="max-width:760px;"><thead><tr><th style="width:32%;">Metric</th><th>Staging</th><th>Live</th><th style="width:14%;">Status</th></tr></thead><tbody>';
+        $same = 0;
+        $diff = 0;
+        foreach ($rows as $r) {
+            list($metric, $s, $l) = $r;
+            $equal = (string) $s === (string) $l;
+            $cls = $equal ? '#0a7d32' : '#dba617';
+            $badge = $equal ? 'Match' : 'Differs';
+            if ($equal) $same++; else $diff++;
+            $out .= '<tr><td><strong>' . esc_html($metric) . '</strong></td><td>' . esc_html((string) $s) . '</td><td>' . esc_html((string) $l) . '</td><td><span style="color:' . $cls . ';font-weight:600;">' . $badge . '</span></td></tr>';
+        }
+        $out .= '</tbody></table>';
+        $out .= '<p class="description">' . $same . ' match, ' . $diff . ' differ. Staging is the source of truth for content &mdash; after Go Live, live will reflect the staging value for each "Differs" row. The tagline difference is intentional (left to the owner).</p>';
+        return $out;
+    }
+
+    public static function render_compare() {
+        if (!current_user_can('manage_options')) return;
+        $staging_url = home_url();
+        $live_url = 'https://gabochiedesign.com';
+        ?>
+        <div class="wrap">
+            <?php echo self::tabs('compare'); ?>
+            <h1>Staging vs Live &mdash; Comparison</h1>
+            <p>Read-only comparison between staging (<code><?php echo esc_html($staging_url); ?></code>) and production (<code><?php echo esc_html($live_url); ?></code>). The matrix probes public REST + HTML endpoints; nothing is written. Staging is the content source of truth &mdash; on Go Live the live DB/code is replaced with staging&rsquo;s.</p>
+
+            <h2>Smart Recommendations <button class="button button-small" id="gol-recs-refresh">Refresh</button></h2>
+            <p class="description">General health checks plus staging-vs-live divergences. Fix Errors/Warnings before the push.</p>
+            <div id="gol-recs">
+                <?php echo self::recs_html(array_merge(self::recommendations(), self::comparison_recommendations())); ?>
+            </div>
+
+            <h2>Comparison matrix <button class="button button-small" id="gol-cmp-refresh">Refresh</button></h2>
+            <div id="gol-cmp">
+                <?php echo self::render_compare_html(); ?>
+            </div>
+
+            <h2>Full server probe <button class="button button-small" id="gol-probe">Run review-probe.sh</button></h2>
+            <p class="description">Read-only shell probe (server-side <code>~/deploy/review-probe.sh</code>) that compares DBs, plugins and uploads directly. Runs on demand; output is informational.</p>
+            <pre id="gol-probe-out" style="background:#0d1117;color:#c9d1d9;padding:12px;border-radius:6px;max-height:480px;overflow:auto;font-size:12px;">Click "Run" to load the full probe output.</pre>
+        </div>
+
+        <script><?php echo self::shared_js(); ?></script>
+        <?php
+    }
+
+    public static function ajax_recs_get() {
+        check_ajax_referer('gabochie_go_live_nonce', '_wpnonce');
+        if (!current_user_can('manage_options')) wp_send_json_error(array('message' => 'Unauthorized'), 403);
+        wp_send_json_success(array('html' => self::render_recommendations_html()));
+    }
+
+    public static function ajax_compare_get() {
+        check_ajax_referer('gabochie_go_live_nonce', '_wpnonce');
+        if (!current_user_can('manage_options')) wp_send_json_error(array('message' => 'Unauthorized'), 403);
+        wp_send_json_success(array(
+            'table' => self::render_compare_html(),
+            'recs' => self::recs_html(array_merge(self::recommendations(), self::comparison_recommendations())),
+        ));
+    }
+
+    public static function ajax_compare_probe() {
+        check_ajax_referer('gabochie_go_live_nonce', '_wpnonce');
+        if (!current_user_can('manage_options')) wp_send_json_error(array('message' => 'Unauthorized'), 403);
+        $out = 'Shell probe not available (shell_exec disabled).';
+        if (self::shell_ok()) {
+            $script = self::deploy_dir() . '/review-probe.sh';
+            if (file_exists($script)) {
+                $out = self::run('bash ' . escapeshellarg($script));
+            } else {
+                $out = 'review-probe.sh not found at ' . $script;
+            }
+        }
+        wp_send_json_success(array('output' => $out));
+    }
+
     public static function render_qa() {
         if (!current_user_can('manage_options')) return;
 
@@ -531,6 +777,7 @@ class Gabochie_Go_Live {
         $smoke = self::last_staging_smoke();
         ?>
         <div class="wrap">
+            <?php echo self::tabs('qa'); ?>
             <h1>Release QA &mdash; Enterprise-Grade Test Roadmap</h1>
             <p>Comprehensive testing plan mirrored from <code>enterpris grade testing.txt</code>, for <strong><?php echo esc_html($staging_url); ?></strong> before promotion to production (<code>https://gabochiedesign.com</code>). Work the phases in order (1&rarr;10), then confirm each quality gate passes before running Go Live.</p>
 
@@ -541,6 +788,12 @@ class Gabochie_Go_Live {
                     <tr><th>Auto-deploy runner</th><td><code>app\_dev-tools\deploy\deploy.ps1</code> (push + smoke test)</td></tr>
                 </tbody>
             </table>
+
+            <h2>Smart Recommendations <button class="button button-small" id="gol-recs-refresh">Refresh</button></h2>
+            <p class="description">Auto-generated from the current staging state. Fix the Errors and Warnings below, then work the roadmap and gates.</p>
+            <div id="gol-recs">
+                <?php echo self::render_recommendations_html(); ?>
+            </div>
 
             <h2>12 Quality Gates</h2>
             <p class="description">Nothing promotes to the next stage unless the current gate passes. Gates 1&ndash;9 are automated/test layers; Gate 10 requires stakeholder approval; Gate 11 is your manual approval to push; Gate 12 verifies post-deploy health.</p>
@@ -577,6 +830,7 @@ class Gabochie_Go_Live {
                 cb.prop('disabled', true);
                 $.post(GOL.ajaxUrl, { action: 'gabochie_checklist_toggle', _wpnonce: GOL.nonce, list: list, id: id, done: cb.is(':checked') ? 1 : 0 }, function (r) {
                     loadList(list);
+                    try { localStorage.setItem('gol-touch', String(Date.now())); } catch (e) {}
                 }).fail(function () { cb.prop('disabled', false); });
             }
 
@@ -587,13 +841,16 @@ class Gabochie_Go_Live {
                 if (!window.confirm('Remove this checklist item?')) return;
                 $.post(GOL.ajaxUrl, { action: 'gabochie_checklist_delete', _wpnonce: GOL.nonce, list: list, id: id }, function (r) {
                     loadList(list);
+                    try { localStorage.setItem('gol-touch', String(Date.now())); } catch (e2) {}
                 });
             }
 
             loadList('gates');
             loadList('qa');
+            window.__golReloadAll = function () { loadList('gates'); loadList('qa'); };
         })(jQuery);
         </script>
+        <script><?php echo self::shared_js(); ?></script>
         <?php
     }
 
@@ -619,6 +876,7 @@ class Gabochie_Go_Live {
         $gol_dir = self::deploy_dir();
         ?>
         <div class="wrap">
+            <?php echo self::tabs('golive'); ?>
             <h1>Go Live &mdash; Push Staging to Production</h1>
             <p>Copies <strong>staging</strong> (<code><?php echo esc_html($staging_url); ?></code>) to <strong>production</strong> (<code>https://gabochiedesign.com</code>): code + database, with backups and an automatic smoke test.</p>
 
@@ -633,7 +891,7 @@ class Gabochie_Go_Live {
             <style>.gol-item.gol-done span{text-decoration:line-through;color:#8c8f94;}</style>
             <h2>Release QA <a class="button button-small" href="<?php echo esc_url(admin_url('admin.php?page=gabochie-go-live-qa')); ?>" style="margin-left:8px;">Open Test Roadmap &amp; Quality Gates</a></h2>
             <p class="description">Enterprise-grade test roadmap (Phases 1&ndash;10) and the 12 quality gates. Work them in order before the push.</p>
-            <h2>Smart Recommendations <a class="button button-small" href="javascript:location.reload();" style="margin-left:8px;">Refresh</a></h2>
+            <h2>Smart Recommendations <button class="button button-small" id="gol-recs-refresh">Refresh</button></h2>
             <p class="description">Auto-generated from the current staging state. Fix the Errors and Warnings below, then work the Pre-Sync Configuration checklist.</p>
             <div id="gol-recs">
                 <?php echo self::render_recommendations_html(); ?>
@@ -706,6 +964,7 @@ class Gabochie_Go_Live {
                 cb.prop('disabled', true);
                 $.post(GOL.ajaxUrl, { action: 'gabochie_checklist_toggle', _wpnonce: GOL.nonce, list: list, id: id, done: cb.is(':checked') ? 1 : 0 }, function (r) {
                     loadChecklist(list);
+                    try { localStorage.setItem('gol-touch', String(Date.now())); } catch (e) {}
                 }).fail(function () { cb.prop('disabled', false); });
             }
 
@@ -715,6 +974,7 @@ class Gabochie_Go_Live {
                 $('#gol-new-' + list).val('');
                 $.post(GOL.ajaxUrl, { action: 'gabochie_checklist_add', _wpnonce: GOL.nonce, list: list, text: text }, function (r) {
                     loadChecklist(list);
+                    try { localStorage.setItem('gol-touch', String(Date.now())); } catch (e) {}
                 });
             }
 
@@ -725,6 +985,7 @@ class Gabochie_Go_Live {
                 if (!window.confirm('Remove this checklist item?')) return;
                 $.post(GOL.ajaxUrl, { action: 'gabochie_checklist_delete', _wpnonce: GOL.nonce, list: list, id: id }, function (r) {
                     loadChecklist(list);
+                    try { localStorage.setItem('gol-touch', String(Date.now())); } catch (e2) {}
                 });
             }
 
@@ -774,8 +1035,10 @@ class Gabochie_Go_Live {
             loadChecklist('precheck');
             refresh();
             setInterval(refresh, 15000);
+            window.__golReloadAll = function () { refresh(); loadChecklist('launch'); loadChecklist('precheck'); };
         })(jQuery);
         </script>
+        <script><?php echo self::shared_js(); ?></script>
         <?php
     }
 
