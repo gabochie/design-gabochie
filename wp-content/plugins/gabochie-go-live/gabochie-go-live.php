@@ -152,11 +152,11 @@ class Gabochie_Go_Live {
 
             function refresh() {
                 $.post(GOL.ajaxUrl, { action: 'gabochie_go_live_status', _wpnonce: GOL.nonce }, function (r) {
-                    if (!r || !r.ok) return;
-                    var s = r.status || {};
+                    if (!r || !r.success || !r.data) return;
+                    var s = r.data.status || {};
                     var msg = (s.status || 'unknown') + ' — ' + (s.message || '');
                     $('#gol-status').text(msg);
-                    if (r.log) $('#gol-log').text(r.log);
+                    if (r.data.log) $('#gol-log').text(r.data.log);
                 }).fail(function () {});
             }
 
@@ -166,18 +166,18 @@ class Gabochie_Go_Live {
                 $('#gol-dry, #gol-real').prop('disabled', true);
                 refresh();
                 $.post(GOL.ajaxUrl, { action: 'gabochie_go_live_launch', _wpnonce: GOL.nonce, mode: mode }, function (r) {
-                    if (!r || !r.ok) {
-                        $('#gol-status').text('Failed to launch: ' + (r && r.message ? r.message : 'unknown'));
+                    if (!r || !r.success || !r.data) {
+                        $('#gol-status').text('Failed to launch: ' + (r && r.data && r.data.message ? r.data.message : 'unknown'));
                         GOL.busy = false;
                         $('#gol-dry, #gol-real').prop('disabled', false);
                         return;
                     }
-                    $('#gol-status').text('running — ' + (r.message || 'Go Live started'));
+                    $('#gol-status').text('running — ' + (r.data.message || 'Go Live started'));
                     GOL.poller = setInterval(function () {
                         $.post(GOL.ajaxUrl, { action: 'gabochie_go_live_status', _wpnonce: GOL.nonce }, function (rr) {
-                            if (!rr || !rr.ok) return;
-                            var s = rr.status || {};
-                            if (rr.log) $('#gol-log').text(rr.log);
+                            if (!rr || !rr.success || !rr.data) return;
+                            var s = rr.data.status || {};
+                            if (rr.data.log) $('#gol-log').text(rr.data.log);
                             if (s.status === 'running') {
                                 $('#gol-status').text('running — ' + (s.message || 'Go Live in progress…'));
                                 return;
