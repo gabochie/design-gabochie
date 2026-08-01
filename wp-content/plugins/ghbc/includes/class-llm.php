@@ -21,22 +21,30 @@ class GHBC_LLM {
     }
 
     public function is_ready() {
-        if (in_array($this->provider, ['ollama', 'lmstudio'])) {
+        if ($this->provider === 'ollama') {
             return !empty($this->model);
         }
         return !empty($this->api_key);
     }
 
+    public function configure($provider = null, $key = null, $model = null, $base_url = null) {
+        if ($provider !== null) $this->provider = $provider;
+        if ($key !== null)     $this->api_key   = $key;
+        if ($model !== null)   $this->model     = $model;
+        if ($base_url !== null) $this->base_url = $base_url;
+    }
+
     public function complete($system_prompt, $messages, $tools = []) {
         if (!$this->is_ready()) {
-            $is_local = in_array($this->provider, ['ollama', 'lmstudio']);
+            $is_local = $this->provider === 'ollama';
             return $this->error($is_local ? 'LLM not configured. Set a model name in GhBC Settings.' : 'LLM not configured. Set API key in GhBC Settings.');
         }
         return match ($this->provider) {
             'openai'   => $this->call_openai($system_prompt, $messages, $tools),
+            'mistral'  => $this->call_mistral($system_prompt, $messages, $tools),
+            'grok'     => $this->call_grok($system_prompt, $messages, $tools),
             'gemini'   => $this->call_gemini($system_prompt, $messages, $tools),
-            'ollama',
-            'lmstudio' => $this->call_local_openai($system_prompt, $messages, $tools),
+            'ollama'   => $this->call_local_openai($system_prompt, $messages, $tools),
             default    => $this->call_claude($system_prompt, $messages, $tools),
         };
     }
@@ -138,6 +146,18 @@ class GHBC_LLM {
     }
 
     private function call_openai($system, $messages, $tools) {
+        return $this->call_openai_compatible($system, $messages, $tools, 'https://api.openai.com/v1/chat/completions');
+    }
+
+    private function call_mistral($system, $messages, $tools) {
+        return $this->call_openai_compatible($system, $messages, $tools, 'https://api.mistral.ai/v1/chat/completions');
+    }
+
+    private function call_grok($system, $messages, $tools) {
+        return $this->call_openai_compatible($system, $messages, $tools, 'https://api.x.ai/v1/chat/completions');
+    }
+
+    private function call_openai_compatible($system, $messages, $tools, $endpoint) {
         $body = [
             'model'       => $this->model,
             'messages'    => array_merge(
@@ -150,7 +170,7 @@ class GHBC_LLM {
             $body['tools'] = $tools;
         }
 
-        $response = wp_remote_post('https://api.openai.com/v1/chat/completions', [
+        $response = wp_remote_post($endpoint, [
             'headers' => [
                 'authorization' => 'Bearer ' . $this->api_key,
                 'content-type'  => 'application/json',
@@ -160,7 +180,7 @@ class GHBC_LLM {
         ]);
 
         if (is_wp_error($response)) {
-            return $this->error('OpenAI API error: ' . $response->get_error_message());
+            return $this->error('API error: ' . $response->get_error_message());
         }
 
         $data = json_decode(wp_remote_retrieve_body($response), true);
@@ -257,7 +277,7 @@ class GHBC_LLM {
     }
 
     public function tool_call_to_message($tool_call, $result) {
-        if (in_array($this->provider, ['openai', 'ollama', 'lmstudio'])) {
+        if (in_array($this->provider, ['openai', 'mistral', 'grok', 'ollama'])) {
             return [
                 'role'       => 'tool',
                 'tool_call_id' => $tool_call['id'],

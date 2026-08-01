@@ -248,30 +248,31 @@ class GHBC_Core {
                         <td>
                             <select name="llm_provider" id="llm-provider">
                                 <option value="claude" <?php selected($provider, 'claude'); ?>>Claude (Anthropic)</option>
-                                <option value="openai" <?php selected($provider, 'openai'); ?>>OpenAI GPT-4o</option>
+                                <option value="openai" <?php selected($provider, 'openai'); ?>>OpenAI</option>
                                 <option value="gemini" <?php selected($provider, 'gemini'); ?>>Gemini (Google)</option>
+                                <option value="mistral" <?php selected($provider, 'mistral'); ?>>Mistral AI</option>
+                                <option value="grok" <?php selected($provider, 'grok'); ?>>Grok (xAI)</option>
                                 <option value="ollama" <?php selected($provider, 'ollama'); ?>>Ollama (Local)</option>
-                                <option value="lmstudio" <?php selected($provider, 'lmstudio'); ?>>LM Studio (Local)</option>
                             </select>
-                            <p class="description" id="local-hint" style="<?php echo in_array($provider, ['ollama', 'lmstudio']) ? '' : 'display:none;'; ?>color:#666;margin-top:4px;">&#128161; Connects to a local API. No API key required.</p>
+                            <p class="description" id="local-hint" style="<?php echo $provider === 'ollama' ? '' : 'display:none;'; ?>color:#666;margin-top:4px;">&#128161; Connects to a local Ollama API. No API key required.</p>
                         </td>
                     </tr>
                     <tr>
                         <th>API Key</th>
                         <td><input type="password" name="llm_key" value="<?php echo esc_attr($key); ?>" class="regular-text" id="llm-key">
-                            <p class="description" id="local-key-hint" style="<?php echo in_array($provider, ['ollama', 'lmstudio']) ? '' : 'display:none;'; ?>color:#999;margin-top:4px;">Not needed for local endpoints. Leave blank.</p>
+                            <p class="description" id="local-key-hint" style="<?php echo $provider === 'ollama' ? '' : 'display:none;'; ?>color:#999;margin-top:4px;">Not needed for local endpoints. Leave blank.</p>
                         </td>
                     </tr>
-                    <tr id="base-url-row" style="<?php echo in_array($provider, ['ollama', 'lmstudio']) ? '' : 'display:none;'; ?>">
+                    <tr id="base-url-row" style="<?php echo $provider === 'ollama' ? '' : 'display:none;'; ?>">
                         <th>Local Base URL</th>
                         <td><input type="text" name="llm_base_url" value="<?php echo esc_attr($base_url ?: 'http://localhost:11434'); ?>" class="regular-text" id="llm-base-url" placeholder="http://localhost:11434">
-                            <p class="description" style="color:#666;margin-top:4px;">For Ollama default: <code>http://localhost:11434</code>. For LM Studio default: <code>http://localhost:1234</code></p>
+                            <p class="description" style="color:#666;margin-top:4px;">Ollama default: <code>http://localhost:11434</code>. If Ollama runs on the same host as the site, leave as-is.</p>
                         </td>
                     </tr>
                     <tr>
                         <th>Model</th>
-                        <td><input type="text" name="llm_model" value="<?php echo esc_attr($model); ?>" class="regular-text" id="llm-model">
-                            <p class="description" style="color:#666;margin-top:4px;">For local providers, the model name running on your server (e.g., <code>gemma-4-9b-it</code>, <code>llama3.2</code>, <code>mistral</code>).</p>
+                        <td><input type="text" name="llm_model" value="<?php echo esc_attr($model); ?>" class="regular-text" id="llm-model" placeholder="claude-sonnet-4-20250514">
+                            <p class="description" style="color:#666;margin-top:4px;">Cloud defaults fill in automatically. For Ollama, use the model name running locally (e.g., <code>llama3.2</code>, <code>qwen2.5</code>, <code>mistral</code>).</p>
                         </td>
                     </tr>
                     <tr>
@@ -292,20 +293,37 @@ class GHBC_Core {
         </div>
         <script>
         jQuery(function($) {
-            var $provider = $('#llm-provider'), $baseUrl = $('#llm-base-url');
-            function isLocal() { var v = $provider.val(); return v === 'ollama' || v === 'lmstudio'; }
+            var $provider = $('#llm-provider'), $baseUrl = $('#llm-base-url'), $model = $('#llm-model');
+            var modelDefaults = {
+                claude:  'claude-sonnet-4-20250514',
+                openai:  'gpt-4o',
+                gemini:  'gemini-2.5-pro',
+                mistral: 'mistral-large-latest',
+                grok:    'grok-3',
+                ollama:  'llama3.2'
+            };
+            function isLocal() { return $provider.val() === 'ollama'; }
             function toggleLocal() {
                 var v = $provider.val();
                 $('#local-hint, #local-key-hint').toggle(isLocal());
                 $('#base-url-row').toggle(isLocal());
-                if (v === 'ollama' && (!$baseUrl.val() || $baseUrl.val() === 'http://localhost:1234')) {
+                if (isLocal() && (!$baseUrl.val() || $baseUrl.val() === 'http://localhost:1234')) {
                     $baseUrl.val('http://localhost:11434');
-                } else if (v === 'lmstudio' && (!$baseUrl.val() || $baseUrl.val() === 'http://localhost:11434')) {
-                    $baseUrl.val('http://localhost:1234');
                 }
             }
-            $provider.on('change', toggleLocal);
+            function presetModel() {
+                var v = $provider.val();
+                var current = $model.val().trim();
+                var prevDefault = modelDefaults[$provider.data('last')] || '';
+                if (modelDefaults[v] && (!current || current === prevDefault)) {
+                    $model.val(modelDefaults[v]);
+                }
+                $provider.data('last', v);
+            }
+            $provider.on('change', function() { toggleLocal(); presetModel(); });
+            $provider.data('last', $provider.val());
             toggleLocal();
+            presetModel();
 
             $('#ghbc-test-llm').on('click', function() {
                 var btn = $(this), result = $('#ghbc-test-result');

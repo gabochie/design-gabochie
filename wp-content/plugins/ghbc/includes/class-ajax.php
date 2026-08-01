@@ -363,10 +363,10 @@ class GHBC_Ajax {
         $key      = sanitize_text_field($_POST['key'] ?? '');
         $base_url = untrailingslashit(sanitize_text_field($_POST['base_url'] ?? ''));
 
-        if (in_array($provider, ['ollama', 'lmstudio'])) {
-            $url = $base_url . '/v1/chat/completions';
+        if ($provider === 'ollama') {
+            $url = ($base_url ?: 'http://localhost:11434') . '/v1/chat/completions';
             $body = [
-                'model'    => $model ?: 'gemma-4-9b-it',
+                'model'    => $model ?: 'llama3.2',
                 'messages' => [['role' => 'user', 'content' => 'Reply with just the word: ok']],
                 'stream'   => false,
             ];
@@ -378,6 +378,7 @@ class GHBC_Ajax {
             ]);
         } else {
             $llm = GHBC_LLM::instance();
+            $llm->configure($provider, $key, $model, $base_url);
             $result = $llm->complete(
                 'You are a test assistant.',
                 [['role' => 'user', 'content' => 'Reply with just the word: ok']]
