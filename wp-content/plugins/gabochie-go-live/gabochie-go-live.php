@@ -49,6 +49,14 @@ class Gabochie_Go_Live {
             'dashicons-migrate',
             3
         );
+        add_submenu_page(
+            'gabochie-go-live',
+            'Release QA',
+            'Release QA',
+            'manage_options',
+            'gabochie-go-live-qa',
+            array(__CLASS__, 'render_qa')
+        );
     }
 
     public static function shell_ok() {
@@ -101,7 +109,10 @@ class Gabochie_Go_Live {
     }
 
     public static function checklist_option($list) {
-        return $list === 'precheck' ? 'gabochie_precheck_list' : 'gabochie_launch_checklist';
+        if ($list === 'precheck') return 'gabochie_precheck_list';
+        if ($list === 'qa') return 'gabochie_qa_roadmap';
+        if ($list === 'gates') return 'gabochie_qa_gates';
+        return 'gabochie_launch_checklist';
     }
 
     public static function checklist_get($list = 'launch') {
@@ -128,6 +139,68 @@ class Gabochie_Go_Live {
     }
 
     public static function checklist_defaults($list = 'launch') {
+        if ($list === 'qa') {
+            return array(
+                array('id' => 'qa-1-lint', 'text' => 'Phase 1 — Code Quality: PHP lint sweep (php -l) over tracked plugins + theme; no parse/fatal errors.', 'done' => 0),
+                array('id' => 'qa-1-wpcs', 'text' => 'Phase 1 — Code Quality: PHPCS with WordPress Coding Standards (naming, formatting, escaping, sanitization, security).', 'done' => 0),
+                array('id' => 'qa-1-phpstan', 'text' => 'Phase 1 — Code Quality: PHPStan static analysis (undefined vars, bad returns, unreachable code).', 'done' => 0),
+                array('id' => 'qa-2-unit', 'text' => 'Phase 2 — Unit Tests: PHPUnit for our plugins (calculate_total, create_invoice, send_email equivalents).', 'done' => 0),
+                array('id' => 'qa-2-integration', 'text' => 'Phase 2 — Integration Tests: plugin ↔ DB ↔ WooCommerce ↔ email ↔ API chains.', 'done' => 0),
+                array('id' => 'qa-2-functional', 'text' => 'Phase 2 — WP Functional Tests: create/edit/save/publish/delete post (WordPress Testing Framework).', 'done' => 0),
+                array('id' => 'qa-2-theme', 'text' => 'Phase 2 — Theme Tests: template loading, single, archive, search, 404, category, tags, pagination.', 'done' => 0),
+                array('id' => 'qa-2-gutenberg', 'text' => 'Phase 2 — Gutenberg Tests: custom blocks, editor, block rendering, reusable blocks.', 'done' => 0),
+                array('id' => 'qa-2-compat', 'text' => 'Phase 2 — Plugin Compatibility: WooCommerce, Yoast, Elementor/Kadence, contact forms, caching plugins.', 'done' => 0),
+                array('id' => 'qa-2-phpver', 'text' => 'Phase 2 — PHP Version Compatibility: confirm 8.1/8.2/8.3 behavior (server is 8.3.31).', 'done' => 0),
+                array('id' => 'qa-2-dbmig', 'text' => 'Phase 2 — Database Migration Tests: schema updates, search-replace correctness, rollback.', 'done' => 0),
+                array('id' => 'qa-3-security', 'text' => 'Phase 3 — Security Tests: SQLi/XSS/CSRF/escaping audit, capability checks, role matrix (admin/editor/author/subscriber/guest).', 'done' => 0),
+                array('id' => 'qa-3-sanitize', 'text' => 'Phase 3 — Sanitization & Escaping Tests: sanitize_text_field/email/intval; esc_url/esc_html/esc_attr on output.', 'done' => 0),
+                array('id' => 'qa-3-rest', 'text' => 'Phase 3 — REST API Tests: endpoints, auth, permissions, validation.', 'done' => 0),
+                array('id' => 'qa-3-ajax', 'text' => 'Phase 3 — AJAX Tests: admin-ajax, nonces, responses, timeouts.', 'done' => 0),
+                array('id' => 'qa-4-perf', 'text' => 'Phase 4 — Performance Tests: page load, TTFB, queries, memory, object cache/OPcache.', 'done' => 0),
+                array('id' => 'qa-4-query', 'text' => 'Phase 4 — Database Query Tests: Query Monitor for duplicate/slow/N+1 queries, missing indexes.', 'done' => 0),
+                array('id' => 'qa-4-leaks', 'text' => 'Phase 4 — Memory Leak Tests: memory usage, long-running requests, recursion.', 'done' => 0),
+                array('id' => 'qa-4-errors', 'text' => 'Phase 4 — Error Log Tests: WP_DEBUG/WP_DEBUG_LOG; 0 warnings, notices, fatals, deprecated.', 'done' => 0),
+                array('id' => 'qa-5-browser', 'text' => 'Phase 5 — Browser Tests: Chrome, Firefox, Safari, Edge, mobile browsers.', 'done' => 0),
+                array('id' => 'qa-5-responsive', 'text' => 'Phase 5 — Responsive Tests: desktop, tablet, phone, landscape, portrait.', 'done' => 0),
+                array('id' => 'qa-5-a11y', 'text' => 'Phase 5 — Accessibility Tests: WCAG, keyboard nav, screen readers, contrast, alt text, focus order, ARIA.', 'done' => 0),
+                array('id' => 'qa-5-seo', 'text' => 'Phase 5 — SEO Tests: meta, Open Graph, JSON-LD, robots.txt, sitemap, canonical.', 'done' => 0),
+                array('id' => 'qa-5-links', 'text' => 'Phase 5 — Link Tests: broken links, redirects, 404s, menus, breadcrumbs.', 'done' => 0),
+                array('id' => 'qa-5-images', 'text' => 'Phase 5 — Image Tests: lazy loading, responsive images, WebP/AVIF, compression, sizes.', 'done' => 0),
+                array('id' => 'qa-5-assets', 'text' => 'Phase 5 — Asset Tests: CSS, JS, fonts, minification, bundling, cache busting.', 'done' => 0),
+                array('id' => 'qa-5-build', 'text' => 'Phase 5 — Build Tests: npm install/build/prod with no errors (if any frontend build exists).', 'done' => 0),
+                array('id' => 'qa-5-js', 'text' => 'Phase 5 — JavaScript Tests: Jest/Vitest for components, utilities, frontend logic.', 'done' => 0),
+                array('id' => 'qa-6-e2e', 'text' => 'Phase 6 — E2E Tests (Playwright/Cypress): homepage → register → login → purchase → checkout → payment → logout.', 'done' => 0),
+                array('id' => 'qa-6-woo', 'text' => 'Phase 6 — WooCommerce Tests: cart, coupons, taxes, shipping, payment, refunds, emails, inventory, orders.', 'done' => 0),
+                array('id' => 'qa-6-pmpro', 'text' => 'Phase 6 — PMPro Tests: signup → membership level assignment → login redirect → billing.', 'done' => 0),
+                array('id' => 'qa-6-ghbc', 'text' => 'Phase 6 — GhBC Tests: test connection (Claude), chat round-trip, form submission.', 'done' => 0),
+                array('id' => 'qa-6-multisite', 'text' => 'Phase 6 — Multisite Tests (if applicable): site creation, user roles, network activation.', 'done' => 0),
+                array('id' => 'qa-6-i18n', 'text' => 'Phase 6 — Localization Tests: translation, RTL, language switching.', 'done' => 0),
+                array('id' => 'qa-7-backup', 'text' => 'Phase 7 — Backup & Restore Tests: backup, restore, DB import, media integrity.', 'done' => 0),
+                array('id' => 'qa-7-deploy', 'text' => 'Phase 7 — Deployment Simulation: git pull, cache clear, activate/deactivate plugin, rollback.', 'done' => 0),
+                array('id' => 'qa-7-regression', 'text' => 'Phase 7 — Regression Tests: forms submit, menus work, login/logout, templates render.', 'done' => 0),
+                array('id' => 'qa-8-smoke', 'text' => 'Phase 8 — Manual Smoke Test (final walkthrough): homepage, nav, login/logout, forms, search, admin, media upload, plugin toggle, business workflows.', 'done' => 0),
+                array('id' => 'qa-8-uat', 'text' => 'Phase 8 — UAT: stakeholder + business sign-off on staging before promotion.', 'done' => 0),
+                array('id' => 'qa-9-preprod', 'text' => 'Phase 9 — Pre-Production: production backup, rollback package, maintenance window, monitoring, deployment approval, release tag.', 'done' => 0),
+                array('id' => 'qa-10-post', 'text' => 'Phase 10 — Production: deploy, DB migration, clear caches, warm cache, health check, smoke test, verify payments/forms/login/search/APIs.', 'done' => 0),
+                array('id' => 'qa-10-monitor', 'text' => 'Phase 10 — Post-Production: real-time monitoring (errors, performance, security, uptime), analytics verification, backup verification, customer feedback → bug tickets.', 'done' => 0),
+            );
+        }
+        if ($list === 'gates') {
+            return array(
+                array('id' => 'gate-1', 'text' => 'Gate 1 — Code compiles successfully (PHP lint, no parse/fatal errors).', 'done' => 0),
+                array('id' => 'gate-2', 'text' => 'Gate 2 — Static analysis passes (PHPStan).', 'done' => 0),
+                array('id' => 'gate-3', 'text' => 'Gate 3 — Coding standards pass (PHPCS/WPCS).', 'done' => 0),
+                array('id' => 'gate-4', 'text' => 'Gate 4 — Unit tests pass (100% required tests).', 'done' => 0),
+                array('id' => 'gate-5', 'text' => 'Gate 5 — Integration tests pass.', 'done' => 0),
+                array('id' => 'gate-6', 'text' => 'Gate 6 — E2E tests pass (Playwright/Cypress).', 'done' => 0),
+                array('id' => 'gate-7', 'text' => 'Gate 7 — No critical security findings.', 'done' => 0),
+                array('id' => 'gate-8', 'text' => 'Gate 8 — Performance budget met.', 'done' => 0),
+                array('id' => 'gate-9', 'text' => 'Gate 9 — Accessibility requirements met.', 'done' => 0),
+                array('id' => 'gate-10', 'text' => 'Gate 10 — UAT approved.', 'done' => 0),
+                array('id' => 'gate-11', 'text' => 'Gate 11 — Production deployment approved.', 'done' => 0),
+                array('id' => 'gate-12', 'text' => 'Gate 12 — Post-deployment health checks pass.', 'done' => 0),
+            );
+        }
         if ($list === 'precheck') {
             return array(
                 array('id' => 'ps-general', 'text' => 'General Settings: site title/tagline, timezone (Africa/Accra), date & time format.', 'done' => 0),
@@ -182,22 +255,74 @@ class Gabochie_Go_Live {
         $total = count($items);
         $pct = $total ? (int) round(100 * $done / $total) : 0;
         $list_attr = esc_attr($list);
+
+        if ($list === 'qa') {
+            return self::render_qa_roadmap_html($items, $done, $total, $pct);
+        }
+
         $out = '<div class="gol-check-progress"><span>Progress: ' . $done . ' / ' . $total . ' (' . $pct . '%)</span>'
              . '<div style="background:#e5e5e5;border-radius:99px;height:10px;margin-top:6px;max-width:520px;"><div style="background:#46b450;height:10px;border-radius:99px;width:' . $pct . '%;"></div></div></div>';
         $out .= '<div id="gol-' . $list_attr . '-items">';
         foreach ($items as $i) {
-            $cid = esc_attr($i['id']);
-            $ctext = esc_html($i['text']);
-            $cls = !empty($i['done']) ? 'gol-done' : '';
-            $checked = !empty($i['done']) ? 'checked' : '';
-            $out .= '<label class="gol-item ' . $cls . '" style="display:flex;gap:8px;align-items:flex-start;padding:6px 4px;border-bottom:1px solid #f0f0f0;max-width:720px;">'
-                  . '<input type="checkbox" data-id="' . $cid . '" ' . $checked . ' style="margin-top:2px;">'
-                  . '<span style="flex:1;">' . $ctext . '</span>'
-                  . '<a href="#" class="gol-del" data-list="' . $list_attr . '" data-id="' . $cid . '" title="Remove item" style="text-decoration:none;color:#b32d2e;">&#10005;</a>'
-                  . '</label>';
+            $out .= self::checklist_item_html($i, $list_attr);
         }
         $out .= '</div>';
         return $out;
+    }
+
+    public static function render_qa_roadmap_html($items, $done, $total, $pct) {
+        $groups = array();
+        foreach ($items as $i) {
+            $g = 'Other';
+            if (preg_match('/^qa-(\d+)-/', $i['id'], $m)) {
+                $n = (int) $m[1];
+                $names = array(
+                    1 => 'Phase 1 — Code Quality',
+                    2 => 'Phase 2 — Unit / Integration / Functional',
+                    3 => 'Phase 3 — Security',
+                    4 => 'Phase 4 — Performance & Logs',
+                    5 => 'Phase 5 — Browser, Responsive, Accessibility, SEO',
+                    6 => 'Phase 6 — E2E, WooCommerce, PMPro, GhBC',
+                    7 => 'Phase 7 — Backup, Deployment, Regression',
+                    8 => 'Phase 8 — Manual Smoke + UAT',
+                    9 => 'Phase 9 — Pre-Production',
+                    10 => 'Phase 10 — Production & Post-Production',
+                );
+                $g = isset($names[$n]) ? $names[$n] : 'Other';
+            }
+            if (!isset($groups[$g])) $groups[$g] = array();
+            $groups[$g][] = $i;
+        }
+        $out = '<div class="gol-check-progress"><span>Roadmap progress: ' . $done . ' / ' . $total . ' checks (' . $pct . '%)</span>'
+             . '<div style="background:#e5e5e5;border-radius:99px;height:10px;margin-top:6px;max-width:520px;"><div style="background:#46b450;height:10px;border-radius:99px;width:' . $pct . '%;"></div></div></div>';
+        $out .= '<div id="gol-qa-items">';
+        $order = 1;
+        foreach ($groups as $g => $gitems) {
+            $gdone = 0;
+            foreach ($gitems as $i) {
+                if (!empty($i['done'])) $gdone++;
+            }
+            $gpct = $gitems ? (int) round(100 * $gdone / count($gitems)) : 0;
+            $out .= '<h4 style="margin:18px 0 4px;font-size:14px;">' . esc_html($g)
+                  . ' <span style="font-weight:400;color:#8c8f94;font-size:12px;">— ' . $gdone . ' / ' . count($gitems) . ' (' . $gpct . '%)</span></h4>';
+            foreach ($gitems as $i) {
+                $out .= self::checklist_item_html($i, 'qa');
+            }
+        }
+        $out .= '</div>';
+        return $out;
+    }
+
+    public static function checklist_item_html($i, $list_attr) {
+        $cid = esc_attr($i['id']);
+        $ctext = esc_html($i['text']);
+        $cls = !empty($i['done']) ? 'gol-done' : '';
+        $checked = !empty($i['done']) ? 'checked' : '';
+        return '<label class="gol-item ' . $cls . '" style="display:flex;gap:8px;align-items:flex-start;padding:6px 4px;border-bottom:1px solid #f0f0f0;max-width:720px;">'
+             . '<input type="checkbox" data-id="' . $cid . '" ' . $checked . ' style="margin-top:2px;">'
+             . '<span style="flex:1;">' . $ctext . '</span>'
+             . '<a href="#" class="gol-del" data-list="' . $list_attr . '" data-id="' . $cid . '" title="Remove item" style="text-decoration:none;color:#b32d2e;">&#10005;</a>'
+             . '</label>';
     }
 
     public static function recommendations() {
@@ -396,6 +521,82 @@ class Gabochie_Go_Live {
         return $out;
     }
 
+    public static function render_qa() {
+        if (!current_user_can('manage_options')) return;
+
+        $staging_url = home_url();
+        $ajax_url = admin_url('admin-ajax.php');
+        $nonce = wp_create_nonce('gabochie_go_live_nonce');
+        $commit = self::staging_commit();
+        $smoke = self::last_staging_smoke();
+        ?>
+        <div class="wrap">
+            <h1>Release QA &mdash; Enterprise-Grade Test Roadmap</h1>
+            <p>Comprehensive testing plan mirrored from <code>enterpris grade testing.txt</code>, for <strong><?php echo esc_html($staging_url); ?></strong> before promotion to production (<code>https://gabochiedesign.com</code>). Work the phases in order (1&rarr;10), then confirm each quality gate passes before running Go Live.</p>
+
+            <table class="widefat striped" style="max-width:720px;">
+                <tbody>
+                    <tr><th>Deployed staging commit</th><td><code><?php echo esc_html($commit); ?></code></td></tr>
+                    <tr><th>Last staging smoke test</th><td><?php echo esc_html($smoke); ?></td></tr>
+                    <tr><th>Auto-deploy runner</th><td><code>app\_dev-tools\deploy\deploy.ps1</code> (push + smoke test)</td></tr>
+                </tbody>
+            </table>
+
+            <h2>12 Quality Gates</h2>
+            <p class="description">Nothing promotes to the next stage unless the current gate passes. Gates 1&ndash;9 are automated/test layers; Gate 10 requires stakeholder approval; Gate 11 is your manual approval to push; Gate 12 verifies post-deploy health.</p>
+            <div id="gol-gates">
+                <?php echo self::checklist_render_html('gates'); ?>
+            </div>
+
+            <h2>Chronological Test Roadmap</h2>
+            <p class="description">Phase 1&rarr;10 in the order the spec prescribes, ending with production + post-production. Check items off as each test is run. The phases are grouped below in chronological order.</p>
+            <div id="gol-qa">
+                <?php echo self::checklist_render_html('qa'); ?>
+            </div>
+        </div>
+
+        <style>.gol-item.gol-done span{text-decoration:line-through;color:#8c8f94;}</style>
+        <script>
+        (function ($) {
+            var GOL = {
+                ajaxUrl: <?php echo wp_json_encode($ajax_url); ?>,
+                nonce: <?php echo wp_json_encode($nonce); ?>
+            };
+
+            function loadList(list) {
+                $.post(GOL.ajaxUrl, { action: 'gabochie_checklist_get', _wpnonce: GOL.nonce, list: list }, function (r) {
+                    if (!r || !r.success || !r.data || !r.data.html) return;
+                    $('#gol-' + list).html(r.data.html);
+                    $('#gol-' + list + ' input[type=checkbox]').on('change', function () { toggleItem(list, this); });
+                    $('#gol-' + list + ' .gol-del').on('click', delItem);
+                }).fail(function () {});
+            }
+
+            function toggleItem(list, el) {
+                var cb = $(el), id = cb.data('id');
+                cb.prop('disabled', true);
+                $.post(GOL.ajaxUrl, { action: 'gabochie_checklist_toggle', _wpnonce: GOL.nonce, list: list, id: id, done: cb.is(':checked') ? 1 : 0 }, function (r) {
+                    loadList(list);
+                }).fail(function () { cb.prop('disabled', false); });
+            }
+
+            function delItem(e) {
+                e.preventDefault();
+                var list = $(this).data('list') || 'qa';
+                var id = $(this).data('id');
+                if (!window.confirm('Remove this checklist item?')) return;
+                $.post(GOL.ajaxUrl, { action: 'gabochie_checklist_delete', _wpnonce: GOL.nonce, list: list, id: id }, function (r) {
+                    loadList(list);
+                });
+            }
+
+            loadList('gates');
+            loadList('qa');
+        })(jQuery);
+        </script>
+        <?php
+    }
+
     public static function render() {
         if (!current_user_can('manage_options')) return;
 
@@ -430,6 +631,8 @@ class Gabochie_Go_Live {
             </table>
 
             <style>.gol-item.gol-done span{text-decoration:line-through;color:#8c8f94;}</style>
+            <h2>Release QA <a class="button button-small" href="<?php echo esc_url(admin_url('admin.php?page=gabochie-go-live-qa')); ?>" style="margin-left:8px;">Open Test Roadmap &amp; Quality Gates</a></h2>
+            <p class="description">Enterprise-grade test roadmap (Phases 1&ndash;10) and the 12 quality gates. Work them in order before the push.</p>
             <h2>Smart Recommendations <a class="button button-small" href="javascript:location.reload();" style="margin-left:8px;">Refresh</a></h2>
             <p class="description">Auto-generated from the current staging state. Fix the Errors and Warnings below, then work the Pre-Sync Configuration checklist.</p>
             <div id="gol-recs">
@@ -619,7 +822,8 @@ class Gabochie_Go_Live {
 
     public static function requested_list() {
         $list = isset($_POST['list']) ? sanitize_key($_POST['list']) : 'launch';
-        return $list === 'precheck' ? 'precheck' : 'launch';
+        $allowed = array('launch', 'precheck', 'qa', 'gates');
+        return in_array($list, $allowed, true) ? $list : 'launch';
     }
 
     public static function ajax_checklist_get() {
