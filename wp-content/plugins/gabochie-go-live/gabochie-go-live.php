@@ -759,7 +759,7 @@ class Gabochie_Go_Live {
         if (self::shell_ok()) {
             $script = self::deploy_dir() . '/review-probe.sh';
             if (file_exists($script)) {
-                $out = self::run('bash ' . escapeshellarg($script));
+                $out = self::run('PATH=/usr/local/sbin:/usr/local/bin:/usr/bin:/bin bash ' . escapeshellarg($script));
             } else {
                 $out = 'review-probe.sh not found at ' . $script;
             }
