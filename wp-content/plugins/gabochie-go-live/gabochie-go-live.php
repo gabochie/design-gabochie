@@ -100,16 +100,41 @@ class Gabochie_Go_Live {
         return self::run('git --git-dir=' . escapeshellarg($dir . '/gabochiedesign.git') . ' rev-parse --short main 2>/dev/null') ?: 'n/a';
     }
 
-    public static function checklist_get() {
-        $items = get_option('gabochie_launch_checklist');
+    public static function checklist_option($list) {
+        return $list === 'precheck' ? 'gabochie_precheck_list' : 'gabochie_launch_checklist';
+    }
+
+    public static function checklist_get($list = 'launch') {
+        $opt = self::checklist_option($list);
+        $items = get_option($opt);
         if (!is_array($items)) {
-            $items = self::checklist_defaults();
-            update_option('gabochie_launch_checklist', $items, false);
+            $items = self::checklist_defaults($list);
+            update_option($opt, $items, false);
         }
         return $items;
     }
 
-    public static function checklist_defaults() {
+    public static function checklist_defaults($list = 'launch') {
+        if ($list === 'precheck') {
+            return array(
+                array('id' => 'ps-general', 'text' => 'General Settings: site title/tagline, timezone (Africa/Accra), date & time format.', 'done' => 0),
+                array('id' => 'ps-permalinks', 'text' => 'Permalinks: pretty (Post name) enabled — no plain query-string URLs.', 'done' => 0),
+                array('id' => 'ps-woo', 'text' => 'WooCommerce Settings: store address, currency (GHS), tax & unit preferences.', 'done' => 0),
+                array('id' => 'ps-woopay', 'text' => 'WooCommerce payments: enable/configure gateways (Stripe / MTN MoMo) and run a test checkout.', 'done' => 0),
+                array('id' => 'ps-wooshipping', 'text' => 'WooCommerce shipping zones & methods configured.', 'done' => 0),
+                array('id' => 'ps-pmpro', 'text' => 'PMPro membership levels: name, price, billing cycle, currency (GHS).', 'done' => 0),
+                array('id' => 'ps-pmpropay', 'text' => 'PMPro payment settings: gateway, test/live mode, checkout page.', 'done' => 0),
+                array('id' => 'ps-ghbc', 'text' => 'GhBC LLM: API key verified via Test Connection (provider is Claude).', 'done' => 0),
+                array('id' => 'ps-email', 'text' => 'Email: from name/address and SMTP/transactional mail (FluentCRM/Brevo) configured + test email delivered.', 'done' => 0),
+                array('id' => 'ps-seo', 'text' => 'SEO: Yoast site meta, social profiles, sitemap, robots.txt verified.', 'done' => 0),
+                array('id' => 'ps-analytics', 'text' => 'Analytics: Site Kit / Google Analytics / Search Console connected.', 'done' => 0),
+                array('id' => 'ps-push', 'text' => 'Web push: WonderPush configured + test notification sent.', 'done' => 0),
+                array('id' => 'ps-cache', 'text' => 'LiteSpeed Cache: purge + verify caching works on staging.', 'done' => 0),
+                array('id' => 'ps-backup', 'text' => 'Backups: full staging backup/DB export saved before Go Live.', 'done' => 0),
+                array('id' => 'ps-security', 'text' => 'Security: strong admin passwords, two-factor, login protection.', 'done' => 0),
+                array('id' => 'ps-dns', 'text' => 'DNS/Email deliverability: SPF/DKIM for no-reply@gabochiedesign.com in cPanel.', 'done' => 0),
+            );
+        }
         return array(
             array('id' => 'cleanup', 'text' => 'Staging cleaned to professional standard: 50 pages (dupes/test/drafts deleted), blogname, from-email, canonical My Account page.', 'done' => 1),
             array('id' => 'ghbc', 'text' => 'GhBC providers updated (Claude/OpenAI/Gemini/Mistral/Grok/Ollama, LM Studio removed) — deployed as commit f9cbdc0f.', 'done' => 1),
@@ -125,21 +150,22 @@ class Gabochie_Go_Live {
         );
     }
 
-    public static function checklist_save($items) {
-        update_option('gabochie_launch_checklist', $items, false);
+    public static function checklist_save($items, $list = 'launch') {
+        update_option(self::checklist_option($list), $items, false);
     }
 
-    public static function checklist_render_html() {
-        $items = self::checklist_get();
+    public static function checklist_render_html($list = 'launch') {
+        $items = self::checklist_get($list);
         $done = 0;
         foreach ($items as $i) {
             if (!empty($i['done'])) $done++;
         }
         $total = count($items);
         $pct = $total ? (int) round(100 * $done / $total) : 0;
+        $list_attr = esc_attr($list);
         $out = '<div class="gol-check-progress"><span>Progress: ' . $done . ' / ' . $total . ' (' . $pct . '%)</span>'
              . '<div style="background:#e5e5e5;border-radius:99px;height:10px;margin-top:6px;max-width:520px;"><div style="background:#46b450;height:10px;border-radius:99px;width:' . $pct . '%;"></div></div></div>';
-        $out .= '<div id="gol-checklist-items">';
+        $out .= '<div id="gol-' . $list_attr . '-items">';
         foreach ($items as $i) {
             $cid = esc_attr($i['id']);
             $ctext = esc_html($i['text']);
@@ -148,7 +174,7 @@ class Gabochie_Go_Live {
             $out .= '<label class="gol-item ' . $cls . '" style="display:flex;gap:8px;align-items:flex-start;padding:6px 4px;border-bottom:1px solid #f0f0f0;max-width:720px;">'
                   . '<input type="checkbox" data-id="' . $cid . '" ' . $checked . ' style="margin-top:2px;">'
                   . '<span style="flex:1;">' . $ctext . '</span>'
-                  . '<a href="#" class="gol-del" data-id="' . $cid . '" title="Remove item" style="text-decoration:none;color:#b32d2e;">&#10005;</a>'
+                  . '<a href="#" class="gol-del" data-list="' . $list_attr . '" data-id="' . $cid . '" title="Remove item" style="text-decoration:none;color:#b32d2e;">&#10005;</a>'
                   . '</label>';
         }
         $out .= '</div>';
@@ -189,13 +215,23 @@ class Gabochie_Go_Live {
             </table>
 
             <style>.gol-item.gol-done span{text-decoration:line-through;color:#8c8f94;}</style>
+            <h2>Pre-Sync Configuration</h2>
+            <p class="description">Settings to finish on staging before the push so live goes out fully configured (WooCommerce, PMPro, GhBC, email, SEO, analytics, cache, security…). Check items off as you complete them; add your own with the box below.</p>
+            <div id="gol-precheck">
+                <?php echo self::checklist_render_html('precheck'); ?>
+                <p style="margin-top:10px;">
+                    <input type="text" id="gol-new-precheck" placeholder="Add a pre-sync config item…" style="width:420px;max-width:100%;">
+                    <button class="button" id="gol-add-precheck">Add</button>
+                </p>
+            </div>
+
             <h2>Launch Checklist</h2>
             <p class="description">Recommendations and steps for a clean launch. Check items off as you complete them; add your own with the box below.</p>
-            <div id="gol-checklist">
-                <?php echo self::checklist_render_html(); ?>
+            <div id="gol-launch">
+                <?php echo self::checklist_render_html('launch'); ?>
                 <p style="margin-top:10px;">
-                    <input type="text" id="gol-new-item" placeholder="Add a checklist item…" style="width:420px;max-width:100%;">
-                    <button class="button" id="gol-add-item">Add</button>
+                    <input type="text" id="gol-new-launch" placeholder="Add a checklist item…" style="width:420px;max-width:100%;">
+                    <button class="button" id="gol-add-launch">Add</button>
                 </p>
             </div>
 
@@ -230,40 +266,41 @@ class Gabochie_Go_Live {
                 }).fail(function () {});
             }
 
-            function loadChecklist() {
-                $.post(GOL.ajaxUrl, { action: 'gabochie_checklist_get', _wpnonce: GOL.nonce }, function (r) {
+            function loadChecklist(list) {
+                $.post(GOL.ajaxUrl, { action: 'gabochie_checklist_get', _wpnonce: GOL.nonce, list: list }, function (r) {
                     if (!r || !r.success || !r.data || !r.data.html) return;
-                    $('#gol-checklist').html(r.data.html + '<p style="margin-top:10px;"><input type="text" id="gol-new-item" placeholder="Add a checklist item…" style="width:420px;max-width:100%;"><button class="button" id="gol-add-item">Add</button></p>');
-                    $('#gol-add-item').on('click', addItem);
-                    $('#gol-new-item').on('keydown', function (e) { if (e.which === 13) addItem(); });
-                    $('#gol-checklist-items input[type=checkbox]').on('change', toggleItem);
-                    $('#gol-checklist-items .gol-del').on('click', delItem);
+                    $('#gol-' + list).html(r.data.html + '<p style="margin-top:10px;"><input type="text" id="gol-new-' + list + '" placeholder="Add a checklist item…" style="width:420px;max-width:100%;"><button class="button" id="gol-add-' + list + '">Add</button></p>');
+                    $('#gol-add-' + list).on('click', function () { addItem(list); });
+                    $('#gol-new-' + list).on('keydown', function (e) { if (e.which === 13) addItem(list); });
+                    $('#gol-' + list + '-items input[type=checkbox]').on('change', function () { toggleItem(list); });
+                    $('#gol-' + list + '-items .gol-del').on('click', delItem);
                 }).fail(function () {});
             }
 
-            function toggleItem() {
+            function toggleItem(list) {
                 var cb = $(this), id = cb.data('id');
                 cb.prop('disabled', true);
-                $.post(GOL.ajaxUrl, { action: 'gabochie_checklist_toggle', _wpnonce: GOL.nonce, id: id, done: cb.is(':checked') ? 1 : 0 }, function (r) {
-                    loadChecklist();
+                $.post(GOL.ajaxUrl, { action: 'gabochie_checklist_toggle', _wpnonce: GOL.nonce, list: list, id: id, done: cb.is(':checked') ? 1 : 0 }, function (r) {
+                    loadChecklist(list);
                 }).fail(function () { cb.prop('disabled', false); });
             }
 
-            function addItem() {
-                var text = $('#gol-new-item').val().trim();
+            function addItem(list) {
+                var text = $('#gol-new-' + list).val().trim();
                 if (!text) return;
-                $('#gol-new-item').val('');
-                $.post(GOL.ajaxUrl, { action: 'gabochie_checklist_add', _wpnonce: GOL.nonce, text: text }, function (r) {
-                    loadChecklist();
+                $('#gol-new-' + list).val('');
+                $.post(GOL.ajaxUrl, { action: 'gabochie_checklist_add', _wpnonce: GOL.nonce, list: list, text: text }, function (r) {
+                    loadChecklist(list);
                 });
             }
 
             function delItem(e) {
                 e.preventDefault();
+                var list = $(this).data('list') || 'launch';
                 var id = $(this).data('id');
                 if (!window.confirm('Remove this checklist item?')) return;
-                $.post(GOL.ajaxUrl, { action: 'gabochie_checklist_delete', _wpnonce: GOL.nonce, id: id }, function (r) {
-                    loadChecklist();
+                $.post(GOL.ajaxUrl, { action: 'gabochie_checklist_delete', _wpnonce: GOL.nonce, list: list, id: id }, function (r) {
+                    loadChecklist(list);
                 });
             }
 
@@ -309,7 +346,8 @@ class Gabochie_Go_Live {
                 if (!window.confirm('This pushes staging code + database to gabochiedesign.com (with backups). Continue?')) return;
                 launch('real');
             });
-            loadChecklist();
+            loadChecklist('launch');
+            loadChecklist('precheck');
             refresh();
             setInterval(refresh, 15000);
         })(jQuery);
@@ -358,23 +396,29 @@ class Gabochie_Go_Live {
         ));
     }
 
+    public static function requested_list() {
+        $list = isset($_POST['list']) ? sanitize_key($_POST['list']) : 'launch';
+        return $list === 'precheck' ? 'precheck' : 'launch';
+    }
+
     public static function ajax_checklist_get() {
         check_ajax_referer('gabochie_go_live_nonce', '_wpnonce');
         if (!current_user_can('manage_options')) wp_send_json_error(array('message' => 'Unauthorized'), 403);
-        wp_send_json_success(array('html' => self::checklist_render_html()));
+        wp_send_json_success(array('html' => self::checklist_render_html(self::requested_list())));
     }
 
     public static function ajax_checklist_toggle() {
         check_ajax_referer('gabochie_go_live_nonce', '_wpnonce');
         if (!current_user_can('manage_options')) wp_send_json_error(array('message' => 'Unauthorized'), 403);
+        $list = self::requested_list();
         $id = sanitize_key($_POST['id'] ?? '');
         $done = !empty($_POST['done']) ? 1 : 0;
-        $items = self::checklist_get();
+        $items = self::checklist_get($list);
         foreach ($items as $k => $i) {
             if ($i['id'] === $id) {
                 $items[$k]['done'] = $done;
-                self::checklist_save($items);
-                wp_send_json_success(array('html' => self::checklist_render_html()));
+                self::checklist_save($items, $list);
+                wp_send_json_success(array('html' => self::checklist_render_html($list)));
             }
         }
         wp_send_json_error(array('message' => 'Item not found'));
@@ -383,24 +427,26 @@ class Gabochie_Go_Live {
     public static function ajax_checklist_add() {
         check_ajax_referer('gabochie_go_live_nonce', '_wpnonce');
         if (!current_user_can('manage_options')) wp_send_json_error(array('message' => 'Unauthorized'), 403);
+        $list = self::requested_list();
         $text = trim(sanitize_text_field($_POST['text'] ?? ''));
         if ($text === '') wp_send_json_error(array('message' => 'Empty item'));
-        $items = self::checklist_get();
+        $items = self::checklist_get($list);
         $items[] = array('id' => uniqid('item-'), 'text' => $text, 'done' => 0);
-        self::checklist_save($items);
-        wp_send_json_success(array('html' => self::checklist_render_html()));
+        self::checklist_save($items, $list);
+        wp_send_json_success(array('html' => self::checklist_render_html($list)));
     }
 
     public static function ajax_checklist_delete() {
         check_ajax_referer('gabochie_go_live_nonce', '_wpnonce');
         if (!current_user_can('manage_options')) wp_send_json_error(array('message' => 'Unauthorized'), 403);
+        $list = self::requested_list();
         $id = sanitize_key($_POST['id'] ?? '');
-        $items = self::checklist_get();
+        $items = self::checklist_get($list);
         foreach ($items as $k => $i) {
             if ($i['id'] === $id) {
                 unset($items[$k]);
-                self::checklist_save(array_values($items));
-                wp_send_json_success(array('html' => self::checklist_render_html()));
+                self::checklist_save(array_values($items), $list);
+                wp_send_json_success(array('html' => self::checklist_render_html($list)));
             }
         }
         wp_send_json_error(array('message' => 'Item not found'));
