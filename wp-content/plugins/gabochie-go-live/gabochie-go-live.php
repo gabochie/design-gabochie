@@ -200,6 +200,202 @@ class Gabochie_Go_Live {
         return $out;
     }
 
+    public static function recommendations() {
+        global $wpdb;
+        $recs = array();
+
+        $provider = get_option('ghbc_llm_provider', '');
+        $key = get_option('ghbc_llm_key', '');
+        if ($provider && $provider !== 'ollama') {
+            if (empty($key)) {
+                $recs[] = array(
+                    'severity' => 'error',
+                    'title' => 'GhBC LLM API key is missing',
+                    'detail' => 'No API key stored for provider "' . $provider . '". Test Connection will fail and the chatbot will not work.',
+                    'action' => admin_url('admin.php?page=ghbc-settings'),
+                    'action_label' => 'Open GhBC Settings',
+                );
+            } elseif ($provider === 'claude' && strpos($key, 'sk-ant-') !== 0) {
+                $recs[] = array(
+                    'severity' => 'error',
+                    'title' => 'GhBC Claude API key looks invalid',
+                    'detail' => 'Stored key does not start with "sk-ant-", so Anthropic rejects it (server test returned "invalid x-api-key"). Paste a real Anthropic key.',
+                    'action' => admin_url('admin.php?page=ghbc-settings'),
+                    'action_label' => 'Open GhBC Settings',
+                );
+            }
+        }
+
+        $status = self::read_status();
+        if ($status['status'] === 'preflight-fail') {
+            $recs[] = array(
+                'severity' => 'error',
+                'title' => 'Live database not created yet',
+                'detail' => 'promote.sh preflight fails: create DB gabozvqd_gaboch_live + user in cPanel > MySQL Databases, grant ALL PRIVILEGES, then run Dry run again.',
+            );
+        }
+
+        $addr = get_option('woocommerce_store_address', '');
+        if (empty($addr)) {
+            $recs[] = array(
+                'severity' => 'warning',
+                'title' => 'WooCommerce store address is empty',
+                'detail' => 'Set your store address + city in WooCommerce > Settings > General so invoices and tax baselines are correct.',
+                'action' => admin_url('admin.php?page=wc-settings&tab=general'),
+                'action_label' => 'Open WooCommerce Settings',
+            );
+        }
+        if (get_option('woocommerce_calc_taxes') !== 'yes') {
+            $recs[] = array(
+                'severity' => 'info',
+                'title' => 'WooCommerce taxes are off',
+                'detail' => 'GHS store with taxes disabled. Enable tax calculation and add Ghana rates (VAT 15% + levies) if you charge tax.',
+                'action' => admin_url('admin.php?page=wc-settings&tab=tax'),
+                'action_label' => 'Open tax settings',
+            );
+        }
+
+        $ep = get_option('woocommerce_expresspay_gateway_settings', array());
+        if (!empty($ep['enabled']) && ($ep['enabled'] === 'yes' || $ep['enabled'] === true)) {
+            $env = isset($ep['environment']) ? $ep['environment'] : 'production';
+            if ($env === 'sandbox') {
+                $recs[] = array(
+                    'severity' => 'warning',
+                    'title' => 'ExpressPay gateway is in sandbox mode',
+                    'detail' => 'Payments are test-only. Switch to production credentials before launch or customers cannot pay you.',
+                    'action' => admin_url('admin.php?page=wc-settings&tab=checkout&section=expresspay_gateway'),
+                    'action_label' => 'Configure ExpressPay',
+                );
+            }
+        }
+
+        $levels = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}pmpro_membership_levels");
+        if ($levels === 0) {
+            $recs[] = array(
+                'severity' => 'error',
+                'title' => 'PMPro has no membership levels',
+                'detail' => 'No levels exist. Visitors cannot join. Create at least one level (price + billing cycle in GHS) before launch.',
+                'action' => admin_url('admin.php?page=pmpro-membershiplevels'),
+                'action_label' => 'Add PMPro levels',
+            );
+        }
+        if (empty(get_option('pmpro_gateway', ''))) {
+            $recs[] = array(
+                'severity' => 'warning',
+                'title' => 'PMPro payment gateway not set',
+                'detail' => 'No gateway configured in PMPro Settings. Memberships cannot be paid for.',
+                'action' => admin_url('admin.php?page=pmpro-paymentsettings'),
+                'action_label' => 'Open PMPro payment settings',
+            );
+        }
+
+        $host = parse_url(home_url(), PHP_URL_HOST);
+        $apex = $host;
+        if (substr_count((string) $host, '.') > 1) {
+            $parts = explode('.', $host);
+            array_shift($parts);
+            $apex = implode('.', $parts);
+        }
+        $mx = function_exists('dns_get_record') ? @dns_get_record($apex, DNS_MX) : false;
+        $zoho = false;
+        if (is_array($mx)) {
+            foreach ($mx as $m) {
+                $t = isset($m['target']) ? $m['target'] : (isset($m['exchange']) ? $m['exchange'] : '');
+                if (stripos($t, 'zoho') !== false) $zoho = true;
+            }
+        }
+        if ($zoho) {
+            $recs[] = array(
+                'severity' => 'info',
+                'title' => 'Email for gabochiedesign.com is hosted on Zoho',
+                'detail' => 'MX points to Zoho, not cPanel. Create no-reply@gabochiedesign.com as a Zoho mailbox (or a transactional service like Brevo) and keep SPF/DKIM on Zoho + Cloudflare. A cPanel mailbox will not receive mail.',
+            );
+        }
+
+        if (empty(get_option('sib_api_key', ''))) {
+            $recs[] = array(
+                'severity' => 'warning',
+                'title' => 'Brevo API key is not set',
+                'detail' => 'Brevo (mailin) is active but has no API key, so forms, transactional email and web push cannot send.',
+                'action' => admin_url('admin.php?page=sib_page_home'),
+                'action_label' => 'Open Brevo',
+            );
+        }
+
+        if (!is_dir(WP_PLUGIN_DIR . '/litespeed-cache')) {
+            $recs[] = array(
+                'severity' => 'info',
+                'title' => 'No LiteSpeed Cache plugin installed',
+                'detail' => 'Caching is server-level LiteSpeed + Cloudflare (x-turbo-charged-by: LiteSpeed). The "purge cache" checklist item is not applicable without the plugin.',
+            );
+        }
+
+        $modules = get_option('googlesitekit_active_modules', false);
+        if (!$modules) {
+            $recs[] = array(
+                'severity' => 'info',
+                'title' => 'Site Kit is not connected',
+                'detail' => 'Google Analytics / Search Console are not linked. Connect Site Kit (needs a Google login) before or right after launch.',
+                'action' => admin_url('admin.php?page=googlesitekit-splash'),
+                'action_label' => 'Set up Site Kit',
+            );
+        }
+
+        $sec_plugins = array('wordfence', 'all-in-one-wp-security', 'solid-security', 'limit-login-attempts-reloaded', 'google-authenticator', 'two-factor', 'wp-2fa');
+        $active = get_option('active_plugins', array());
+        $has_sec = false;
+        foreach ($sec_plugins as $slug) {
+            foreach ($active as $p) {
+                if (stripos($p, $slug) !== false) { $has_sec = true; break 2; }
+            }
+        }
+        if (!$has_sec) {
+            $recs[] = array(
+                'severity' => 'warning',
+                'title' => 'No security or two-factor plugin active',
+                'detail' => 'No login-protection/2FA plugin found. Add a security plugin (e.g. 2FA + limit-login) and use strong admin passwords before launch.',
+                'action' => admin_url('plugin-install.php?s=two%20factor&tab=search&type=term'),
+                'action_label' => 'Browse 2FA plugins',
+            );
+        }
+
+        $smoke = self::last_staging_smoke();
+        if (stripos($smoke, 'PASS') === false) {
+            $recs[] = array(
+                'severity' => 'error',
+                'title' => 'Last staging smoke test did not pass',
+                'detail' => 'promote.sh will refuse to go live until the latest deploy log shows "SMOKE TEST: PASS". Push the latest code again.',
+            );
+        }
+
+        return $recs;
+    }
+
+    public static function render_recommendations_html() {
+        $recs = self::recommendations();
+        if (empty($recs)) {
+            return '<div class="notice notice-success" style="max-width:720px;"><p><strong>All checks passed.</strong> No open recommendations.</p></div>';
+        }
+        $sev = array(
+            'error'   => array('#d63638', 'Error'),
+            'warning' => array('#dba617', 'Warning'),
+            'info'    => array('#2271b1', 'Note'),
+        );
+        $out = '<div style="max-width:720px;">';
+        foreach ($recs as $r) {
+            $s = isset($sev[$r['severity']]) ? $sev[$r['severity']] : $sev['info'];
+            $out .= '<div style="display:flex;gap:10px;padding:10px 12px;border:1px solid #c3c4c7;border-left:4px solid ' . $s[0] . ';background:#fff;margin-bottom:8px;border-radius:4px;align-items:flex-start;">'
+                  . '<span style="font-weight:600;color:' . $s[0] . ';white-space:nowrap;font-size:12px;text-transform:uppercase;margin-top:2px;">' . $s[1] . '</span>'
+                  . '<div style="flex:1;"><strong>' . esc_html($r['title']) . '</strong><div style="color:#50575e;margin-top:2px;">' . esc_html($r['detail']) . '</div>';
+            if (!empty($r['action'])) {
+                $out .= '<div style="margin-top:6px;"><a class="button button-small" href="' . esc_url($r['action']) . '" target="_blank" rel="noopener">' . esc_html($r['action_label']) . '</a></div>';
+            }
+            $out .= '</div></div>';
+        }
+        $out .= '</div>';
+        return $out;
+    }
+
     public static function render() {
         if (!current_user_can('manage_options')) return;
 
@@ -234,6 +430,12 @@ class Gabochie_Go_Live {
             </table>
 
             <style>.gol-item.gol-done span{text-decoration:line-through;color:#8c8f94;}</style>
+            <h2>Smart Recommendations <a class="button button-small" href="javascript:location.reload();" style="margin-left:8px;">Refresh</a></h2>
+            <p class="description">Auto-generated from the current staging state. Fix the Errors and Warnings below, then work the Pre-Sync Configuration checklist.</p>
+            <div id="gol-recs">
+                <?php echo self::render_recommendations_html(); ?>
+            </div>
+
             <h2>Pre-Sync Configuration</h2>
             <p class="description">Settings to finish on staging before the push so live goes out fully configured (WooCommerce, PMPro, GhBC, email, SEO, analytics, cache, security…). Check items off as you complete them; add your own with the box below.</p>
             <div id="gol-precheck">
