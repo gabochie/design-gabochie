@@ -110,7 +110,20 @@ class Gabochie_Go_Live {
         if (!is_array($items)) {
             $items = self::checklist_defaults($list);
             update_option($opt, $items, false);
+            return $items;
         }
+        $have = array();
+        foreach ($items as $i) {
+            if (isset($i['id'])) $have[$i['id']] = true;
+        }
+        $added = false;
+        foreach (self::checklist_defaults($list) as $d) {
+            if (isset($d['id']) && empty($have[$d['id']])) {
+                $items[] = $d;
+                $added = true;
+            }
+        }
+        if ($added) update_option($opt, $items, false);
         return $items;
     }
 
@@ -133,6 +146,12 @@ class Gabochie_Go_Live {
                 array('id' => 'ps-backup', 'text' => 'Backups: full staging backup/DB export saved before Go Live.', 'done' => 0),
                 array('id' => 'ps-security', 'text' => 'Security: strong admin passwords, two-factor, login protection.', 'done' => 0),
                 array('id' => 'ps-dns', 'text' => 'DNS/Email deliverability: SPF/DKIM for no-reply@gabochiedesign.com in cPanel.', 'done' => 0),
+                array('id' => 'cpanel-db', 'text' => 'cPanel: create DB gabozvqd_gaboch_live + user gabozvqd_gaboch_live in MySQL Databases, grant ALL PRIVILEGES — preflight blocks until done.', 'done' => 0),
+                array('id' => 'cpanel-mailbox', 'text' => 'cPanel: create email account no-reply@gabochiedesign.com so transactional mail has a real mailbox.', 'done' => 0),
+                array('id' => 'cpanel-dns', 'text' => 'cPanel: add SPF + DKIM + DMARC records for gabochiedesign.com (SPF include server178.web-hosting.com).', 'done' => 0),
+                array('id' => 'cpanel-ssl', 'text' => 'cPanel: confirm AutoSSL/HTTPS is active for gabochiedesign.com.', 'done' => 0),
+                array('id' => 'cpanel-php', 'text' => 'cPanel: confirm PHP 8.3 version on the live docroot matches staging.', 'done' => 0),
+                array('id' => 'cpanel-backup', 'text' => 'cPanel: take a full account backup before Go Live.', 'done' => 0),
             );
         }
         return array(
