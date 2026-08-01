@@ -29,6 +29,13 @@ wp-content/object-cache.php
 .well-known/
 cgi-bin/
 
+# Live-site keepers (preserved across deploys; NOT repo content)
+/ads.txt
+/BingSiteAuth.xml
+/.htaccess.bk
+/.litespeed_flag
+/wordfence-waf.php
+
 # AI-Growth-OS dev-only vendor (phpstan binaries; plugin disabled on staging)
 wp-content/plugins/AI-Growth-OS/vendor/
 
