@@ -272,13 +272,13 @@ class Gabochie_Go_Live {
                     $('#gol-' + list).html(r.data.html + '<p style="margin-top:10px;"><input type="text" id="gol-new-' + list + '" placeholder="Add a checklist item…" style="width:420px;max-width:100%;"><button class="button" id="gol-add-' + list + '">Add</button></p>');
                     $('#gol-add-' + list).on('click', function () { addItem(list); });
                     $('#gol-new-' + list).on('keydown', function (e) { if (e.which === 13) addItem(list); });
-                    $('#gol-' + list + '-items input[type=checkbox]').on('change', function () { toggleItem(list); });
+                    $('#gol-' + list + '-items input[type=checkbox]').on('change', function () { toggleItem(list, this); });
                     $('#gol-' + list + '-items .gol-del').on('click', delItem);
                 }).fail(function () {});
             }
 
-            function toggleItem(list) {
-                var cb = $(this), id = cb.data('id');
+            function toggleItem(list, el) {
+                var cb = $(el), id = cb.data('id');
                 cb.prop('disabled', true);
                 $.post(GOL.ajaxUrl, { action: 'gabochie_checklist_toggle', _wpnonce: GOL.nonce, list: list, id: id, done: cb.is(':checked') ? 1 : 0 }, function (r) {
                     loadChecklist(list);
