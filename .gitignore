@@ -39,6 +39,9 @@ cgi-bin/
 # AI-Growth-OS dev-only vendor (phpstan binaries; plugin disabled on staging)
 wp-content/plugins/AI-Growth-OS/vendor/
 
+# Local-only tooling (never deploy)
+wp-content/plugins/gabochie-deploy-local/
+
 # OS junk
 .DS_Store
 Thumbs.db
