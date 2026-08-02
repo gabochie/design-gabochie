@@ -146,8 +146,8 @@ class GHBC_Core {
         $today = $wpdb->get_var("SELECT COUNT(*) FROM $qtable WHERE DATE(created_at) = CURDATE()");
         $total_q = $wpdb->get_var("SELECT COUNT(*) FROM $qtable");
         $provider = get_option('ghbc_llm_provider', 'none');
-        $key = get_option('ghbc_llm_key', '');
-        $llm_ok = !empty($key);
+        $fallbacks = (array) get_option('ghbc_llm_fallbacks', []);
+        $llm_ok = GHBC_LLM::instance()->is_ready();
         ?>
         <div class="wrap">
             <h1>GhBC Command Center</h1>
@@ -167,7 +167,7 @@ class GHBC_Core {
                 </div>
                 <div style="padding:16px 20px;background:#fff;border:1px solid #ddd;border-radius:8px;flex:1;min-width:140px;text-align:center;">
                     <div style="font-size:26px;font-weight:700;color:<?php echo $llm_ok ? '#2e7d32' : '#c62828'; ?>;"><?php echo $llm_ok ? '&#10003;' : '&#10060;'; ?></div>
-                    <div style="color:#666;font-size:12px;"><?php echo $llm_ok ? ucfirst($provider) : 'LLM Disconnected'; ?></div>
+                    <div style="color:#666;font-size:12px;"><?php echo $llm_ok ? ucfirst($provider) . (count($fallbacks) ? ' + ' . count($fallbacks) . ' fallback' . (count($fallbacks) === 1 ? '' : 's') : '') : 'LLM Disconnected'; ?></div>
                 </div>
             </div>
 
@@ -230,6 +230,23 @@ class GHBC_Core {
             update_option('ghbc_llm_model', sanitize_text_field($_POST['llm_model'] ?? 'claude-sonnet-4-20250514'));
             update_option('ghbc_llm_base_url', sanitize_text_field($_POST['llm_base_url'] ?? 'http://localhost:11434'));
             update_option('ghbc_max_queries_free', (int)($_POST['max_queries_free'] ?? 20));
+
+            $fallbacks = [];
+            $fp = isset($_POST['fb_provider']) ? (array) $_POST['fb_provider'] : [];
+            $fk = isset($_POST['fb_key']) ? (array) $_POST['fb_key'] : [];
+            $fm = isset($_POST['fb_model']) ? (array) $_POST['fb_model'] : [];
+            $fbu = isset($_POST['fb_base_url']) ? (array) $_POST['fb_base_url'] : [];
+            foreach ($fp as $i => $p) {
+                $p = sanitize_text_field($p);
+                if (empty($p)) continue;
+                $fallbacks[] = [
+                    'provider' => $p,
+                    'key'      => sanitize_text_field($fk[$i] ?? ''),
+                    'model'    => sanitize_text_field($fm[$i] ?? ''),
+                    'base_url' => sanitize_text_field($fbu[$i] ?? 'http://localhost:11434'),
+                ];
+            }
+            update_option('ghbc_llm_fallbacks', $fallbacks);
             echo '<div class="notice notice-success"><p>Settings saved.</p></div>';
         }
         $provider = get_option('ghbc_llm_provider', 'claude');
@@ -237,9 +254,20 @@ class GHBC_Core {
         $model = get_option('ghbc_llm_model', 'claude-sonnet-4-20250514');
         $base_url = get_option('ghbc_llm_base_url', '');
         $free = get_option('ghbc_max_queries_free', 20);
+        $fallbacks = (array) get_option('ghbc_llm_fallbacks', []);
+        $providers = [
+            'claude'    => 'Claude (Anthropic)',
+            'openai'    => 'OpenAI',
+            'openrouter'=> 'OpenRouter',
+            'gemini'    => 'Gemini (Google)',
+            'mistral'   => 'Mistral AI',
+            'grok'      => 'Grok (xAI)',
+            'ollama'    => 'Ollama (Local)',
+        ];
         ?>
         <div class="wrap">
             <h1>GhBC Settings</h1>
+            <p class="description">The <strong>primary provider</strong> is tried first. If it fails (invalid key, outage, empty response, local endpoint down), GhBC automatically falls back to the <strong>fallback providers</strong> in the order listed below. OpenRouter routes many models through one key (e.g. <code>openai/gpt-4o</code>, <code>anthropic/claude-3.7-sonnet</code>).</p>
             <form method="post">
                 <?php wp_nonce_field('ghbc_settings'); ?>
                 <table class="form-table">
@@ -247,12 +275,9 @@ class GHBC_Core {
                         <th>LLM Provider</th>
                         <td>
                             <select name="llm_provider" id="llm-provider">
-                                <option value="claude" <?php selected($provider, 'claude'); ?>>Claude (Anthropic)</option>
-                                <option value="openai" <?php selected($provider, 'openai'); ?>>OpenAI</option>
-                                <option value="gemini" <?php selected($provider, 'gemini'); ?>>Gemini (Google)</option>
-                                <option value="mistral" <?php selected($provider, 'mistral'); ?>>Mistral AI</option>
-                                <option value="grok" <?php selected($provider, 'grok'); ?>>Grok (xAI)</option>
-                                <option value="ollama" <?php selected($provider, 'ollama'); ?>>Ollama (Local)</option>
+                                <?php foreach ($providers as $val => $label) { ?>
+                                    <option value="<?php echo esc_attr($val); ?>" <?php selected($provider, $val); ?>><?php echo esc_html($label); ?></option>
+                                <?php } ?>
                             </select>
                             <p class="description" id="local-hint" style="<?php echo $provider === 'ollama' ? '' : 'display:none;'; ?>color:#666;margin-top:4px;">&#128161; Connects to a local Ollama API. No API key required.</p>
                         </td>
@@ -272,7 +297,7 @@ class GHBC_Core {
                     <tr>
                         <th>Model</th>
                         <td><input type="text" name="llm_model" value="<?php echo esc_attr($model); ?>" class="regular-text" id="llm-model" placeholder="claude-sonnet-4-20250514">
-                            <p class="description" style="color:#666;margin-top:4px;">Cloud defaults fill in automatically. For Ollama, use the model name running locally (e.g., <code>llama3.2</code>, <code>qwen2.5</code>, <code>mistral</code>).</p>
+                            <p class="description" style="color:#666;margin-top:4px;">Cloud defaults fill in automatically. For Ollama, use the model name running locally (e.g., <code>llama3.2</code>, <code>qwen2.5</code>, <code>mistral</code>). For OpenRouter use <code>vendor/model</code> (e.g., <code>openai/gpt-4o</code>).</p>
                         </td>
                     </tr>
                     <tr>
@@ -284,10 +309,16 @@ class GHBC_Core {
                         <td>
                             <button type="button" class="button" id="ghbc-test-llm">Test Connection</button>
                             <span id="ghbc-test-result" style="margin-left:8px;"></span>
-                            <p class="description" style="color:#666;margin-top:4px;">Saves settings first, then tests the provider.</p>
+                            <p class="description" style="color:#666;margin-top:4px;">Tests the primary provider above (does not touch fallbacks).</p>
                         </td>
                     </tr>
                 </table>
+
+                <h2>Fallback Providers <button type="button" class="button" id="ghbc-fb-add" style="margin-left:8px;">+ Add fallback</button></h2>
+                <p class="description" style="max-width:900px;">Listed in priority order — each is tried only if all earlier providers fail. An Ollama row needs a model name but no key.</p>
+                <div id="ghbc-fallbacks">
+                    <?php foreach ($fallbacks as $fb) { echo self::fallback_row_html($fb, $providers); } ?>
+                </div>
                 <p class="submit"><button type="submit" class="button button-primary">Save</button></p>
             </form>
         </div>
@@ -295,19 +326,21 @@ class GHBC_Core {
         jQuery(function($) {
             var $provider = $('#llm-provider'), $baseUrl = $('#llm-base-url'), $model = $('#llm-model');
             var modelDefaults = {
-                claude:  'claude-sonnet-4-20250514',
-                openai:  'gpt-4o',
-                gemini:  'gemini-2.5-pro',
-                mistral: 'mistral-large-latest',
-                grok:    'grok-3',
-                ollama:  'llama3.2'
+                claude:    'claude-sonnet-4-20250514',
+                openai:    'gpt-4o',
+                openrouter:'openai/gpt-4o',
+                gemini:    'gemini-2.5-pro',
+                mistral:   'mistral-large-latest',
+                grok:      'grok-3',
+                ollama:    'llama3.2'
             };
-            function isLocal() { return $provider.val() === 'ollama'; }
+            var providerOptions = <?php echo wp_json_encode($providers); ?>;
+            function isLocal(p) { return p === 'ollama'; }
             function toggleLocal() {
                 var v = $provider.val();
-                $('#local-hint, #local-key-hint').toggle(isLocal());
-                $('#base-url-row').toggle(isLocal());
-                if (isLocal() && (!$baseUrl.val() || $baseUrl.val() === 'http://localhost:1234')) {
+                $('#local-hint, #local-key-hint').toggle(isLocal(v));
+                $('#base-url-row').toggle(isLocal(v));
+                if (isLocal(v) && (!$baseUrl.val() || $baseUrl.val() === 'http://localhost:1234')) {
                     $baseUrl.val('http://localhost:11434');
                 }
             }
@@ -324,6 +357,52 @@ class GHBC_Core {
             $provider.data('last', $provider.val());
             toggleLocal();
             presetModel();
+
+            function fbModelPreset(row) {
+                var $sel = row.find('.fb-provider'), $m = row.find('.fb-model');
+                var v = $sel.val();
+                var current = $m.val().trim();
+                var prevDefault = modelDefaults[$sel.data('last')] || '';
+                if (modelDefaults[v] && (!current || current === prevDefault)) {
+                    $m.val(modelDefaults[v]);
+                }
+                $sel.data('last', v);
+            }
+            function fbToggle(row) {
+                var v = row.find('.fb-provider').val();
+                row.find('.fb-base-wrap').toggle(isLocal(v));
+                row.find('.fb-key-hint').toggle(isLocal(v));
+                var $bu = row.find('.fb-base-url');
+                if (isLocal(v) && (!$bu.val() || $bu.val().indexOf('localhost') === 0)) {
+                    $bu.val('http://localhost:11434');
+                }
+            }
+            function buildRow(p) {
+                var opts = '';
+                $.each(providerOptions, function(val, label) {
+                    opts += '<option value="' + val + '"' + (val === p ? ' selected' : '') + '>' + label + '</option>';
+                });
+                return $('<div class="fb-row" style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:8px;background:#fff;border:1px solid #ddd;border-radius:6px;padding:10px 12px;max-width:900px;">'
+                    + '<div><label class="description" style="display:block;margin-bottom:2px;">Provider</label><select name="fb_provider[]" class="fb-provider">' + opts + '</select></div>'
+                    + '<div><label class="description" style="display:block;margin-bottom:2px;">API Key</label><input type="password" name="fb_key[]" class="regular-text fb-key"><p class="description fb-key-hint" style="margin:2px 0 0;color:#999;display:none;">Not needed for local.</p></div>'
+                    + '<div><label class="description" style="display:block;margin-bottom:2px;">Model</label><input type="text" name="fb_model[]" class="regular-text fb-model" placeholder="claude-sonnet-4-20250514"></div>'
+                    + '<div class="fb-base-wrap" style="display:none;"><label class="description" style="display:block;margin-bottom:2px;">Base URL</label><input type="text" name="fb_base_url[]" class="regular-text fb-base-url" value="http://localhost:11434"></div>'
+                    + '<button type="button" class="button fb-remove" style="flex-shrink:0;">Remove</button>'
+                    + '</div>');
+            }
+            function bindRow($row) {
+                $row.find('.fb-provider').on('change', function() { fbToggle($row); fbModelPreset($row); });
+                $row.find('.fb-remove').on('click', function() { $row.remove(); });
+                $row.find('.fb-provider').data('last', $row.find('.fb-provider').val());
+                fbToggle($row);
+                fbModelPreset($row);
+            }
+            $('#ghbc-fallbacks > .fb-row').each(function() { bindRow($(this)); });
+            $('#ghbc-fb-add').on('click', function() {
+                var $row = buildRow('openrouter');
+                $('#ghbc-fallbacks').append($row);
+                bindRow($row);
+            });
 
             $('#ghbc-test-llm').on('click', function() {
                 var btn = $(this), result = $('#ghbc-test-result');
@@ -352,5 +431,21 @@ class GHBC_Core {
         });
         </script>
         <?php
+    }
+
+    private static function fallback_row_html($fb, $providers) {
+        $p = $fb['provider'] ?? 'openrouter';
+        $is_ollama = $p === 'ollama';
+        $opts = '';
+        foreach ($providers as $val => $label) {
+            $opts .= '<option value="' . esc_attr($val) . '"' . selected($p, $val, false) . '>' . esc_html($label) . '</option>';
+        }
+        return '<div class="fb-row" style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:8px;background:#fff;border:1px solid #ddd;border-radius:6px;padding:10px 12px;max-width:900px;">'
+             . '<div><label class="description" style="display:block;margin-bottom:2px;">Provider</label><select name="fb_provider[]" class="fb-provider">' . $opts . '</select></div>'
+             . '<div><label class="description" style="display:block;margin-bottom:2px;">API Key</label><input type="password" name="fb_key[]" class="regular-text fb-key" value="' . esc_attr($fb['key'] ?? '') . '"><p class="description fb-key-hint" style="margin:2px 0 0;color:#999;' . ($is_ollama ? '' : 'display:none;') . '">Not needed for local.</p></div>'
+             . '<div><label class="description" style="display:block;margin-bottom:2px;">Model</label><input type="text" name="fb_model[]" class="regular-text fb-model" value="' . esc_attr($fb['model'] ?? '') . '" placeholder="openai/gpt-4o"></div>'
+             . '<div class="fb-base-wrap" style="' . ($is_ollama ? '' : 'display:none;') . '"><label class="description" style="display:block;margin-bottom:2px;">Base URL</label><input type="text" name="fb_base_url[]" class="regular-text fb-base-url" value="' . esc_attr($fb['base_url'] ?? 'http://localhost:11434') . '"></div>'
+             . '<button type="button" class="button fb-remove" style="flex-shrink:0;">Remove</button>'
+             . '</div>';
     }
 }
