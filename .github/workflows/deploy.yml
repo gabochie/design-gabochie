@@ -1,0 +1,30 @@
+name: Deploy to Live
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to server via SSH
+        uses: easingthemes/ssh-deploy@v5
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          REMOTE_HOST: server178.web-hosting.com
+          REMOTE_PORT: '21098'
+          REMOTE_USER: gabozvqd
+          SOURCE: ./
+          TARGET: /home/gabozvqd/public_html
+          EXCLUDE: |
+            .git/
+            .github/
+            wp-config.php
+            wp-content/uploads/
+            wp-content/cache/
+            node_modules/
+            .env
