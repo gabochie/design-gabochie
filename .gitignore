@@ -29,6 +29,10 @@ wp-content/object-cache.php
 .well-known/
 cgi-bin/
 
+# Deploy infrastructure (server-side only; webhook.php holds the deploy secret)
+deploy.sh
+webhook.php
+
 # Live-site keepers (preserved across deploys; NOT repo content)
 /ads.txt
 /BingSiteAuth.xml
