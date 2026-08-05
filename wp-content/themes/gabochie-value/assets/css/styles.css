@@ -531,6 +531,7 @@ img.alignleft, img.alignright, img.aligncenter { display: block; }
   .container { padding: 0 1.25rem; }
   section { padding: 4.5rem 1.25rem; }
   .nav-links, .nav-right .nav-cta, .dark-toggle { display: none; }
+  .logo-tag { display: none; }
   .mobile-menu-btn { display: flex; }
   nav { padding: 0 1.25rem; }
   .hero { grid-template-columns: 1fr; min-height: auto; }
