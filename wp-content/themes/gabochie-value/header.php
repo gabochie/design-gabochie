@@ -3,7 +3,7 @@
  * Header template
  * @package Gabochie_Value
  */
-$hero_img_default = 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=1200&q=80';
+$hero_img_default = GABOCHIE_VALUE_URI . '/assets/images/hero.jpg';
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
@@ -60,7 +60,7 @@ $og_type = is_singular('post') ? 'article' : 'website';
     </svg>
     <span class="logo-text">
       <span class="logo-name">GABOCHIE</span>
-      <span class="logo-tag">Value-Driven Architectural Consultancy</span>
+      <span class="logo-tag">Design.Value.Transformation</span>
     </span>
   </a>
   <?php if (has_nav_menu('primary')) : ?>

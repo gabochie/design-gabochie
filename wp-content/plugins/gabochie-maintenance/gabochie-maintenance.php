@@ -139,8 +139,8 @@ class Gabochie_Maintenance {
       <polygon points="26,4 47,15 47,37 26,48 5,37 5,15" fill="#072E28" stroke="#C9A96E" stroke-width="2"/>
       <text x="26" y="29" text-anchor="middle" font-family="Georgia,serif" font-size="17" font-weight="700" fill="#C9A96E">GD</text>
     </svg>
-    <div class="brand-name"><?php echo esc_html(strtoupper(preg_replace('/\s+.*$/', '', $brand))); ?></div>
-    <div class="brand-tag">Value-Driven Architectural Consultancy</div>
+    <div class="brand-name"><?php echo esc_html(strtoupper($brand)); ?></div>
+    <div class="brand-tag">Design.Value.Transformation</div>
     <div class="rule"></div>
     <h1>Back <em>shortly.</em></h1>
     <p class="lead"><?php echo esc_html($message); ?></p>

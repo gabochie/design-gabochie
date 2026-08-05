@@ -526,6 +526,7 @@ img.alignleft, img.alignright, img.aligncenter { display: block; }
   .res-grid { grid-template-columns: repeat(2, 1fr); }
   .value-quote { grid-template-columns: 1fr; gap: 1.5rem; padding: 2.75rem; }
   .rec-grid { grid-template-columns: 1fr 1fr; }
+  .logo-tag { display: none; }
 }
 @media (max-width: 768px) {
   .container { padding: 0 1.25rem; }

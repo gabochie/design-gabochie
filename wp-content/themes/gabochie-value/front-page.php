@@ -35,7 +35,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
     </div>
   </div>
   <div class="hero-art">
-    <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=1200&q=80" alt="Gabochie Design principal in a client consultation" width="540" height="440" fetchpriority="high">
+    <img src="<?php echo esc_url(GABOCHIE_VALUE_URI . '/assets/images/hero.jpg'); ?>" alt="Gabochie Design architectural project" width="540" height="440" fetchpriority="high">
     <div class="hero-art-overlay">
       <span>Private advisory &middot; Architecture practice</span>
       <strong>Gabochie Design</strong>
