@@ -1,0 +1,17 @@
+/*
+Theme Name: Gabochie Value
+Theme URI: https://gabochiedesign.com
+Author: Gabochie Design
+Author URI: https://gabochiedesign.com
+Description: Value-Driven Architectural Consultancy. Port of the VDAC static prototype — teal/gold/cream brand system, Playfair Display + Jost, dark mode, five-question "Get Clarity" wizard, building journey, services, projects, diaspora, recovery, resources and FAQ sections. No maintenance page — content is baked into templates.
+Version: 1.0.0
+Requires at least: 6.0
+Tested up to: 7.0
+Requires PHP: 8.0
+License: GNU General Public License v2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: gabochie-value
+Tags: custom-logo, custom-menu, featured-images, threaded-comments, translation-ready
+*/
+
+/* All theme styles are enqueued from assets/css/styles.css — see inc/scripts.php. */
