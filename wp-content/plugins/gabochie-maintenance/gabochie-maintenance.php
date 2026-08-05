@@ -2,8 +2,8 @@
 /**
  * Plugin Name: Gabochie Maintenance Mode
  * Plugin URI: https://gabochiedesign.com
- * Description: Brand-aware maintenance mode with countdown, email capture, and admin bypass.
- * Version: 1.0.0
+ * Description: Branded maintenance page (503) with admin toggle. Keeps wp-admin, login, PMPro login, webhook and cron reachable.
+ * Version: 1.1.0
  * Author: Gabochie Design
  * License: GPL-2.0+
  * Text Domain: gabochie-maintenance
@@ -12,294 +12,153 @@
 if (!defined('ABSPATH')) exit;
 
 class Gabochie_Maintenance {
-    private static $instance = null;
-    const OPTION = 'gabochie_maintenance_active';
-    const END_OPTION = 'gabochie_maintenance_end';
-    const EMAILS_OPTION = 'gabochie_maintenance_emails';
-    const MESSAGE_OPTION = 'gabochie_maintenance_message';
+    const OPTION_ACTIVE = 'gabochie_maintenance_active';
+    const OPTION_MESSAGE = 'gabochie_maintenance_message';
 
     public static function instance() {
-        if (null === self::$instance) {
-            self::$instance = new self();
+        static $instance = null;
+        if (null === $instance) {
+            $instance = new self();
         }
-        return self::$instance;
+        return $instance;
     }
 
     private function __construct() {
-        add_action('wp', array($this, 'maybe_activate'));
+        add_action('template_redirect', array($this, 'maybe_serve'), 0);
         add_action('admin_menu', array($this, 'add_menu'));
-        add_action('admin_init', array($this, 'save_settings'));
-        add_action('wp_ajax_gabochie_maintenance_save', array($this, 'ajax_save'));
-        add_action('wp_ajax_gabochie_maintenance_export', array($this, 'ajax_export'));
-        add_action('wp_ajax_gabochie_maintenance_delete', array($this, 'ajax_delete'));
-        add_action('wp_head', array($this, 'admin_bar_bypass'));
-        add_shortcode('maintenance_countdown', array($this, 'countdown_shortcode'));
+        add_action('admin_init', array($this, 'register_settings'));
+        add_action('admin_bar_menu', array($this, 'admin_bar_notice'), 100);
     }
 
     public function is_active() {
-        return get_option(self::OPTION, 0) && !is_user_logged_in();
+        return (bool) get_option(self::OPTION_ACTIVE, 0);
     }
 
-    public function maybe_activate() {
-        $end = get_option(self::END_OPTION, '');
-        if ($end && current_time('timestamp') > strtotime($end)) {
-            update_option(self::OPTION, 0);
-            return;
-        }
-        if ($this->is_active()) {
-            $this->show_maintenance();
-        }
+    public function maybe_serve() {
+        if (!$this->is_active()) return;
+        if (current_user_can('manage_options')) return;
+        if (is_page('membership-login')) return;
+        $this->serve_page();
     }
 
-    public function admin_bar_bypass() {
-        if (get_option(self::OPTION, 0) && is_user_logged_in() && current_user_can('manage_options')) {
-            echo '<style>#wpadminbar { display: block !important; } .maintenance-bypass { position:fixed; bottom:20px; right:20px; z-index:99999; background:#0D5C52; color:#fff; padding:12px 20px; border-radius:8px; font-family:Jost,sans-serif; font-weight:600; cursor:pointer; box-shadow:0 4px 16px rgba(0,0,0,0.3); text-decoration:none; } .maintenance-bypass:hover { background:#C9A96E; color:#1A1A1A; }</style>';
-            echo '<a class="maintenance-bypass" href="' . esc_url(home_url('/')) . '?gabochie_bypass=1">Site is in Maintenance Mode — View as Admin</a>';
-        }
-    }
-
-    public function show_maintenance() {
-        $message = get_option(self::MESSAGE_OPTION, '');
-        $end_time = get_option(self::END_OPTION, '');
-        $end_ts = $end_time ? strtotime($end_time) : 0;
+    private function serve_page() {
+        status_header(503);
+        nocache_headers();
+        header('Retry-After: 3600');
+        header('X-Robots-Tag: noindex, nofollow');
+        $message = get_option(self::OPTION_MESSAGE, '');
         $brand = get_bloginfo('name');
-        ?>
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Maintenance Mode — <?php echo esc_html($brand); ?></title>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-        <style>
-            * { margin:0; padding:0; box-sizing:border-box; }
-            body {
-                font-family:'Jost',system-ui,sans-serif;
-                background:#072E28;
-                color:#fff;
-                min-height:100vh;
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                overflow:hidden;
-                position:relative;
-            }
-            .m-wrap {
-                text-align:center;
-                max-width:600px;
-                padding:40px 24px;
-                position:relative;
-                z-index:2;
-            }
-            .m-brand {
-                font-family:'Playfair Display',Georgia,serif;
-                font-size:1.25rem;
-                font-weight:700;
-                letter-spacing:0.1em;
-                margin-bottom:48px;
-                color:#C9A96E;
-            }
-            .m-icon {
-                width:80px; height:80px;
-                border:2px solid #C9A96E44;
-                border-radius:50%;
-                display:inline-flex;
-                align-items:center;
-                justify-content:center;
-                margin-bottom:32px;
-            }
-            .m-icon svg { width:36px; height:36px; stroke:#C9A96E; fill:none; stroke-width:1.5; }
-            h1 {
-                font-family:'Playfair Display',Georgia,serif;
-                font-size:clamp(2rem,5vw,3rem);
-                font-weight:700;
-                line-height:1.15;
-                margin-bottom:16px;
-            }
-            h1 em { color:#C9A96E; font-style:italic; }
-            .m-sub {
-                font-size:1.1rem;
-                color:#B0B8C1;
-                line-height:1.6;
-                margin-bottom:40px;
-            }
-            .m-countdown {
-                display:flex;
-                gap:16px;
-                justify-content:center;
-                margin-bottom:40px;
-            }
-            .m-cd-item {
-                min-width:80px;
-                padding:16px;
-                background:#0D5C5233;
-                border:1px solid #0D5C5266;
-                border-radius:12px;
-            }
-            .m-cd-n {
-                font-size:2rem;
-                font-weight:700;
-                font-family:'Playfair Display',Georgia,serif;
-                line-height:1;
-                color:#C9A96E;
-            }
-            .m-cd-l {
-                font-size:0.7rem;
-                text-transform:uppercase;
-                letter-spacing:0.1em;
-                color:#646970;
-                margin-top:4px;
-            }
-            .m-form {
-                display:flex;
-                gap:8px;
-                max-width:440px;
-                margin:0 auto;
-            }
-            .m-form input[type="email"] {
-                flex:1;
-                padding:14px 20px;
-                border:1px solid #0D5C5266;
-                border-radius:8px;
-                background:#0D5C5211;
-                color:#fff;
-                font-family:'Jost',sans-serif;
-                font-size:0.95rem;
-                outline:none;
-                transition:border-color 0.2s;
-            }
-            .m-form input[type="email"]::placeholder { color:#646970; }
-            .m-form input[type="email"]:focus { border-color:#C9A96E; }
-            .m-form button {
-                padding:14px 28px;
-                background:#C9A96E;
-                color:#072E28;
-                border:none;
-                border-radius:8px;
-                font-family:'Jost',sans-serif;
-                font-weight:600;
-                font-size:0.95rem;
-                cursor:pointer;
-                transition:background 0.2s;
-                white-space:nowrap;
-            }
-            .m-form button:hover { background:#b8944a; }
-            .m-msg { margin-top:16px; font-size:0.85rem; color:#00a32a; display:none; }
-            .m-msg.show { display:block; }
-            .m-footer {
-                margin-top:48px;
-                font-size:0.8rem;
-                color:#646970;
-            }
-            .m-footer a { color:#C9A96E; text-decoration:none; }
-
-            /* Animated background */
-            .bg-circles {
-                position:fixed; top:0; left:0; width:100%; height:100%;
-                pointer-events:none; z-index:0; overflow:hidden;
-            }
-            .bg-circles span {
-                position:absolute;
-                border-radius:50%;
-                border:1px solid #0D5C5215;
-                animation:float 20s infinite ease-in-out;
-            }
-            .bg-circles span:nth-child(1) { width:400px; height:400px; top:10%; left:-5%; animation-delay:0s; }
-            .bg-circles span:nth-child(2) { width:300px; height:300px; top:60%; right:-8%; animation-delay:4s; border-color:#C9A96E10; }
-            .bg-circles span:nth-child(3) { width:500px; height:500px; bottom:-15%; left:30%; animation-delay:8s; }
-            .bg-circles span:nth-child(4) { width:200px; height:200px; top:30%; right:20%; animation-delay:12s; border-color:#C9A96E08; }
-
-            @keyframes float {
-                0%, 100% { transform:translate(0,0) scale(1); }
-                33% { transform:translate(30px,-30px) scale(1.05); }
-                66% { transform:translate(-20px,20px) scale(0.95); }
-            }
-
-            @media (max-width:600px) {
-                .m-countdown { gap:8px; }
-                .m-cd-item { min-width:64px; padding:12px 8px; }
-                .m-cd-n { font-size:1.5rem; }
-                .m-form { flex-direction:column; }
-            }
-        </style>
-        </head>
-        <body>
-        <div class="bg-circles">
-            <span></span><span></span><span></span><span></span>
-        </div>
-        <div class="m-wrap">
-            <div class="m-brand"><?php echo esc_html($brand); ?></div>
-            <div class="m-icon">
-                <svg viewBox="0 0 24 24"><path d="M3 21h18M9 8h1M9 12h1M9 16h1M14 8h1M14 12h1M14 16h1M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16"/></svg>
-            </div>
-            <h1>We're Building<br>Something <em>Intelligent</em></h1>
-            <p class="m-sub">Our AI-powered architecture platform is being upgraded. We'll be back soon with smarter tools, faster designs, and a better experience.</p>
-
-            <?php if ($end_ts > time()) : ?>
-            <div class="m-countdown" id="m-countdown" data-end="<?php echo esc_attr($end_ts); ?>">
-                <div class="m-cd-item"><div class="m-cd-n" id="m-d">00</div><div class="m-cd-l">Days</div></div>
-                <div class="m-cd-item"><div class="m-cd-n" id="m-h">00</div><div class="m-cd-l">Hours</div></div>
-                <div class="m-cd-item"><div class="m-cd-n" id="m-m">00</div><div class="m-cd-l">Minutes</div></div>
-                <div class="m-cd-item"><div class="m-cd-n" id="m-s">00</div><div class="m-cd-l">Seconds</div></div>
-            </div>
-            <?php endif; ?>
-
-            <form class="m-form" id="m-form">
-                <input type="email" name="email" placeholder="Enter your email for launch updates" required>
-                <button type="submit">Notify Me</button>
-            </form>
-            <div class="m-msg" id="m-msg">Thanks! We'll notify you when we launch.</div>
-
-            <?php if ($message) : ?>
-            <p class="m-sub" style="margin-top:32px;font-size:0.9rem;"><?php echo esc_html($message); ?></p>
-            <?php endif; ?>
-
-            <div class="m-footer">
-                <p>&copy; <?php echo date('Y'); ?> <?php echo esc_html($brand); ?>. All rights reserved.</p>
-            </div>
-        </div>
-
-        <script>
-        (function(){
-            var el = document.getElementById('m-countdown');
-            if (!el) return;
-            var end = parseInt(el.dataset.end) * 1000;
-            function tick() {
-                var now = Date.now(), diff = Math.max(0, end - now);
-                var d = Math.floor(diff / 86400000);
-                var h = Math.floor((diff % 86400000) / 3600000);
-                var m = Math.floor((diff % 3600000) / 60000);
-                var s = Math.floor((diff % 60000) / 1000);
-                document.getElementById('m-d').textContent = String(d).padStart(2,'0');
-                document.getElementById('m-h').textContent = String(h).padStart(2,'0');
-                document.getElementById('m-m').textContent = String(m).padStart(2,'0');
-                document.getElementById('m-s').textContent = String(s).padStart(2,'0');
-                if (diff > 0) requestAnimationFrame(tick);
-            }
-            tick();
-        })();
-        </script>
-        <script>
-        document.getElementById('m-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            var email = this.querySelector('input[name="email"]').value;
-            var fd = new FormData();
-            fd.append('action', 'gabochie_maintenance_save');
-            fd.append('email', email);
-            fd.append('_ajax_nonce', '<?php echo wp_create_nonce('gabochie_maintenance'); ?>');
-            fetch('<?php echo admin_url('admin-ajax.php'); ?>', { method:'POST', body:fd })
-                .then(function(r){ return r.json(); })
-                .then(function(res){
-                    if (res.success) {
-                        document.getElementById('m-msg').classList.add('show');
-                        document.getElementById('m-form').reset();
-                    }
-                });
-        });
-        </script>
-        </body></html>
-        <?php
+        if (!$message) {
+            $message = 'We\'re giving the website a quick tune-up so it works even better for your project. In the meantime, we\'re one message away.';
+        }
+        ?><!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title><?php echo esc_html($brand); ?> — Back Shortly</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Jost', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(26,122,110,0.35), transparent 60%),
+      radial-gradient(900px 500px at 10% 110%, rgba(201,169,110,0.12), transparent 55%),
+      linear-gradient(160deg, #072E28 0%, #0A4840 55%, #072E28 100%);
+    color: #FAF7F2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .panel {
+    max-width: 560px;
+    width: 100%;
+    text-align: center;
+    background: rgba(7,46,40,0.55);
+    border: 1px solid rgba(201,169,110,0.28);
+    border-radius: 24px;
+    padding: 56px 40px 48px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.35);
+    backdrop-filter: blur(6px);
+  }
+  .logo-hex { width: 64px; height: 64px; display: block; margin: 0 auto 22px; }
+  .brand-name {
+    font-size: 15px; letter-spacing: 0.34em; font-weight: 500; color: #E8D5A8;
+    text-transform: uppercase;
+  }
+  .brand-tag {
+    font-family: 'Playfair Display', Georgia, serif; font-style: italic;
+    font-size: 16px; color: #9FB8B2; margin-top: 4px;
+  }
+  .rule {
+    width: 56px; height: 2px; background: #C9A96E; margin: 26px auto;
+  }
+  h1 {
+    font-family: 'Playfair Display', Georgia, serif; font-weight: 600;
+    font-size: clamp(26px, 4.4vw, 34px); line-height: 1.25; color: #FDFCF9;
+    margin-bottom: 14px;
+  }
+  h1 em { font-style: italic; color: #E8D5A8; }
+  p.lead {
+    font-size: 16px; font-weight: 300; line-height: 1.65; color: #D4E8E4;
+    margin-bottom: 30px;
+  }
+  .actions { display: flex; flex-direction: column; gap: 12px; align-items: stretch; }
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    padding: 14px 22px; border-radius: 12px; font-size: 15px; font-weight: 500;
+    text-decoration: none; transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .btn:hover { opacity: 0.92; transform: translateY(-1px); }
+  .btn-wa { background: #C9A96E; color: #072E28; }
+  .btn-ghost {
+    background: transparent; color: #FAF7F2; border: 1px solid rgba(201,169,110,0.5);
+  }
+  .btn svg { width: 18px; height: 18px; flex: none; }
+  .foot {
+    margin-top: 30px; font-size: 13px; font-weight: 300; letter-spacing: 0.04em;
+    color: #6B8A84;
+  }
+  .foot span { color: #E8D5A8; }
+  @media (max-width: 480px) {
+    .panel { padding: 44px 24px 38px; border-radius: 18px; }
+  }
+</style>
+</head>
+<body>
+  <main class="panel">
+    <svg class="logo-hex" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <polygon points="26,4 47,15 47,37 26,48 5,37 5,15" fill="#072E28" stroke="#C9A96E" stroke-width="2"/>
+      <text x="26" y="29" text-anchor="middle" font-family="Georgia,serif" font-size="17" font-weight="700" fill="#C9A96E">GD</text>
+    </svg>
+    <div class="brand-name"><?php echo esc_html(strtoupper(preg_replace('/\s+.*$/', '', $brand))); ?></div>
+    <div class="brand-tag">Value-Driven Architectural Consultancy</div>
+    <div class="rule"></div>
+    <h1>Back <em>shortly.</em></h1>
+    <p class="lead"><?php echo esc_html($message); ?></p>
+    <div class="actions">
+      <a class="btn btn-wa" href="https://wa.me/233268248970?text=Hello%20Gabochie%20Design%20%E2%80%94%20I%20visited%20your%20site%20while%20it%20was%20in%20maintenance." target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+        WhatsApp us
+      </a>
+      <a class="btn btn-ghost" href="tel:+233268248970">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        +233 26 824 8970
+      </a>
+    </div>
+    <div class="foot">Sakumono &middot; Tema &middot; Ghana &nbsp;&nbsp;|&nbsp;&nbsp; <span><?php echo esc_html(parse_url(home_url(), PHP_URL_HOST)); ?></span></div>
+  </main>
+</body>
+</html>
+<?php
         exit;
     }
 
@@ -313,113 +172,56 @@ class Gabochie_Maintenance {
         );
     }
 
-    public function settings_page() {
-        if (isset($_POST['gabochie_maintenance_nonce']) && wp_verify_nonce($_POST['gabochie_maintenance_nonce'], 'gabochie_maintenance_settings')) {
-            $active = isset($_POST['active']) ? 1 : 0;
-            update_option(self::OPTION, $active);
-            update_option(self::END_OPTION, sanitize_text_field($_POST['end_time'] ?? ''));
-            update_option(self::MESSAGE_OPTION, sanitize_text_field($_POST['message'] ?? ''));
-            echo '<div class="notice notice-success is-dismissible"><p>Settings saved.</p></div>';
-        }
+    public function register_settings() {
+        register_setting('gabochie_maintenance_group', self::OPTION_ACTIVE, array('type' => 'integer', 'default' => 0));
+        register_setting('gabochie_maintenance_group', self::OPTION_MESSAGE, array('type' => 'string', 'sanitize_callback' => 'sanitize_text_field'));
+    }
 
-        $active = get_option(self::OPTION, 0);
-        $end_time = get_option(self::END_OPTION, '');
-        $message = get_option(self::MESSAGE_OPTION, '');
-        $emails = get_option(self::EMAILS_OPTION, array());
+    public function settings_page() {
+        $active = $this->is_active();
         ?>
         <div class="wrap">
             <h1>Maintenance Mode</h1>
-            <form method="post">
-                <?php wp_nonce_field('gabochie_maintenance_settings', 'gabochie_maintenance_nonce'); ?>
+            <?php if ($active) : ?>
+            <div class="notice notice-warning"><p><strong>Maintenance is ON.</strong> Visitors see the branded "Back shortly" page (HTTP 503).</p></div>
+            <?php else : ?>
+            <div class="notice notice-success"><p>Maintenance is OFF — the site is live.</p></div>
+            <?php endif; ?>
+            <form method="post" action="options.php">
+                <?php settings_fields('gabochie_maintenance_group'); ?>
                 <table class="form-table">
                     <tr>
                         <th scope="row">Enable Maintenance</th>
-                        <td><label><input type="checkbox" name="active" value="1" <?php checked($active); ?>> Show maintenance page to non-logged-in visitors</label></td>
+                        <td>
+                            <label><input type="checkbox" name="<?php echo esc_attr(self::OPTION_ACTIVE); ?>" value="1" <?php checked($active); ?>> Show the maintenance page to visitors</label>
+                            <p class="description">Logged-in admins, wp-admin, wp-login, the PMPro login page, webhook and cron stay reachable.</p>
+                        </td>
                     </tr>
                     <tr>
-                        <th scope="row">End Date & Time</th>
-                        <td><input type="datetime-local" name="end_time" value="<?php echo esc_attr($end_time); ?>" class="regular-text">
-                        <p class="description">Countdown timer shows on the maintenance page. Leave empty for no countdown.</p></td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Custom Message</th>
-                        <td><textarea name="message" rows="3" class="large-text" placeholder="e.g. Launching June 2026"><?php echo esc_textarea($message); ?></textarea></td>
+                        <th scope="row">Message</th>
+                        <td>
+                            <textarea name="<?php echo esc_attr(self::OPTION_MESSAGE); ?>" rows="3" class="large-text" placeholder="We're giving the website a quick tune-up..."><?php echo esc_textarea(get_option(self::OPTION_MESSAGE, '')); ?></textarea>
+                            <p class="description">Shown on the maintenance page. Leave empty for the default message.</p>
+                        </td>
                     </tr>
                 </table>
-                <p class="submit">
-                    <button type="submit" class="button button-primary">Save Settings</button>
-                    <a href="<?php echo wp_nonce_url(admin_url('admin-ajax.php?action=gabochie_maintenance_export'), 'gabochie_maintenance'); ?>" class="button" style="margin-left:8px;">Export Emails (CSV)</a>
-                </p>
+                <?php submit_button('Save Settings'); ?>
             </form>
-
-            <hr>
-            <h2>Captured Emails (<?php echo count($emails); ?>)</h2>
-            <?php if (!empty($emails)) : ?>
-            <table class="wp-list-table widefat fixed striped">
-                <thead><tr><th>Email</th><th>Date</th><th></th></tr></thead>
-                <tbody>
-                <?php foreach ($emails as $i => $e) : ?>
-                <tr>
-                    <td><?php echo esc_html($e['email']); ?></td>
-                    <td><?php echo esc_html($e['date']); ?></td>
-                    <td><a href="<?php echo wp_nonce_url(admin_url('admin-ajax.php?action=gabochie_maintenance_delete&index=' . $i), 'gabochie_maintenance'); ?>" class="button button-small" style="color:#a00;" onclick="return confirm('Delete this email?')">Delete</a></td>
-                </tr>
-                <?php endforeach; ?>
-                </tbody>
-            </table>
-            <?php else : ?>
-            <p>No emails captured yet.</p>
+            <?php if ($active) : ?>
+            <p><a class="button" href="<?php echo esc_url(home_url('/')); ?>" target="_blank" rel="noopener">Preview maintenance page</a></p>
             <?php endif; ?>
         </div>
         <?php
     }
 
-    public function save_settings() {
-        if (wp_doing_ajax() && isset($_POST['action']) && $_POST['action'] === 'gabochie_maintenance_save') {
-            check_ajax_referer('gabochie_maintenance');
-            $email = sanitize_email($_POST['email'] ?? '');
-            if (!is_email($email)) {
-                wp_send_json_error('Invalid email');
-            }
-            $emails = get_option(self::EMAILS_OPTION, array());
-            $emails[] = array('email' => $email, 'date' => current_time('mysql'));
-            update_option(self::EMAILS_OPTION, $emails);
-            wp_send_json_success();
-        }
-    }
-
-    public function ajax_export() {
-        if (!current_user_can('manage_options')) wp_die('Unauthorized');
-        $emails = get_option(self::EMAILS_OPTION, array());
-        header('Content-Type: text/csv');
-        header('Content-Disposition: attachment; filename="maintenance-emails-' . date('Y-m-d') . '.csv"');
-        $fp = fopen('php://output', 'w');
-        fputcsv($fp, array('Email', 'Date'));
-        foreach ($emails as $e) {
-            fputcsv($fp, array($e['email'], $e['date']));
-        }
-        fclose($fp);
-        exit;
-    }
-
-    public function ajax_delete() {
-        if (!current_user_can('manage_options')) wp_die('Unauthorized');
-        check_admin_referer('gabochie_maintenance');
-        $index = intval($_GET['index'] ?? -1);
-        $emails = get_option(self::EMAILS_OPTION, array());
-        if (isset($emails[$index])) {
-            array_splice($emails, $index, 1);
-            update_option(self::EMAILS_OPTION, $emails);
-        }
-        wp_redirect(admin_url('options-general.php?page=gabochie-maintenance'));
-        exit;
-    }
-
-    public function countdown_shortcode($atts) {
-        $end = get_option(self::END_OPTION, '');
-        if (!$end) return '';
-        $ts = strtotime($end);
-        return '<div class="m-countdown" data-end="' . esc_attr($ts) . '"><div class="m-cd-item"><div class="m-cd-n" id="m-d">--</div><div class="m-cd-l">Days</div></div><div class="m-cd-item"><div class="m-cd-n" id="m-h">--</div><div class="m-cd-l">Hours</div></div><div class="m-cd-item"><div class="m-cd-n" id="m-m">--</div><div class="m-cd-l">Minutes</div></div><div class="m-cd-item"><div class="m-cd-n" id="m-s">--</div><div class="m-cd-l">Seconds</div></div></div>';
+    public function admin_bar_notice($wp_admin_bar) {
+        if (!$this->is_active() || !current_user_can('manage_options')) return;
+        $wp_admin_bar->add_node(array(
+            'id' => 'gabochie-maintenance',
+            'title' => '<span style="color:#C9A96E;">&#9888; Maintenance ON</span>',
+            'href' => admin_url('options-general.php?page=gabochie-maintenance'),
+            'meta' => array('title' => 'Maintenance mode is active')
+        ));
     }
 }
 
