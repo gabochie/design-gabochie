@@ -8,6 +8,7 @@ $hero_img_default = 'https://images.unsplash.com/photo-1560250097-0b93528c311a?a
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>
+<script>document.documentElement.className += ' js';</script>
 <meta charset="<?php bloginfo('charset'); ?>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="mobile-web-app-capable" content="yes">

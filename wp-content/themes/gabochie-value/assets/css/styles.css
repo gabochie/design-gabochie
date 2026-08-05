@@ -437,16 +437,19 @@ footer { background: var(--teal-dark); padding: 5rem 2.5rem 2rem; color: rgba(25
 .whatsapp-fab svg { width: 30px; height: 30px; fill: #06350F; }
 
 /* ============ REVEAL ============ */
-.reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1); }
-.reveal.revealed { opacity: 1; transform: translateY(0); }
-.reveal.in { opacity: 1; transform: translateY(0); }
-.reveal-left { opacity: 0; transform: translateX(-24px); transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1); }
-.reveal-left.revealed { opacity: 1; transform: translateX(0); }
-.reveal-left.in { opacity: 1; transform: translateX(0); }
-.reveal-delay-1 { transition-delay: 0.1s; }
-.reveal-delay-2 { transition-delay: 0.2s; }
-.reveal-delay-3 { transition-delay: 0.3s; }
-.reveal-delay-4 { transition-delay: 0.4s; }
+/* Progressive enhancement: hidden only when JS is confirmed running (html.js).
+   If main.js fails/blocked, content stays visible instead of opacity:0. */
+html.js .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1); }
+html.js .reveal.revealed, html.js .reveal.in { opacity: 1; transform: translateY(0); }
+html.js .reveal-left { opacity: 0; transform: translateX(-24px); transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1); }
+html.js .reveal-left.revealed, html.js .reveal-left.in { opacity: 1; transform: translateX(0); }
+html.js .reveal-delay-1 { transition-delay: 0.1s; }
+html.js .reveal-delay-2 { transition-delay: 0.2s; }
+html.js .reveal-delay-3 { transition-delay: 0.3s; }
+html.js .reveal-delay-4 { transition-delay: 0.4s; }
+@media (prefers-reduced-motion: reduce) {
+  html.js .reveal, html.js .reveal-left { opacity: 1; transform: none; transition: none; }
+}
 
 /* ============ WORDPRESS: ENTRY CONTENT ============ */
 .entry-content { font-size: 1rem; line-height: 1.9; color: var(--charcoal); max-width: 780px; }
