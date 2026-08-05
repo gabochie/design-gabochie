@@ -59,7 +59,7 @@ $og_type = is_singular('post') ? 'article' : 'website';
       <text x="26" y="29" text-anchor="middle" font-family="Georgia,serif" font-size="17" font-weight="700" fill="#C9A96E">GD</text>
     </svg>
     <span class="logo-text">
-      <span class="logo-name">GABOCHIE</span>
+      <span class="logo-name">GABOCHIE DESIGN</span>
       <span class="logo-tag">Design.Value.Transformation</span>
     </span>
   </a>
