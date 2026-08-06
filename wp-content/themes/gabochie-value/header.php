@@ -70,6 +70,7 @@ $og_type = is_singular('post') ? 'article' : 'website';
     <li><a href="<?php echo esc_url(gabochie_value_section_url('services')); ?>">Services</a></li>
     <li><a href="<?php echo esc_url(gabochie_value_section_url('journey')); ?>">Journey</a></li>
     <li><a href="<?php echo esc_url(gabochie_value_section_url('diaspora')); ?>">Diaspora</a></li>
+    <li><a href="<?php echo esc_url(home_url('/blog/')); ?>">Blog</a></li>
     <li><a href="<?php echo esc_url(gabochie_value_section_url('resources')); ?>">Resources</a></li>
     <li><a href="<?php echo esc_url(gabochie_value_section_url('projects')); ?>">Projects</a></li>
   </ul>
@@ -88,6 +89,7 @@ $og_type = is_singular('post') ? 'article' : 'website';
   <a href="<?php echo esc_url(gabochie_value_section_url('journey')); ?>">Building Journey</a>
   <a href="<?php echo esc_url(gabochie_value_section_url('diaspora')); ?>">For Diaspora</a>
   <a href="<?php echo esc_url(gabochie_value_section_url('recovery')); ?>">Project Recovery</a>
+  <a href="<?php echo esc_url(home_url('/blog/')); ?>">Blog</a>
   <a href="<?php echo esc_url(gabochie_value_section_url('resources')); ?>">Resources</a>
   <a href="<?php echo esc_url(gabochie_value_section_url('projects')); ?>">Projects</a>
   <a class="nav-cta" href="<?php echo esc_url(gabochie_value_clarity_url()); ?>">Get Clarity</a>

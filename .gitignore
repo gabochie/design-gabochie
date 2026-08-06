@@ -46,6 +46,9 @@ wp-content/plugins/AI-Growth-OS/vendor/
 # Local-only tooling (never deploy)
 wp-content/plugins/gabochie-deploy-local/
 
+# Local debug endpoint (xdebug_info() — never ship)
+local-xdebuginfo.php
+
 # OS junk
 .DS_Store
 Thumbs.db

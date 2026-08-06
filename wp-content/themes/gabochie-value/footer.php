@@ -36,6 +36,7 @@ $social_svgs = array(
         <li><a href="<?php echo esc_url(gabochie_value_section_url('services')); ?>">Services</a></li>
         <li><a href="<?php echo esc_url(gabochie_value_section_url('journey')); ?>">Building Journey</a></li>
         <li><a href="<?php echo esc_url(gabochie_value_section_url('diaspora')); ?>">For Diaspora</a></li>
+        <li><a href="<?php echo esc_url(home_url('/blog/')); ?>">Blog</a></li>
         <li><a href="<?php echo esc_url(gabochie_value_section_url('resources')); ?>">Resources</a></li>
         <li><a href="<?php echo esc_url(gabochie_value_section_url('projects')); ?>">Projects</a></li>
       </ul>
@@ -54,7 +55,7 @@ $social_svgs = array(
       <h4>Get in touch</h4>
       <ul>
         <li class="foot-contact"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg><a href="tel:<?php echo esc_attr($phone_tel); ?>"><?php echo esc_html($phone); ?></a></li>
-        <li class="foot-contact"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Sakumono, Tema &mdash; Ghana</li>
+        <li class="foot-contact"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>P.O. Box SK 2125, Sakumono, Tema &mdash; Ghana</li>
       </ul>
     </div>
   </div>

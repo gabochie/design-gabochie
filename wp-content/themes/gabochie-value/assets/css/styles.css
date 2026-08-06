@@ -245,6 +245,8 @@ section { padding: 7rem 2.5rem; }
 .guide-form button { padding: 0.85rem 1.6rem; background: var(--gold); color: var(--teal-dark); font-family: 'Jost', sans-serif; font-size: 0.72rem; letter-spacing: 0.13em; text-transform: uppercase; border: none; border-radius: var(--r-sm); cursor: pointer; font-weight: 500; min-height: 48px; }
 .guide-ok { font-size: 0.85rem; color: var(--gold-light); margin-top: 0.6rem; display: none; }
 .guide-ok.show { display: block; }
+.guide-err { font-size: 0.85rem; color: #e08a6a; margin-top: 0.6rem; display: none; }
+.guide-err.show { display: block; }
 .success-panel { text-align: center; padding: 1.5rem 1rem 0.5rem; }
 .success-mark { width: 72px; height: 72px; border-radius: 50%; background: var(--teal-light); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.75rem; color: var(--teal); font-size: 1.8rem; }
 .success-panel h3 { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 400; color: var(--charcoal); margin-bottom: 0.9rem; }
@@ -384,6 +386,12 @@ section { padding: 7rem 2.5rem; }
 .res-card-img { margin-bottom: 1.25rem; aspect-ratio: 16 / 9; overflow: hidden; border-radius: var(--r-sm); }
 .res-card-img img { width: 100%; height: 100%; object-fit: cover; }
 .res-card-body { display: flex; flex-direction: column; flex: 1; }
+
+/* Blog category filters */
+.blog-filters { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 2.5rem; }
+.blog-filter { display: inline-flex; align-items: center; padding: 0.55rem 1.1rem; font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--teal); border: 1px solid var(--border); border-radius: 999px; transition: all 0.25s; font-weight: 500; }
+.blog-filter:hover { border-color: var(--gold); color: var(--gold); }
+.blog-filter.is-active { background: var(--teal); border-color: var(--teal); color: #FAF7F2; }
 
 /* ============ FAQ ============ */
 .faq { background: var(--ivory); }

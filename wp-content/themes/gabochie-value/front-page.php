@@ -356,9 +356,12 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
         <p>The 40-point checklist we walk every project through &mdash; before a single cedi is committed.</p>
         <form class="guide-form" id="resForm" novalidate>
           <input type="email" id="resEmail" placeholder="Your email" required aria-label="Email for the readiness checklist">
+          <input type="text" name="website" id="resWebsite" tabindex="-1" autocomplete="off" aria-hidden="true" class="gd-hp" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+          <input type="hidden" name="source" value="homepage">
           <button type="submit">Send the guide</button>
         </form>
         <div class="guide-ok" id="resGuideOk">Got it &mdash; the checklist is on its way to your inbox.</div>
+        <div class="guide-err" id="resGuideErr" role="alert"></div>
       </div>
       <div class="res-card reveal reveal-delay-1">
         <div class="r-tag">For the diaspora</div>

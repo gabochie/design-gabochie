@@ -246,36 +246,63 @@
     showStep(1);
   });
 
+  /* guide delivery — POST to REST endpoint (email with PDF attachment) */
+  function sendGuide(form, emailId, okId, errId, source, extra) {
+    var email = (($(emailId) || {}).value || '').trim();
+    var err = $(errId);
+    var ok = $(okId);
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      if (err) { err.textContent = 'Please enter a valid email address.'; err.classList.add('show'); }
+      return;
+    }
+    if (err) err.classList.remove('show');
+    var hp = form.querySelector('[name=website]');
+    var payload = { email: email, source: source, website: hp ? hp.value : '' };
+    if (extra) for (var k in extra) if (extra.hasOwnProperty(k)) payload[k] = extra[k];
+    var btn = form.querySelector('button[type=submit]');
+    var btnText = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = 'Sending\u2026'; }
+    var fail = function () {
+      if (btn) { btn.disabled = false; btn.textContent = btnText; }
+      if (err) { err.textContent = 'Something went wrong \u2014 please try again, or message us on WhatsApp at +' + WA + '.'; err.classList.add('show'); }
+    };
+    fetch('/wp-json/gabochie/v1/guide-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (data) { return { ok: r.ok, data: data }; });
+    }).then(function (res) {
+      if (res.ok && res.data && res.data.success) {
+        try {
+          var guides = JSON.parse(localStorage.getItem('gd_guides') || '[]');
+          guides.push({ ts: Date.now(), email: email, guide: 'readiness-checklist', source: source });
+          localStorage.setItem('gd_guides', JSON.stringify(guides));
+        } catch (e) {}
+        window.Gabochie.track('gd_guide_request', { guide: 'readiness-checklist', source: source });
+        if (ok) ok.classList.add('show');
+        form.style.display = 'none';
+      } else {
+        fail();
+      }
+    }).catch(fail);
+  }
+
   /* guide form (featured resource) */
   var resForm = $('#resForm');
   if (resForm) resForm.addEventListener('submit', function (e) {
     e.preventDefault();
-    var email = (($('#resEmail') || {}).value || '').trim();
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
-    try {
-      var guides = JSON.parse(localStorage.getItem('gd_guides') || '[]');
-      guides.push({ ts: Date.now(), email: email, guide: 'readiness-checklist' });
-      localStorage.setItem('gd_guides', JSON.stringify(guides));
-    } catch (e) {}
-    var ok = $('#resGuideOk'); if (ok) ok.style.display = 'block';
-    resForm.style.display = 'none';
-    window.Gabochie.track('gd_guide_request', { guide: 'readiness-checklist' });
+    sendGuide(resForm, '#resEmail', '#resGuideOk', '#resGuideErr', 'homepage');
   });
 
   /* wizard guide form */
   var guideForm = $('#guideForm');
   if (guideForm) guideForm.addEventListener('submit', function (e) {
     e.preventDefault();
-    var email = (($('#guideEmail') || {}).value || '').trim();
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
-    try {
-      var guides = JSON.parse(localStorage.getItem('gd_guides') || '[]');
-      guides.push({ ts: Date.now(), email: email, guide: 'readiness-checklist', source: 'wizard' });
-      localStorage.setItem('gd_guides', JSON.stringify(guides));
-    } catch (e) {}
-    var ok = $('#guideOk'); if (ok) ok.style.display = 'block';
-    guideForm.style.display = 'none';
-    window.Gabochie.track('gd_guide_request', { guide: 'readiness-checklist', source: 'wizard' });
+    sendGuide(guideForm, '#guideEmail', '#guideOk', '#guideErr', 'wizard', {
+      journey: state.journey || '',
+      blocker: state.blocker || ''
+    });
   });
 
 })();

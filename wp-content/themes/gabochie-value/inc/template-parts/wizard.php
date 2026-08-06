@@ -163,9 +163,12 @@ if (!defined('ABSPATH')) exit;
             <p>Not ready to book? Email me the project guide.</p>
             <form class="guide-form" id="guideForm" novalidate>
               <input type="email" id="guideEmail" placeholder="Your email" required aria-label="Email for the project guide">
+              <input type="text" name="website" id="guideWebsite" tabindex="-1" autocomplete="off" aria-hidden="true" class="gd-hp" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+              <input type="hidden" name="source" value="wizard">
               <button type="submit">Send the guide</button>
             </form>
             <div class="guide-ok" id="guideOk">Got it &mdash; the guide is on its way to your inbox.</div>
+            <div class="guide-err" id="guideErr" role="alert"></div>
           </div>
         </div>
 
