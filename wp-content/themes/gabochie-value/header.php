@@ -19,8 +19,10 @@ $hero_img_default = GABOCHIE_VALUE_URI . '/assets/images/hero.jpg';
  * Only render theme-level OpenGraph/Twitter tags when Yoast SEO is not
  * active — when it is, Yoast is the single source of truth (avoids
  * duplicated, conflicting og: tags in the head which hurt SEO/social).
+ * NB: use the WPSEO_VERSION constant, not class_exists('WPSEO') — Yoast
+ * 28+ no longer defines that class.
  */
-if (!class_exists('WPSEO')) :
+if (!defined('WPSEO_VERSION')) :
 $og_title = is_singular() ? get_the_title() : 'Gabochie Design — Value-Driven Architectural Consultancy, Ghana';
 $og_desc  = is_singular()
     ? wp_trim_words(get_the_excerpt() ?: get_the_content(), 30)
