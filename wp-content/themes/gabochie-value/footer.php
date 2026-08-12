@@ -39,6 +39,7 @@ $social_svgs = array(
         <li><a href="<?php echo esc_url(home_url('/blog/')); ?>">Blog</a></li>
         <li><a href="<?php echo esc_url(gabochie_value_section_url('resources')); ?>">Resources</a></li>
         <li><a href="<?php echo esc_url(gabochie_value_section_url('projects')); ?>">Projects</a></li>
+        <li><a href="<?php echo esc_url(home_url('/community/')); ?>">Community</a></li>
       </ul>
     </div>
     <div class="foot-col">

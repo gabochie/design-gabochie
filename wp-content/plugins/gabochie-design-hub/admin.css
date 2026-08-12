@@ -1,0 +1,67 @@
+/* Gabochie Design Hub - launch checklist
+   Brand: deep green #072E28, gold #C9A96E, cream #F7F4EC */
+
+.gdh-wrap { max-width: 1080px; }
+.gdh-wrap h1 { font-size: 22px; margin: 0 0 6px; }
+.gdh-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 24px;
+    background: #072E28; color: #F7F4EC; border-radius: 10px;
+    padding: 22px 26px; margin: 8px 0 26px;
+}
+.gdh-head p { color: #cfe0da; margin: 0; max-width: 640px; line-height: 1.55; }
+.gdh-head strong { color: #F7F4EC; }
+
+.gdh-gauge {
+    position: relative; flex: 0 0 92px; width: 92px; height: 92px;
+    border-radius: 50%;
+    background: conic-gradient(#C9A96E calc(var(--pct) * 1%), rgba(255,255,255,0.14) 0);
+    display: flex; align-items: center; justify-content: center;
+}
+.gdh-gauge::before {
+    content: ""; position: absolute; inset: 8px; border-radius: 50%; background: #072E28;
+}
+.gdh-gauge span { position: relative; font-weight: 700; font-size: 17px; color: #C9A96E; }
+
+.gdh-group {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 1.4px;
+    color: #072E28; margin: 26px 0 10px; padding-bottom: 6px;
+    border-bottom: 2px solid #C9A96E;
+}
+.gdh-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+
+.gdh-item {
+    display: flex; gap: 12px; background: #fff; border: 1px solid #e2ddd0;
+    border-radius: 8px; padding: 16px 16px 14px; transition: border-color .15s;
+}
+.gdh-item.is-done { border-left: 4px solid #2e7d5b; }
+.gdh-item.is-pending { border-left: 4px solid #C9A96E; }
+
+.gdh-item-status {
+    flex: 0 0 24px; height: 24px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; margin-top: 2px;
+}
+.gdh-item.is-done .gdh-item-status { background: #2e7d5b; color: #fff; }
+.gdh-item.is-pending .gdh-item-status { background: #C9A96E; color: #072E28; }
+
+.gdh-item-body { flex: 1; min-width: 0; }
+.gdh-item-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.gdh-item h3 { margin: 0; font-size: 15px; color: #072E28; }
+.gdh-item p { margin: 6px 0 10px; font-size: 12.5px; line-height: 1.5; color: #555; }
+
+.gdh-tag {
+    font-size: 10px; text-transform: uppercase; letter-spacing: .5px;
+    padding: 2px 7px; border-radius: 20px; white-space: nowrap;
+}
+.gdh-tag.auto { background: #e7f3ec; color: #2e7d5b; }
+.gdh-tag.manual { background: #f6efdc; color: #8a6d1f; }
+
+.gdh-item-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.gdh-item-actions .button { min-height: 30px; line-height: 28px; font-size: 12px; }
+
+.gdh-foot { margin: 22px 0 40px; }
+.gdh-reset { color: #a00; }
+
+@media (max-width: 782px) {
+    .gdh-head { flex-direction: column; align-items: flex-start; }
+}

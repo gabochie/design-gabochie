@@ -16,7 +16,12 @@ $phone   = gabochie_value_phone();
 <!-- ========== POST HERO ========== -->
 <section class="hero hero--solo" id="top">
   <div class="hero-left">
-    <div class="hero-location"><span class="hero-location-dot"></span> <?php echo esc_html(get_the_date()); ?></div>
+    <div class="hero-location"><span class="hero-location-dot"></span> <?php echo esc_html(get_the_date()); ?>
+      <?php $gabochie_author_id = get_post_field('post_author'); ?>
+      <?php if ($gabochie_author_id) : ?>
+      &middot; By <span class="hero-author"><?php echo esc_html(get_the_author_meta('display_name', $gabochie_author_id)); ?></span>
+      <?php endif; ?>
+    </div>
     <h1 class="hero-h1"><?php the_title(); ?></h1>
     <div class="hero-rule"></div>
     <div class="hero-actions">

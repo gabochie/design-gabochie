@@ -15,6 +15,12 @@ $hero_img_default = GABOCHIE_VALUE_URI . '/assets/images/hero.jpg';
 <meta name="format-detection" content="telephone=no">
 <meta name="theme-color" content="#072E28">
 <?php
+/*
+ * Only render theme-level OpenGraph/Twitter tags when Yoast SEO is not
+ * active — when it is, Yoast is the single source of truth (avoids
+ * duplicated, conflicting og: tags in the head which hurt SEO/social).
+ */
+if (!class_exists('WPSEO')) :
 $og_title = is_singular() ? get_the_title() : 'Gabochie Design — Value-Driven Architectural Consultancy, Ghana';
 $og_desc  = is_singular()
     ? wp_trim_words(get_the_excerpt() ?: get_the_content(), 30)
@@ -36,6 +42,7 @@ $og_type = is_singular('post') ? 'article' : 'website';
 <meta name="twitter:title" content="<?php echo esc_attr($og_title); ?>">
 <meta name="twitter:description" content="<?php echo esc_attr($og_desc); ?>">
 <meta name="twitter:image" content="<?php echo esc_url($og_image); ?>">
+<?php endif; ?>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 52 52'%3E%3Cpolygon points='26,3 49,15 49,37 26,49 3,37 3,15' fill='%23072E28' stroke='%23C9A96E' stroke-width='2'/%3E%3Ctext x='26' y='28' text-anchor='middle' font-family='Georgia,serif' font-size='16' font-weight='700' fill='%23C9A96E'%3EGD%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -73,6 +80,7 @@ $og_type = is_singular('post') ? 'article' : 'website';
     <li><a href="<?php echo esc_url(home_url('/blog/')); ?>">Blog</a></li>
     <li><a href="<?php echo esc_url(gabochie_value_section_url('resources')); ?>">Resources</a></li>
     <li><a href="<?php echo esc_url(gabochie_value_section_url('projects')); ?>">Projects</a></li>
+    <li><a href="<?php echo esc_url(home_url('/community/')); ?>">Community</a></li>
   </ul>
   <?php endif; ?>
   <div class="nav-right">
@@ -92,6 +100,7 @@ $og_type = is_singular('post') ? 'article' : 'website';
   <a href="<?php echo esc_url(home_url('/blog/')); ?>">Blog</a>
   <a href="<?php echo esc_url(gabochie_value_section_url('resources')); ?>">Resources</a>
   <a href="<?php echo esc_url(gabochie_value_section_url('projects')); ?>">Projects</a>
+  <a href="<?php echo esc_url(home_url('/community/')); ?>">Community</a>
   <a class="nav-cta" href="<?php echo esc_url(gabochie_value_clarity_url()); ?>">Get Clarity</a>
 </div>
 </header>

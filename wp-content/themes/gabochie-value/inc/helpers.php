@@ -71,3 +71,173 @@ function gabochie_value_json_ld() {
     echo '<script type="application/ld+json">' . wp_json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . '</script>' . "\n";
 }
 add_action('wp_head', 'gabochie_value_json_ld', 1);
+
+/* ============================================
+   AEO: FAQPage schema for posts with an FAQ section
+   ============================================ */
+
+/**
+ * Extract Q&A pairs from a "Frequently Asked Questions" section in post content.
+ * Expects the conventional structure: an <h2>/<h3> heading whose text mentions
+ * "FAQ"/"frequently asked", followed by <h3> question + <p> answer pairs.
+ */
+function gabochie_value_extract_faqs($content) {
+    if (empty($content)) {
+        return array();
+    }
+    $faqs = array();
+    $dom  = new DOMDocument();
+    libxml_use_internal_errors(true);
+    $dom->loadHTML('<meta charset="UTF-8"><div>' . $content . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+    libxml_clear_errors();
+
+    $xpath = new DOMXPath($dom);
+    $nodes = $xpath->query('//h2|//h3');
+    if (!$nodes) {
+        return $faqs;
+    }
+
+    $in_faq    = false;
+    $question  = null;
+    foreach ($nodes as $node) {
+        $text = trim(preg_replace('/\s+/', ' ', $node->textContent));
+
+        if ($node->nodeName === 'h2') {
+            if ($in_faq) {
+                break; // FAQ section ended by the next h2
+            }
+            if (preg_match('/frequently\s*asked|faq/i', $text)) {
+                $in_faq = true;
+                continue;
+            }
+        }
+
+        if ($in_faq && $node->nodeName === 'h3') {
+            $question = $text;
+            $answer   = '';
+            $sib      = $node->nextSibling;
+            while ($sib) {
+                if ($sib->nodeType === XML_ELEMENT_NODE) {
+                    if ($sib->nodeName === 'p') {
+                        $answer = trim(preg_replace('/\s+/', ' ', $sib->textContent));
+                        break;
+                    }
+                    if (in_array($sib->nodeName, array('h2', 'h3', 'table', 'ul', 'ol'), true)) {
+                        break;
+                    }
+                }
+                $sib = $sib->nextSibling;
+            }
+            if ($question !== null && $question !== '' && $answer !== '') {
+                $faqs[] = array('q' => $question, 'a' => $answer);
+            }
+            $question = null;
+        }
+    }
+    return $faqs;
+}
+
+/**
+ * Inject an FAQPage node into Yoast's schema graph for posts that contain a
+ * FAQ section, so answer engines get machine-readable Q&A.
+ */
+function gabochie_value_faq_schema_graph($graph) {
+    if (!is_singular('post')) {
+        return $graph;
+    }
+    $post = get_queried_object();
+    if (!$post || empty($post->post_content)) {
+        return $graph;
+    }
+    $faqs = gabochie_value_extract_faqs($post->post_content);
+    if (count($faqs) < 2) {
+        return $graph;
+    }
+    $main_entity = array();
+    foreach ($faqs as $faq) {
+        $main_entity[] = array(
+            '@type'          => 'Question',
+            'name'           => $faq['q'],
+            'acceptedAnswer' => array(
+                '@type' => 'Answer',
+                'text'  => $faq['a'],
+            ),
+        );
+    }
+    $graph[] = array(
+        '@type'      => 'FAQPage',
+        '@id'        => get_permalink($post) . '#faqpage',
+        'url'        => get_permalink($post),
+        'mainEntity' => $main_entity,
+    );
+    return $graph;
+}
+add_filter('wpseo_schema_graph', 'gabochie_value_faq_schema_graph', 20);
+
+/* ============================================
+   AEO: meta-description fallback for placeholder Yoast descriptions
+   ============================================ */
+
+function gabochie_value_is_placeholder_metadesc($metadesc) {
+    $metadesc = trim($metadesc);
+    if ($metadesc === '') {
+        return true;
+    }
+    if (preg_match('/^Discover how .+ unlocks/i', $metadesc)) {
+        return true;
+    }
+    if (preg_match('/^Everything you need to know about/i', $metadesc)) {
+        return true;
+    }
+    if (preg_match('/Proven strategies, cost breakdowns/i', $metadesc)) {
+        return true;
+    }
+    return false;
+}
+
+function gabochie_value_yoast_metadesc_fallback($metadesc) {
+    if (!is_singular()) {
+        return $metadesc;
+    }
+    if ($metadesc && !gabochie_value_is_placeholder_metadesc($metadesc)) {
+        return $metadesc;
+    }
+    $post = get_queried_object();
+    if (!$post || empty($post->post_content)) {
+        return $metadesc;
+    }
+    $content = preg_replace('/\[[^\]]+\]/', '', $post->post_content); // strip shortcodes
+    $content = wp_strip_all_tags($content);
+    $content = trim(preg_replace('/\s+/', ' ', $content));
+    if ($content === '') {
+        return $metadesc;
+    }
+    $fallback = function_exists('mb_substr') ? mb_substr($content, 0, 158) : substr($content, 0, 158);
+    if ($fallback === '') {
+        return $metadesc;
+    }
+    return $fallback;
+}
+add_filter('wpseo_metadesc', 'gabochie_value_yoast_metadesc_fallback', 20);
+
+/* ============================================
+   AEO: richer link descriptions in Yoast's llms.txt
+   ============================================ */
+
+function gabochie_value_llmstxt_link_description($description, $post_id, $post_type) {
+    if ($description && strlen($description) > 40) {
+        return $description;
+    }
+    $post = get_post($post_id);
+    if (!$post || empty($post->post_content)) {
+        return $description;
+    }
+    $content = wp_strip_all_tags(do_shortcode($post->post_content));
+    $content = trim(preg_replace('/\s+/', ' ', $content));
+    if ($content === '') {
+        return $description;
+    }
+    $trimmed = function_exists('mb_substr') ? mb_substr($content, 0, 200) : substr($content, 0, 200);
+    return $trimmed . '…';
+}
+add_filter('wpseo_llmstxt_link_description', 'gabochie_value_llmstxt_link_description', 10, 3);
