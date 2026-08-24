@@ -86,6 +86,11 @@ $og_type = is_singular('post') ? 'article' : 'website';
   </ul>
   <?php endif; ?>
   <div class="nav-right">
+    <?php if (is_user_logged_in()) : ?>
+      <a class="nav-portal" href="<?php echo esc_url(home_url('/dashboard/')); ?>" style="font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--mist);text-decoration:none;padding:0.55rem 0.75rem;border:1px solid var(--border);border-radius:var(--r-sm);transition:all 0.2s">Dashboard</a>
+    <?php else : ?>
+      <a class="nav-portal" href="<?php echo esc_url(home_url('/login/')); ?>" style="font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--mist);text-decoration:none;padding:0.55rem 0.75rem;border:1px solid var(--border);border-radius:var(--r-sm);transition:all 0.2s">Sign In</a>
+    <?php endif; ?>
     <button class="dark-toggle" id="darkToggle" aria-label="Toggle dark mode">
       <svg class="icon-sun" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
       <svg class="icon-moon" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -103,6 +108,11 @@ $og_type = is_singular('post') ? 'article' : 'website';
   <a href="<?php echo esc_url(gabochie_value_section_url('resources')); ?>">Resources</a>
   <a href="<?php echo esc_url(gabochie_value_section_url('projects')); ?>">Projects</a>
   <a href="<?php echo esc_url(home_url('/community/')); ?>">Community</a>
+  <?php if (is_user_logged_in()) : ?>
+    <a href="<?php echo esc_url(home_url('/dashboard/')); ?>">My Dashboard</a>
+  <?php else : ?>
+    <a href="<?php echo esc_url(home_url('/login/')); ?>">Sign In</a>
+  <?php endif; ?>
   <a class="nav-cta" href="<?php echo esc_url(gabochie_value_clarity_url()); ?>">Get Clarity</a>
 </div>
 </header>

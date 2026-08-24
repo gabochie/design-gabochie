@@ -90,6 +90,7 @@ nav.scrolled { background: rgba(7,46,40,0.98); box-shadow: var(--shadow); }
 .nav-right { display: flex; align-items: center; gap: 1rem; }
 .nav-cta { background: transparent; border: 1px solid var(--gold); color: var(--gold); font-family: 'Jost', sans-serif; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; padding: 0.55rem 1.4rem; cursor: pointer; border-radius: var(--r-sm); text-decoration: none; display: inline-block; min-height: 38px; line-height: 1.6rem; text-align: center; }
 .nav-cta:hover { background: var(--gold); color: var(--teal-dark); }
+.nav-portal:hover { border-color: var(--gold); color: var(--gold); }
 .dark-toggle { background: none; border: 1px solid rgba(201,169,110,0.3); border-radius: 50%; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: rgba(250,247,242,0.5); flex-shrink: 0; }
 .dark-toggle:hover { border-color: var(--gold); color: var(--gold); }
 .dark-toggle svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.5; }
@@ -161,6 +162,14 @@ section { padding: 7rem 2.5rem; }
 .sec-h2 { font-family: 'Playfair Display', serif; font-size: clamp(2.1rem, 3.5vw, 3.3rem); font-weight: 400; line-height: 1.15; color: var(--charcoal); }
 .sec-h2 em { font-style: italic; color: var(--teal); }
 .sec-lead { font-size: 1rem; line-height: 1.9; color: var(--mist); max-width: 640px; margin-top: 1.25rem; font-weight: 400; }
+
+/* Page hero (login/dashboard/inner pages) */
+.page-hero { background: var(--teal-dark); padding: 6rem 2.5rem 4rem; }
+.page-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 3.5vw, 3rem); color: #FAF7F2; margin-bottom: 0.75rem; }
+.page-hero h1 em { font-style: italic; color: var(--gold); }
+.page-hero p { font-size: 1rem; color: var(--mist); max-width: 560px; }
+.page-hero .breadcrumb { font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); margin-bottom: 1.5rem; }
+.page-hero .breadcrumb a { color: var(--gold); }
 
 /* Alone section strip */
 .alone { background: var(--ivory); }
@@ -539,7 +548,7 @@ img.alignleft, img.alignright, img.aligncenter { display: block; }
 @media (max-width: 768px) {
   .container { padding: 0 1.25rem; }
   section { padding: 4.5rem 1.25rem; }
-  .nav-links, .nav-right .nav-cta, .dark-toggle { display: none; }
+  .nav-links, .nav-right .nav-cta, .nav-right .nav-portal, .dark-toggle { display: none; }
   .logo-tag { display: none; }
   .mobile-menu-btn { display: flex; }
   nav { padding: 0 1.25rem; }
@@ -571,6 +580,7 @@ img.alignleft, img.alignright, img.aligncenter { display: block; }
   .foot-grid { grid-template-columns: 1fr; gap: 2.25rem; }
   .wiz-opt-group { grid-template-columns: 1fr; }
   .journey-banner { padding: 1.5rem; }
+  .page-hero { padding: 5rem 1.25rem 2.5rem; }
   .whatsapp-fab { left: 1.25rem; bottom: 1.25rem; width: 56px; height: 56px; }
   .back-to-top { right: 1.25rem; bottom: 1.25rem; }
 }

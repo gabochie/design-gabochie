@@ -28,6 +28,11 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
       <a class="btn-ghost-w" href="<?php echo esc_url(gabochie_value_section_url('journey')); ?>">Explore the journey</a>
     </div>
     <div class="hero-note">Prefer to talk? Call or WhatsApp <?php echo esc_html($phone); ?></div>
+    <?php if (!is_user_logged_in()) : ?>
+    <div class="hero-note" style="margin-top:0.5rem;font-size:0.78rem"><a href="<?php echo esc_url(home_url('/login/')); ?>" style="color:var(--gold);text-decoration:underline">Already a client? Sign in to your dashboard</a></div>
+    <?php else : ?>
+    <div class="hero-note" style="margin-top:0.5rem;font-size:0.78rem"><a href="<?php echo esc_url(home_url('/dashboard/')); ?>" style="color:var(--gold);text-decoration:underline">Go to your dashboard</a></div>
+    <?php endif; ?>
     <div class="hero-stats">
       <div><div class="stat-n">10</div><div class="stat-l">Stages on your building journey</div></div>
       <div><div class="stat-n">14</div><div class="stat-l">Consultancy services, one accountable team</div></div>
