@@ -414,4 +414,98 @@
     });
   });
 
+  /* ---------- exit-intent popup ---------- */
+  (function () {
+    if (localStorage.getItem('gd_popup_dismissed')) return;
+    var shown = false;
+    function showPopup() {
+      if (shown || localStorage.getItem('gd_popup_dismissed')) return;
+      shown = true;
+      var overlay = document.createElement('div');
+      overlay.className = 'exit-popup-overlay';
+      overlay.innerHTML = '<div class="exit-popup">' +
+        '<button class="exit-popup-close" aria-label="Close">&times;</button>' +
+        '<div class="exit-popup-ey">Before you go</div>' +
+        '<h3>Get your free Building Project Readiness Checklist</h3>' +
+        '<p>The 40-point checklist we walk every project through &mdash; before a single cedi is committed.</p>' +
+        '<form class="exit-popup-form" novalidate>' +
+          '<input type="email" placeholder="Your email" required aria-label="Email for checklist">' +
+          '<input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="gd-hp" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">' +
+          '<input type="hidden" name="source" value="exit-popup">' +
+          '<button type="submit">Send me the checklist</button>' +
+        '</form>' +
+        '<div class="exit-popup-ok" style="display:none">Got it &mdash; check your inbox.</div>' +
+        '<div class="exit-popup-alt">Or <a href="/#clarity">answer 5 questions</a> and leave with a direction.</div>' +
+      '</div>';
+      document.body.appendChild(overlay);
+      requestAnimationFrame(function () { overlay.classList.add('show'); });
+      overlay.querySelector('.exit-popup-close').addEventListener('click', function () {
+        overlay.classList.remove('show');
+        setTimeout(function () { overlay.remove(); }, 300);
+        localStorage.setItem('gd_popup_dismissed', '1');
+      });
+      overlay.addEventListener('click', function (e) { if (e.target === overlay) {
+        overlay.classList.remove('show');
+        setTimeout(function () { overlay.remove(); }, 300);
+        localStorage.setItem('gd_popup_dismissed', '1');
+      }});
+      var form = overlay.querySelector('.exit-popup-form');
+      if (form) form.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        var email = (form.querySelector('input[type=email]') || {}).value || '';
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+        var hp = form.querySelector('[name=website]');
+        var btn = form.querySelector('button[type=submit]');
+        if (btn) { btn.disabled = true; btn.textContent = 'Sending\u2026'; }
+        fetch('/wp-json/gabochie/v1/guide-request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, source: 'exit-popup', website: hp ? hp.value : '' })
+        }).then(function (r) {
+          return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, data: d }; });
+        }).then(function (res) {
+          if (res.ok && res.data && res.data.success) {
+            form.style.display = 'none';
+            var ok = overlay.querySelector('.exit-popup-ok');
+            if (ok) ok.style.display = 'block';
+            localStorage.setItem('gd_popup_dismissed', '1');
+          } else {
+            if (btn) { btn.disabled = false; btn.textContent = 'Send me the checklist'; }
+          }
+        }).catch(function () {
+          if (btn) { btn.disabled = false; btn.textContent = 'Send me the checklist'; }
+        });
+      });
+    }
+    document.addEventListener('mouseout', function (e) {
+      if (e.clientY < 10) showPopup();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') showPopup();
+    });
+    setTimeout(function () {
+      if (!shown && !localStorage.getItem('gd_popup_dismissed')) {
+        var st = window.pageYOffset || document.documentElement.scrollTop;
+        var h = document.documentElement.scrollHeight - window.innerHeight;
+        if (h > 0 && st / h > 0.7) showPopup();
+      }
+    }, 45000);
+  })();
+
+  /* ---------- CTA analytics tracking ---------- */
+  (function () {
+    $$('.btn-gold, .btn-ghost, .btn-ghost-w, .btn-solid, .whatsapp-btn, .whatsapp-fab, .svc, .share-btn').forEach(function (el) {
+      el.addEventListener('click', function () {
+        var label = el.textContent.trim().substring(0, 50) || el.getAttribute('aria-label') || 'cta';
+        var href = el.getAttribute('href') || '';
+        var type = 'cta_click';
+        if (href.indexOf('wa.me') !== -1) type = 'whatsapp_click';
+        else if (href.indexOf('tel:') !== -1) type = 'phone_click';
+        else if (el.classList.contains('share-btn')) type = 'share_click';
+        else if (el.classList.contains('svc')) type = 'service_click';
+        window.Gabochie.track(type, { label: label, href: href.substring(0, 100) });
+      });
+    });
+  })();
+
 })();
