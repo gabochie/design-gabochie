@@ -24,7 +24,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
     <div class="hero-rule"></div>
     <p class="hero-sub">Gabochie Design is a development facilitation and design consultancy that believes the best projects begin with honest answers &mdash; not beautiful drawings. We help clients build the right thing, control cost honestly, and protect their interest from brief to handover.</p>
     <div class="hero-actions">
-      <a class="btn-gold" href="<?php echo esc_url($clarity); ?>">Get Clarity</a>
+      <a class="btn-gold" href="<?php echo esc_url($clarity); ?>">Start Here</a>
       <a class="btn-ghost-w" href="<?php echo esc_url(gabochie_value_section_url('services')); ?>">See what we do</a>
     </div>
     <div class="hero-note">Prefer to talk? Call or WhatsApp <?php echo esc_html($phone); ?></div>
@@ -46,7 +46,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
       <blockquote>We don't simply ask, "What should we design?" We ask: what should you build, why should you build it, what should it cost &mdash; and how do we help you get the best possible outcome?</blockquote>
       <div>
         <p>Better decisions happen when design, cost, feasibility and delivery sit under one roof. That's what we do &mdash; whether you're in Accra or abroad.</p>
-        <a class="btn-ghost-w" href="<?php echo esc_url($clarity); ?>" style="margin-top:1.5rem;display:inline-block">Get Clarity</a>
+        <a class="btn-ghost-w" href="<?php echo esc_url($clarity); ?>" style="margin-top:1.5rem;display:inline-block">Start Here</a>
       </div>
     </div>
   </div>
@@ -87,7 +87,7 @@ get_template_part('inc/template-parts/cta-band', null, array(
     'title'   => 'Let\'s test what we <em>stand for.</em>',
     'sub'     => 'Bring us your idea, your stalled project or your questions. You\'ll leave with a direction &mdash; and real information, whether or not you work with us.',
     'actions' => array(
-        array('class' => 'btn-gold', 'href' => $clarity, 'text' => 'Get Clarity'),
+        array('class' => 'btn-gold', 'href' => $clarity, 'text' => 'Start Here'),
         array('class' => 'whatsapp-btn', 'href' => $wa_base . 'Hello%20Gabochie%20Design%20%E2%80%94%20from%20your%20website.', 'text' => 'WhatsApp Us', 'icon' => 'whatsapp'),
         array('class' => 'btn-ghost-w', 'href' => 'tel:' . $phone_tel, 'text' => 'Call ' . $phone),
     ),
