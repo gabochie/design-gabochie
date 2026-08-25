@@ -607,7 +607,7 @@ img.alignleft, img.alignright, img.aligncenter { display: block; }
 /* ============ FOOTER NEWSLETTER ============ */
 .foot-newsletter { max-width: 1280px; margin: 0 auto; padding: 1.75rem 0; border-bottom: 1px solid rgba(201,169,110,0.12); }
 .foot-newsletter-inner { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
-.foot-newsletter-label { font-size: 0.82rem; color: rgba(250,247,242,0.5); font-weight: 400; white-space: nowrap; }
+.foot-newsletter-label { font-size: 0.82rem; color: rgba(250,247,242,0.5); font-weight: 400; }
 .foot-newsletter-form { display: flex; gap: 0.5rem; }
 .foot-newsletter-form input[type="email"] { padding: 0.6rem 1rem; background: rgba(250,247,242,0.08); border: 1px solid rgba(201,169,110,0.2); border-radius: var(--r-sm); color: #FAF7F2; font-size: 0.82rem; font-family: 'Jost', sans-serif; min-width: 220px; }
 .foot-newsletter-form input[type="email"]::placeholder { color: rgba(250,247,242,0.3); }
