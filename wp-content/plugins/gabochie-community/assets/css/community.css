@@ -76,6 +76,18 @@
 	background: #fff;
 }
 
+@media (min-width: 768px) {
+	.gqc-chips {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: .75rem;
+		padding: 1.5rem 2rem;
+	}
+	.gqc-chip {
+		justify-content: center;
+	}
+}
+
 .gqc-chip:hover {
 	border-color: var(--gold);
 	color: var(--gold);
