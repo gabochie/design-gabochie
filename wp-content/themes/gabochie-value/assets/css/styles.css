@@ -223,7 +223,7 @@ section { padding: 4.5rem 2.5rem; }
 .btn-ghost { font-size: 0.74rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--mist); background: none; border: none; border-bottom: 1px solid var(--border); padding-bottom: 2px; cursor: pointer; font-family: 'Jost', sans-serif; min-height: 44px; }
 .btn-ghost:hover { color: var(--teal); border-color: var(--teal); }
 .wiz-validate .btn-ghost { margin-right: auto; }
-.reassure-line { font-size: 0.8rem; color: var(--gold-light); margin-top: 1.1rem; font-style: italic; }
+.reassure-line { font-size: 0.8rem; color: var(--teal-mid); margin-top: 1.1rem; font-style: italic; }
 .wiz-field { margin-bottom: 2rem; max-width: 560px; }
 .wiz-field label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--charcoal); margin-bottom: 0.6rem; letter-spacing: 0.04em; }
 .wiz-field label .req { color: var(--gold); }
@@ -293,7 +293,7 @@ section { padding: 4.5rem 2.5rem; }
 .stage .st-n { font-family: 'Playfair Display', serif; font-style: italic; font-size: 0.85rem; color: var(--gold); }
 .stage .st-t { font-family: 'Playfair Display', serif; font-size: 1.35rem; color: #FAF7F2; font-weight: 400; margin: 0.7rem 0 1.1rem; text-transform: uppercase; letter-spacing: 0.05em; }
 .stage dl { display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 1.5rem; }
-.stage dt { font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(250,247,242,0.5); font-weight: 500; }
+.stage dt { font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(250,247,242,0.6); font-weight: 500; }
 .stage dd { font-size: 0.84rem; line-height: 1.7; color: rgba(250,247,242,0.62); font-weight: 400; }
 .stage .st-cta { margin-top: auto; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); border-bottom: 1px solid rgba(201,169,110,0.4); padding-bottom: 2px; display: inline-block; align-self: flex-start; }
 
