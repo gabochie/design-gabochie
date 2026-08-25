@@ -40,7 +40,7 @@ $social_svgs = array(
 
     <!-- Services -->
     <div class="foot-col">
-      <h4>Services</h4>
+      <p class="foot-heading">Services</p>
       <ul>
         <li><a href="<?php echo esc_url(gabochie_value_section_url('services')); ?>">Clarity &amp; Feasibility</a></li>
         <li><a href="<?php echo esc_url(gabochie_value_section_url('services')); ?>">Architectural Design</a></li>
@@ -52,7 +52,7 @@ $social_svgs = array(
 
     <!-- Company -->
     <div class="foot-col">
-      <h4>Company</h4>
+      <p class="foot-heading">Company</p>
       <ul>
         <li><a href="<?php echo esc_url(home_url('/about/')); ?>">About Us</a></li>
         <li><a href="<?php echo esc_url(home_url('/blog/')); ?>">Blog</a></li>
@@ -64,7 +64,7 @@ $social_svgs = array(
 
     <!-- Contact -->
     <div class="foot-col">
-      <h4>Contact</h4>
+      <p class="foot-heading">Contact</p>
       <ul>
         <li class="foot-contact">
           <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>

@@ -6,6 +6,12 @@
 if (!defined('ABSPATH')) exit;
 
 function gabochie_value_scripts() {
+    // Preconnect for Google Fonts
+    add_action('wp_head', function () {
+        echo '<link rel="preconnect" href="https://fonts.googleapis.com">' . "\n";
+        echo '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' . "\n";
+    }, 1);
+
     // Brand fonts (gabochiedesign.com typography)
     wp_enqueue_style(
         'gabochie-value-fonts',
