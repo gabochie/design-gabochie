@@ -54,7 +54,7 @@ $social_svgs = array(
     <div class="foot-col">
       <h4>Company</h4>
       <ul>
-        <li><a href="<?php echo esc_url(gabochie_value_section_url('services')); ?>">About Us</a></li>
+        <li><a href="<?php echo esc_url(home_url('/about/')); ?>">About Us</a></li>
         <li><a href="<?php echo esc_url(home_url('/blog/')); ?>">Blog</a></li>
         <li><a href="<?php echo esc_url(home_url('/community/')); ?>">Community</a></li>
         <li><a href="<?php echo esc_url(home_url('/login/')); ?>">Client Portal</a></li>
@@ -81,6 +81,20 @@ $social_svgs = array(
       </ul>
     </div>
 
+  </div>
+
+  <!-- Newsletter signup -->
+  <div class="foot-newsletter">
+    <div class="foot-newsletter-inner">
+      <span class="foot-newsletter-label">Get practical building insights &mdash; no spam, unsubscribe anytime.</span>
+      <form class="foot-newsletter-form" novalidate>
+        <input type="email" placeholder="Your email" required aria-label="Email for newsletter">
+        <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="gd-hp" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+        <input type="hidden" name="source" value="footer-newsletter">
+        <button type="submit">Subscribe</button>
+      </form>
+      <div class="foot-newsletter-ok" style="display:none">Subscribed &mdash; welcome aboard.</div>
+    </div>
   </div>
 
   <!-- Bottom bar: copyright + legal links -->

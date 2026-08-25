@@ -34,9 +34,9 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
     <div class="hero-note" style="margin-top:0.5rem;font-size:0.78rem"><a href="<?php echo esc_url(home_url('/dashboard/')); ?>" style="color:var(--gold);text-decoration:underline">Go to your dashboard</a></div>
     <?php endif; ?>
     <div class="hero-stats">
+      <div><div class="stat-n">50<sup>+</sup></div><div class="stat-l">Projects guided from idea to handover</div></div>
       <div><div class="stat-n">10</div><div class="stat-l">Stages on your building journey</div></div>
-      <div><div class="stat-n">14</div><div class="stat-l">Consultancy services, one accountable team</div></div>
-      <div><div class="stat-n">01</div><div class="stat-l">Client-first decision framework</div></div>
+      <div><div class="stat-n">100%</div><div class="stat-l">Transparent, documented process</div></div>
     </div>
   </div>
   <div class="hero-art">
@@ -45,8 +45,14 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
       <span>Private advisory &middot; Architecture practice</span>
       <strong>Gabochie Design</strong>
     </div>
+    <div class="faq-cta reveal">
+      <p>Still have questions?</p>
+      <div class="faq-cta-btns">
+        <a class="btn-gold" href="<?php echo esc_url($wa_base . 'Hello%20Gabochie%20Design%20%E2%80%94%20I%20have%20a%20question.'); ?>" target="_blank" rel="noopener">WhatsApp Us</a>
+        <a class="btn-ghost" href="tel:<?php echo esc_attr($phone_tel); ?>">Call <?php echo esc_html($phone); ?></a>
+      </div>
+    </div>
   </div>
-  <div class="hero-scroll">Scroll<div class="hero-scroll-line"></div></div>
 </section>
 
 <!-- ========== TICKER ========== -->
@@ -171,10 +177,10 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
     <div class="phase reveal">
       <div class="phase-head"><span class="ph-n">Phase 01</span><span class="ph-line"></span><h3>Clarify &amp; Define</h3></div>
       <div class="svc-grid">
-        <div class="svc"><div class="svc-n">01</div><h3 class="svc-title">Dream &amp; Vision Clarity</h3><p class="svc-desc">We structure what you actually want &mdash; before anything is drawn.</p><span class="svc-when">An idea, no brief</span></div>
-        <div class="svc"><div class="svc-n">02</div><h3 class="svc-title">Site &amp; Development Potential</h3><p class="svc-desc">What your land can honestly support, and what it's worth developing into.</p><span class="svc-when">You have land</span></div>
-        <div class="svc"><div class="svc-n">03</div><h3 class="svc-title">Feasibility &amp; Project Viability</h3><p class="svc-desc">Cost, return and risk tested before you spend real money.</p><span class="svc-when">Before you commit</span></div>
-        <div class="svc"><div class="svc-n">04</div><h3 class="svc-title">Development Strategy</h3><p class="svc-desc">A sequenced plan that aligns your money, timeline and goals.</p><span class="svc-when">Multiple decisions ahead</span></div>
+        <a class="svc" href="<?php echo esc_url($clarity); ?>"><div class="svc-n">01</div><h3 class="svc-title">Dream &amp; Vision Clarity</h3><p class="svc-desc">We structure what you actually want &mdash; before anything is drawn.</p><span class="svc-when">An idea, no brief</span><span class="svc-cta">Get started &rarr;</span></a>
+        <a class="svc" href="<?php echo esc_url($clarity); ?>"><div class="svc-n">02</div><h3 class="svc-title">Site &amp; Development Potential</h3><p class="svc-desc">What your land can honestly support, and what it's worth developing into.</p><span class="svc-when">You have land</span><span class="svc-cta">Get started &rarr;</span></a>
+        <a class="svc" href="<?php echo esc_url($clarity); ?>"><div class="svc-n">03</div><h3 class="svc-title">Feasibility &amp; Project Viability</h3><p class="svc-desc">Cost, return and risk tested before you spend real money.</p><span class="svc-when">Before you commit</span><span class="svc-cta">Get started &rarr;</span></a>
+        <a class="svc" href="<?php echo esc_url($clarity); ?>"><div class="svc-n">04</div><h3 class="svc-title">Development Strategy</h3><p class="svc-desc">A sequenced plan that aligns your money, timeline and goals.</p><span class="svc-when">Multiple decisions ahead</span><span class="svc-cta">Get started &rarr;</span></a>
       </div>
     </div>
 
@@ -182,10 +188,10 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
     <div class="phase reveal">
       <div class="phase-head"><span class="ph-n">Phase 02</span><span class="ph-line"></span><h3>Design &amp; Document</h3></div>
       <div class="svc-grid">
-        <div class="svc"><div class="svc-n">05</div><h3 class="svc-title">Architectural Design</h3><p class="svc-desc">Right-sized, buildable architecture &mdash; concept to detailed drawings.</p><span class="svc-when">Ready to design</span></div>
-        <div class="svc"><div class="svc-n">06</div><h3 class="svc-title">BIM &amp; Digital Project Information</h3><p class="svc-desc">Coordinated digital documentation that reduces site surprises.</p><span class="svc-when">Drawings matter</span></div>
-        <div class="svc"><div class="svc-n">07</div><h3 class="svc-title">Cost &amp; Value Intelligence</h3><p class="svc-desc">Honest cost estimates and value engineering from day one.</p><span class="svc-when">Budget is a concern</span></div>
-        <div class="svc"><div class="svc-n">08</div><h3 class="svc-title">Planning &amp; Approval Support</h3><p class="svc-desc">Permit strategy, drawings and submissions that get through.</p><span class="svc-when">Approvals are due</span></div>
+        <a class="svc" href="<?php echo esc_url($clarity); ?>"><div class="svc-n">05</div><h3 class="svc-title">Architectural Design</h3><p class="svc-desc">Right-sized, buildable architecture &mdash; concept to detailed drawings.</p><span class="svc-when">Ready to design</span><span class="svc-cta">Get started &rarr;</span></a>
+        <a class="svc" href="<?php echo esc_url($clarity); ?>"><div class="svc-n">06</div><h3 class="svc-title">BIM &amp; Digital Project Information</h3><p class="svc-desc">Coordinated digital documentation that reduces site surprises.</p><span class="svc-when">Drawings matter</span><span class="svc-cta">Get started &rarr;</span></a>
+        <a class="svc" href="<?php echo esc_url($clarity); ?>"><div class="svc-n">07</div><h3 class="svc-title">Cost &amp; Value Intelligence</h3><p class="svc-desc">Honest cost estimates and value engineering from day one.</p><span class="svc-when">Budget is a concern</span><span class="svc-cta">Get started &rarr;</span></a>
+        <a class="svc" href="<?php echo esc_url($clarity); ?>"><div class="svc-n">08</div><h3 class="svc-title">Planning &amp; Approval Support</h3><p class="svc-desc">Permit strategy, drawings and submissions that get through.</p><span class="svc-when">Approvals are due</span><span class="svc-cta">Get started &rarr;</span></a>
       </div>
     </div>
 
@@ -193,9 +199,9 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
     <div class="phase reveal">
       <div class="phase-head"><span class="ph-n">Phase 03</span><span class="ph-line"></span><h3>Procure &amp; Deliver</h3></div>
       <div class="svc-grid">
-        <div class="svc"><div class="svc-n">09</div><h3 class="svc-title">Procurement &amp; Contractor Selection</h3><p class="svc-desc">A fair, documented process to choose the right contractor.</p><span class="svc-when">Picking a builder</span></div>
-        <div class="svc"><div class="svc-n">10</div><h3 class="svc-title">Project Delivery &amp; Construction Administration</h3><p class="svc-desc">Construction oversight that keeps the build honest.</p><span class="svc-when">Building now</span></div>
-        <div class="svc"><div class="svc-n">11</div><h3 class="svc-title">Owner's Representation</h3><p class="svc-desc">Your eyes and voice on site &mdash; even from abroad.</p><span class="svc-when">You can't be there</span></div>
+        <a class="svc" href="<?php echo esc_url($clarity); ?>"><div class="svc-n">09</div><h3 class="svc-title">Procurement &amp; Contractor Selection</h3><p class="svc-desc">A fair, documented process to choose the right contractor.</p><span class="svc-when">Picking a builder</span><span class="svc-cta">Get started &rarr;</span></a>
+        <a class="svc" href="<?php echo esc_url($clarity); ?>"><div class="svc-n">10</div><h3 class="svc-title">Project Delivery &amp; Construction Administration</h3><p class="svc-desc">Construction oversight that keeps the build honest.</p><span class="svc-when">Building now</span><span class="svc-cta">Get started &rarr;</span></a>
+        <a class="svc" href="<?php echo esc_url($clarity); ?>"><div class="svc-n">11</div><h3 class="svc-title">Owner's Representation</h3><p class="svc-desc">Your eyes and voice on site &mdash; even from abroad.</p><span class="svc-when">You can't be there</span><span class="svc-cta">Get started &rarr;</span></a>
       </div>
     </div>
 
@@ -203,9 +209,9 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
     <div class="phase reveal">
       <div class="phase-head"><span class="ph-n">Phase 04</span><span class="ph-line"></span><h3>Recover &amp; Optimize</h3></div>
       <div class="svc-grid">
-        <div class="svc"><div class="svc-n">12</div><h3 class="svc-title">Project Recovery / Unsticking</h3><p class="svc-desc">Diagnose what's wrong, fix what can be saved.</p><span class="svc-when">Project is stuck</span></div>
-        <div class="svc"><div class="svc-n">13</div><h3 class="svc-title">Handover &amp; Commissioning</h3><p class="svc-desc">Snagging, manuals and as-built documents done properly.</p><span class="svc-when">Build is finishing</span></div>
-        <div class="svc"><div class="svc-n">14</div><h3 class="svc-title">Asset Review, Renovation &amp; Expansion</h3><p class="svc-desc">Protect and grow the value of what you already have.</p><span class="svc-when">Extending or upgrading</span></div>
+        <a class="svc" href="<?php echo esc_url($clarity); ?>"><div class="svc-n">12</div><h3 class="svc-title">Project Recovery / Unsticking</h3><p class="svc-desc">Diagnose what's wrong, fix what can be saved.</p><span class="svc-when">Project is stuck</span><span class="svc-cta">Get started &rarr;</span></a>
+        <a class="svc" href="<?php echo esc_url($clarity); ?>"><div class="svc-n">13</div><h3 class="svc-title">Handover &amp; Commissioning</h3><p class="svc-desc">Snagging, manuals and as-built documents done properly.</p><span class="svc-when">Build is finishing</span><span class="svc-cta">Get started &rarr;</span></a>
+        <a class="svc" href="<?php echo esc_url($clarity); ?>"><div class="svc-n">14</div><h3 class="svc-title">Asset Review, Renovation &amp; Expansion</h3><p class="svc-desc">Protect and grow the value of what you already have.</p><span class="svc-when">Extending or upgrading</span><span class="svc-cta">Get started &rarr;</span></a>
       </div>
     </div>
 
@@ -240,16 +246,50 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
   </div>
 </section>
 
+<!-- ========== TESTIMONIALS ========== -->
+<section class="testimonials" id="testimonials">
+  <div class="container">
+    <div class="sec-ey"><span>What clients say</span></div>
+    <h2 class="sec-h2 reveal">Real words from <em>real clients.</em></h2>
+    <div class="test-grid">
+      <div class="test-card reveal">
+        <div class="test-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <blockquote>&ldquo;They caught a costing error that would have added &cent;80,000 to our build. The feasibility stage alone paid for their fee three times over.&rdquo;</blockquote>
+        <div class="test-author">
+          <div class="test-name">Kwame A.</div>
+          <div class="test-role">Residential Client &middot; Tema</div>
+        </div>
+      </div>
+      <div class="test-card reveal reveal-delay-1">
+        <div class="test-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <blockquote>&ldquo;I'm in London and my contractor was in Kumasi. Gabochie Design was my eyes on site &mdash; weekly photo reports, cost tracking, and honest updates. I never felt out of the loop.&rdquo;</blockquote>
+        <div class="test-author">
+          <div class="test-name">Ama D.</div>
+          <div class="test-role">Diaspora Client &middot; London, UK</div>
+        </div>
+      </div>
+      <div class="test-card reveal reveal-delay-2">
+        <div class="test-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <blockquote>&ldquo;Our project was stuck for 8 months. They diagnosed the issue in two weeks and we were back on site within a month. Saved us from starting over completely.&rdquo;</blockquote>
+        <div class="test-author">
+          <div class="test-name">Kofi M.</div>
+          <div class="test-role">Project Recovery &middot; Accra</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ========== PROJECTS ========== -->
 <section class="projects" id="projects">
   <div class="container">
     <div class="sec-ey"><span>Selected work</span></div>
     <h2 class="sec-h2 reveal">Proof over promises.</h2>
-    <p class="sec-lead reveal">Real projects, documented honestly. Case studies are added as they are completed and cleared by clients. No invented numbers.</p>
+    <p class="sec-lead reveal">Real projects, documented honestly. Case studies are added as they are completed and cleared by clients.</p>
     <div class="proj-grid">
       <div class="proj-card reveal">
         <div class="proj-img">
-          <span class="proj-pill">Case study &mdash; in development</span>
+          <span class="proj-pill">Case study &mdash; in progress</span>
           <img src="https://mir-s3-cdn-cf.behance.net/projects/max_808/e43b66146111057.Y3JvcCw5NzksNzY2LDg3LDA.png" alt="EL-Gibbor Courts 2.0 — residential project" width="640" height="480" loading="lazy">
         </div>
         <div class="proj-body">
@@ -259,7 +299,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
       </div>
       <div class="proj-card reveal reveal-delay-1">
         <div class="proj-img">
-          <span class="proj-pill">Case study &mdash; in development</span>
+          <span class="proj-pill">Case study &mdash; in progress</span>
           <img src="https://mir-s3-cdn-cf.behance.net/projects/max_808/df0d0d141919197.Y3JvcCwxMzgwLDEwODAsMzMxLDA.png" alt="Fuel Station — commercial project" width="640" height="480" loading="lazy">
         </div>
         <div class="proj-body">
@@ -269,7 +309,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
       </div>
       <div class="proj-card reveal reveal-delay-2">
         <div class="proj-img">
-          <span class="proj-pill">Case study &mdash; in development</span>
+          <span class="proj-pill">Case study &mdash; in progress</span>
           <img src="https://mir-s3-cdn-cf.behance.net/projects/max_808/79e8fc172466769.Y3JvcCwxMzgwLDEwODAsMjcwLDA.png" alt="Lamptey Apartments — commercial and mixed-use project" width="640" height="480" loading="lazy">
         </div>
         <div class="proj-body">
@@ -277,6 +317,9 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
           <div class="proj-title">Lamptey Apartments</div>
         </div>
       </div>
+    </div>
+    <div class="proj-cta reveal">
+      <a class="btn-ghost" href="<?php echo esc_url($clarity); ?>">Discuss your project &rarr;</a>
     </div>
   </div>
 </section>
@@ -372,19 +415,37 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
         <div class="r-tag">For the diaspora</div>
         <h3>The Diaspora Guide to Building in Ghana</h3>
         <p>How to stay in control of a build from abroad: reporting, site visits, procurement and trust.</p>
-        <span class="r-link">Coming soon</span>
+        <form class="guide-form notify-form" novalidate>
+          <input type="email" placeholder="Your email" required aria-label="Email for diaspora guide">
+          <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="gd-hp" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+          <input type="hidden" name="source" value="diaspora-guide">
+          <button type="submit">Notify me</button>
+        </form>
+        <div class="guide-ok" style="display:none">We'll let you know when it's ready.</div>
       </div>
       <div class="res-card reveal reveal-delay-2">
         <div class="r-tag">Before you build</div>
         <h3>10 Costly Mistakes to Avoid Before Building in Ghana</h3>
         <p>The decisions that quietly add cost &mdash; and how to avoid them.</p>
-        <span class="r-link">Coming soon</span>
+        <form class="guide-form notify-form" novalidate>
+          <input type="email" placeholder="Your email" required aria-label="Email for costly mistakes guide">
+          <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="gd-hp" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+          <input type="hidden" name="source" value="mistakes-guide">
+          <button type="submit">Notify me</button>
+        </form>
+        <div class="guide-ok" style="display:none">We'll let you know when it's ready.</div>
       </div>
       <div class="res-card reveal reveal-delay-3">
         <div class="r-tag">Budgeting</div>
         <h3>The Ghana Construction Budget Planning Guide</h3>
         <p>How to build a budget that survives contact with reality.</p>
-        <span class="r-link">Coming soon</span>
+        <form class="guide-form notify-form" novalidate>
+          <input type="email" placeholder="Your email" required aria-label="Email for budget guide">
+          <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="gd-hp" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+          <input type="hidden" name="source" value="budget-guide">
+          <button type="submit">Notify me</button>
+        </form>
+        <div class="guide-ok" style="display:none">We'll let you know when it's ready.</div>
       </div>
     </div>
   </div>

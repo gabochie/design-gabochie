@@ -305,4 +305,36 @@
     });
   });
 
+  /* notify-me forms (coming-soon resource cards) + footer newsletter */
+  $$('.notify-form, .foot-newsletter-form').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var input = form.querySelector('input[type=email]');
+      var email = (input ? input.value : '').trim();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+      var hp = form.querySelector('[name=website]');
+      var source = (form.querySelector('[name=source]') || {}).value || 'notify';
+      var btn = form.querySelector('button[type=submit]');
+      var btnText = btn ? btn.textContent : '';
+      if (btn) { btn.disabled = true; btn.textContent = 'Sending\u2026'; }
+      fetch('/wp-json/gabochie/v1/guide-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, source: source, website: hp ? hp.value : '' })
+      }).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, data: d }; });
+      }).then(function (res) {
+        if (res.ok && res.data && res.data.success) {
+          var ok = form.parentElement.querySelector('.guide-ok, .foot-newsletter-ok');
+          form.style.display = 'none';
+          if (ok) ok.style.display = 'block';
+        } else {
+          if (btn) { btn.disabled = false; btn.textContent = btnText; }
+        }
+      }).catch(function () {
+        if (btn) { btn.disabled = false; btn.textContent = btnText; }
+      });
+    });
+  });
+
 })();

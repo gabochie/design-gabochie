@@ -731,7 +731,7 @@ class YoastSmartAutoFixer {
             case 'internal_links':
                 return "[/services/] Our Services\n[/portfolio/] View Our Work";
             case 'external_links':
-                return "[https://www.houzz.com] Houzz Inspiration\n[https://www.pinterest.com] Pinterest Ideas";
+                return $text;
             default:
                 return $text;
         }
