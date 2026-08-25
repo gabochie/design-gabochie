@@ -55,7 +55,7 @@ body.dark-mode .svc { background: rgba(15,26,24,0.8); }
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
 
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; scroll-padding-top: 100px; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; scroll-padding-top: 100px; overflow-x: hidden; }
 body { font-family: 'Jost', sans-serif; background: var(--ivory); color: var(--charcoal); overflow-x: hidden; font-weight: 400; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 a { color: var(--teal); text-decoration: none; transition: color 0.2s; }
 a:hover { color: var(--gold); }
@@ -693,6 +693,7 @@ img.alignleft, img.alignright, img.aligncenter { display: block; }
   .test-grid { grid-template-columns: 1fr; }
   .faq-cta-btns { flex-direction: column; align-items: center; }
   .foot-newsletter-inner { flex-direction: column; text-align: center; }
+  .foot-newsletter-label { white-space: normal; }
   .foot-newsletter-form { flex-wrap: wrap; justify-content: center; }
   .post-share { flex-direction: column; align-items: flex-start; }
   .post-capture .guide-form { flex-direction: column; }
