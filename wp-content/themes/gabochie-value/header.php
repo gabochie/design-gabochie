@@ -64,7 +64,7 @@ $og_type = is_singular('post') ? 'article' : 'website';
 <nav aria-label="Primary">
   <a class="logo-link" href="<?php echo esc_url(home_url('/')); ?>">
     <svg class="logo-hex" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <polygon points="26,4 47,15 47,37 26,48 5,37 5,15" fill="#072E28" stroke="#C9A96E" stroke-width="2"/>
+      <polygon points="26,4 47,15 47,37 26,48 5,37 26,4z" fill="#072E28" stroke="#C9A96E" stroke-width="2"/>
       <text x="26" y="29" text-anchor="middle" font-family="Georgia,serif" font-size="17" font-weight="700" fill="#C9A96E">GD</text>
     </svg>
     <span class="logo-text">
@@ -77,42 +77,40 @@ $og_type = is_singular('post') ? 'article' : 'website';
   <?php else : ?>
   <ul class="nav-links" id="navLinks">
     <li><a href="<?php echo esc_url(gabochie_value_section_url('services')); ?>">Services</a></li>
-    <li><a href="<?php echo esc_url(gabochie_value_section_url('journey')); ?>">Journey</a></li>
-    <li><a href="<?php echo esc_url(gabochie_value_section_url('diaspora')); ?>">Diaspora</a></li>
+    <li><a href="<?php echo esc_url(home_url('/about/')); ?>">About</a></li>
     <li><a href="<?php echo esc_url(home_url('/blog/')); ?>">Blog</a></li>
-    <li><a href="<?php echo esc_url(gabochie_value_section_url('resources')); ?>">Resources</a></li>
-    <li><a href="<?php echo esc_url(gabochie_value_section_url('projects')); ?>">Projects</a></li>
-    <li><a href="<?php echo esc_url(home_url('/community/')); ?>">Community</a></li>
   </ul>
   <?php endif; ?>
   <div class="nav-right">
+    <a class="nav-cta" href="<?php echo esc_url(gabochie_value_clarity_url()); ?>">Start Here</a>
     <?php if (is_user_logged_in()) : ?>
-      <a class="nav-portal" href="<?php echo esc_url(home_url('/dashboard/')); ?>" style="font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--mist);text-decoration:none;padding:0.55rem 0.75rem;border:1px solid var(--border);border-radius:var(--r-sm);transition:all 0.2s">Dashboard</a>
+      <a class="nav-portal" href="<?php echo esc_url(home_url('/dashboard/')); ?>">Dashboard</a>
     <?php else : ?>
-      <a class="nav-portal" href="<?php echo esc_url(home_url('/login/')); ?>" style="font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--mist);text-decoration:none;padding:0.55rem 0.75rem;border:1px solid var(--border);border-radius:var(--r-sm);transition:all 0.2s">Sign In</a>
+      <a class="nav-portal" href="<?php echo esc_url(home_url('/login/')); ?>">Sign In</a>
     <?php endif; ?>
     <button class="dark-toggle" id="darkToggle" aria-label="Toggle dark mode">
       <svg class="icon-sun" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
       <svg class="icon-moon" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
     </button>
-    <a class="nav-cta" href="<?php echo esc_url(gabochie_value_clarity_url()); ?>">Get Clarity</a>
     <button class="mobile-menu-btn" id="navToggle" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
   </div>
 </nav>
 <div class="mobile-menu" id="mobileMenu">
+  <a class="mobile-cta" href="<?php echo esc_url(gabochie_value_clarity_url()); ?>">Start Here</a>
   <a href="<?php echo esc_url(gabochie_value_section_url('services')); ?>">Services</a>
+  <a href="<?php echo esc_url(home_url('/about/')); ?>">About</a>
+  <a href="<?php echo esc_url(home_url('/blog/')); ?>">Blog</a>
+  <div class="mobile-divider"></div>
   <a href="<?php echo esc_url(gabochie_value_section_url('journey')); ?>">Building Journey</a>
   <a href="<?php echo esc_url(gabochie_value_section_url('diaspora')); ?>">For Diaspora</a>
-  <a href="<?php echo esc_url(gabochie_value_section_url('recovery')); ?>">Project Recovery</a>
-  <a href="<?php echo esc_url(home_url('/blog/')); ?>">Blog</a>
+  <a href="<?php echo esc_url(home_url('/community/')); ?>">Community</a>
   <a href="<?php echo esc_url(gabochie_value_section_url('resources')); ?>">Resources</a>
   <a href="<?php echo esc_url(gabochie_value_section_url('projects')); ?>">Projects</a>
-  <a href="<?php echo esc_url(home_url('/community/')); ?>">Community</a>
+  <div class="mobile-divider"></div>
   <?php if (is_user_logged_in()) : ?>
     <a href="<?php echo esc_url(home_url('/dashboard/')); ?>">My Dashboard</a>
   <?php else : ?>
     <a href="<?php echo esc_url(home_url('/login/')); ?>">Sign In</a>
   <?php endif; ?>
-  <a class="nav-cta" href="<?php echo esc_url(gabochie_value_clarity_url()); ?>">Get Clarity</a>
 </div>
 </header>
