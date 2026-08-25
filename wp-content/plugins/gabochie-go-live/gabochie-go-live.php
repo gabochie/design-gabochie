@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Gabochie Go Live
  * Description: Push staging (wp.gabochiedesign.com) to production (gabochiedesign.com) via the server-side promote.sh engine. Staging site only.
- * Version: 1.2.0
+ * Version: 1.3.0
  * Author: Gabochie Design
  * License: GPL-2.0+
  * Text Domain: gabochie-go-live
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) exit;
 
 class Gabochie_Go_Live {
 
-    const VERSION = '1.2.0';
+    const VERSION = '1.3.0';
 
     public static function deploy_dir() {
         return apply_filters('gabochie_go_live_deploy_dir', '/home/gabozvqd/deploy');
@@ -40,6 +40,7 @@ class Gabochie_Go_Live {
         add_action('wp_ajax_gabochie_recs_get', array(__CLASS__, 'ajax_recs_get'));
         add_action('wp_ajax_gabochie_compare_get', array(__CLASS__, 'ajax_compare_get'));
         add_action('wp_ajax_gabochie_compare_probe', array(__CLASS__, 'ajax_compare_probe'));
+        add_action('wp_ajax_gabochie_score_refresh', array(__CLASS__, 'ajax_score_refresh'));
     }
 
     public static function menu() {
@@ -67,6 +68,14 @@ class Gabochie_Go_Live {
             'manage_options',
             'gabochie-go-live-compare',
             array(__CLASS__, 'render_compare')
+        );
+        add_submenu_page(
+            'gabochie-go-live',
+            'Release Score',
+            'Release Score',
+            'manage_options',
+            'gabochie-go-live-score',
+            array(__CLASS__, 'render_score')
         );
     }
 
@@ -540,6 +549,7 @@ class Gabochie_Go_Live {
             'golive'  => array('Go Live', admin_url('admin.php?page=gabochie-go-live')),
             'compare' => array('Comparison', admin_url('admin.php?page=gabochie-go-live-compare')),
             'qa'      => array('Release QA', admin_url('admin.php?page=gabochie-go-live-qa')),
+            'score'   => array('Release Score', admin_url('admin.php?page=gabochie-go-live-score')),
         );
         $out = '<h2 class="nav-tab-wrapper" style="border-bottom:1px solid #c3c4c7;margin-bottom:14px;">';
         foreach ($tabs as $key => $t) {
@@ -1138,6 +1148,280 @@ class Gabochie_Go_Live {
             }
         }
         wp_send_json_error(array('message' => 'Item not found'));
+    }
+
+    /* =====================================================================
+     * RELEASE SCORE DASHBOARD
+     * =================================================================== */
+
+    public static function score_data() {
+        $data = array(
+            'qa_gate'     => array('status' => 'unknown', 'commit' => '', 'time' => ''),
+            'deploy'      => array('last_line' => '', 'commit' => ''),
+            'lighthouse'  => array('performance' => 0, 'accessibility' => 0, 'seo' => 0, 'best_practices' => 0),
+            'e2e'         => array('pass' => 0, 'fail' => 0, 'skip' => 0),
+            'lint'        => array('errors' => 0, 'warnings' => 0),
+            'secret_scan' => array('status' => 'unknown', 'hits' => 0),
+            'qa_suite'    => array('pass' => 0, 'fail' => 0, 'warn' => 0),
+        );
+
+        // QA gate state
+        $gate_file = self::deploy_dir() . '/qa-state.txt';
+        if (is_readable($gate_file)) {
+            $gate = parse_ini_string(file_get_contents($gate_file));
+            if (is_array($gate)) {
+                $data['qa_gate'] = array(
+                    'status' => $gate['STATUS'] ?? 'unknown',
+                    'commit' => $gate['COMMIT'] ?? '',
+                    'time'   => $gate['TIME'] ?? '',
+                );
+            }
+        }
+
+        // Deploy log (last meaningful lines)
+        $log_file = self::deploy_dir() . '/deploy-staging.log';
+        if (is_readable($log_file)) {
+            $lines = file($log_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            if ($lines) {
+                $last = '';
+                for ($i = count($lines) - 1; $i >= 0; $i--) {
+                    if (preg_match('/RESULT:|deploy ok|FAIL/', $lines[$i])) {
+                        $last = $lines[$i];
+                        break;
+                    }
+                }
+                if (!$last) $last = end($lines);
+                $data['deploy']['last_line'] = $last;
+                if (preg_match('/commit\s+(\w{7,})/', $last, $m)) {
+                    $data['deploy']['commit'] = $m[1];
+                }
+            }
+        }
+
+        // QA suite results from deploy log
+        if (is_readable($log_file)) {
+            $log = file_get_contents($log_file);
+            if (preg_match('/RESULT:\s*(\d+)\s*pass,\s*(\d+)\s*fail,\s*(\d+)\s*warn/', $log, $m)) {
+                $data['qa_suite'] = array('pass' => (int)$m[1], 'fail' => (int)$m[2], 'warn' => (int)$m[3]);
+            }
+        }
+
+        // Lighthouse scores (read from server-side JSON if available)
+        $lh_file = self::deploy_dir() . '/lighthouse-scores.json';
+        if (is_readable($lh_file)) {
+            $lh = json_decode(file_get_contents($lh_file), true);
+            if (is_array($lh)) {
+                $data['lighthouse'] = array(
+                    'performance'    => $lh['performance'] ?? 0,
+                    'accessibility'  => $lh['accessibility'] ?? 0,
+                    'seo'            => $lh['seo'] ?? 0,
+                    'best_practices' => $lh['best_practices'] ?? 0,
+                );
+            }
+        }
+
+        // E2E results
+        $e2e_file = self::deploy_dir() . '/e2e-results.json';
+        if (is_readable($e2e_file)) {
+            $e2e = json_decode(file_get_contents($e2e_file), true);
+            if (is_array($e2e)) {
+                $data['e2e'] = array(
+                    'pass' => $e2e['pass'] ?? 0,
+                    'fail' => $e2e['fail'] ?? 0,
+                    'skip' => $e2e['skip'] ?? 0,
+                );
+            }
+        }
+
+        // Lint results
+        $lint_file = self::deploy_dir() . '/lint-results.json';
+        if (is_readable($lint_file)) {
+            $lint = json_decode(file_get_contents($lint_file), true);
+            if (is_array($lint)) {
+                $data['lint'] = array(
+                    'errors'   => $lint['errors'] ?? 0,
+                    'warnings' => $lint['warnings'] ?? 0,
+                );
+            }
+        }
+
+        // Secret scan
+        $scan_file = self::deploy_dir() . '/secret-scan-results.txt';
+        if (is_readable($scan_file)) {
+            $scan = file_get_contents($scan_file);
+            $hits = substr_count($scan, "\n") - 1;
+            $data['secret_scan'] = array(
+                'status' => (strpos($scan, 'PASS') !== false) ? 'pass' : (($hits > 0) ? 'fail' : 'pass'),
+                'hits'   => max(0, $hits),
+            );
+        }
+
+        return $data;
+    }
+
+    public static function score_grade($score) {
+        if ($score >= 90) return array('A', '#22c55e');
+        if ($score >= 70) return array('B', '#84cc16');
+        if ($score >= 50) return array('C', '#eab308');
+        return array('F', '#ef4444');
+    }
+
+    public static function render_score() {
+        if (!current_user_can('manage_options')) return;
+        $commit = self::staging_commit();
+        $data = self::score_data();
+
+        // Compute overall score
+        $weights = array('qa_gate' => 25, 'lighthouse' => 25, 'e2e' => 20, 'lint' => 15, 'secret_scan' => 10, 'qa_suite' => 5);
+        $component_scores = array();
+
+        // QA gate: 100 if pass, 0 otherwise
+        $component_scores['qa_gate'] = ($data['qa_gate']['status'] === 'pass') ? 100 : 0;
+
+        // Lighthouse: average of 4 categories
+        $lh = $data['lighthouse'];
+        $component_scores['lighthouse'] = ($lh['performance'] + $lh['accessibility'] + $lh['seo'] + $lh['best_practices']) / 4;
+
+        // E2E: pass / (pass + fail + skip) * 100
+        $e2e_total = $data['e2e']['pass'] + $data['e2e']['fail'] + $data['e2e']['skip'];
+        $component_scores['e2e'] = ($e2e_total > 0) ? round($data['e2e']['pass'] / $e2e_total * 100) : 0;
+
+        // Lint: 100 if no errors
+        $component_scores['lint'] = ($data['lint']['errors'] === 0) ? 100 : max(0, 100 - $data['lint']['errors'] * 10);
+
+        // Secret scan: 100 if pass
+        $component_scores['secret_scan'] = ($data['secret_scan']['status'] === 'pass') ? 100 : 0;
+
+        // QA suite: pass / total * 100
+        $qa_total = $data['qa_suite']['pass'] + $data['qa_suite']['fail'] + $data['qa_suite']['warn'];
+        $component_scores['qa_suite'] = ($qa_total > 0) ? round($data['qa_suite']['pass'] / $qa_total * 100) : 0;
+
+        $overall = 0;
+        foreach ($weights as $k => $w) {
+            $overall += ($component_scores[$k] ?? 0) * $w / 100;
+        }
+        $overall = round($overall);
+        list($grade, $grade_color) = self::score_grade($overall);
+
+        echo '<div class="wrap">';
+        echo self::tabs('score');
+        echo '<h1>Release Score Dashboard</h1>';
+        echo '<p>Commit: <code>' . esc_html($commit) . '</code> &mdash; ';
+        echo 'QA Gate: <strong style="color:' . esc_attr($data['qa_gate']['status'] === 'pass' ? '#22c55e' : '#ef4444') . '">' . esc_html(strtoupper($data['qa_gate']['status'])) . '</strong>';
+        if ($data['qa_gate']['time']) {
+            echo ' &mdash; ' . esc_html($data['qa_gate']['time']);
+        }
+        echo '</p>';
+
+        // Overall score card
+        echo '<div style="display:flex;gap:2rem;align-items:center;margin:20px 0 30px;padding:28px 32px;background:#fff;border:1px solid #c3c4c7;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.04);">';
+        echo '<div style="font-size:4rem;font-weight:700;color:' . esc_attr($grade_color) . ';line-height:1;">' . esc_html($overall) . '</div>';
+        echo '<div>';
+        echo '<div style="font-size:1.6rem;font-weight:600;color:' . esc_attr($grade_color) . '">Grade ' . esc_html($grade) . '</div>';
+        echo '<div style="color:#646970;margin-top:4px;">Overall release readiness score</div>';
+        echo '</div>';
+        echo '</div>';
+
+        // Component scores grid
+        echo '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:24px;">';
+
+        $components = array(
+            'qa_gate'      => array('QA Gate', 'Pass/fail from qa.sh gate check'),
+            'lighthouse'   => array('Lighthouse', 'Avg of Performance/Accessibility/SEO/Best Practices'),
+            'e2e'          => array('E2E Tests', 'Playwright test pass rate'),
+            'qa_suite'     => array('QA Suite', 'Server-side qa.sh pass/fail/warn'),
+            'lint'         => array('Lint (PHP)', 'PHPCS + PHPStan error count'),
+            'secret_scan'  => array('Secret Scan', 'Secret scanning results'),
+        );
+
+        foreach ($components as $key => $info) {
+            $score = $component_scores[$key];
+            list($g, $gc) = self::score_grade($score);
+            $weight = $weights[$key];
+            echo '<div style="background:#fff;border:1px solid #c3c4c7;border-radius:8px;padding:20px;">';
+            echo '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
+            echo '<strong style="font-size:0.95rem;">' . esc_html($info[0]) . '</strong>';
+            echo '<span style="background:' . esc_attr($gc) . ';color:#fff;padding:2px 10px;border-radius:12px;font-size:0.8rem;font-weight:600;">' . esc_html($score) . '%</span>';
+            echo '</div>';
+            echo '<div style="font-size:0.78rem;color:#646970;margin-bottom:10px;">' . esc_html($info[1]) . '</div>';
+            // Progress bar
+            echo '<div style="height:6px;background:#e2e4e9;border-radius:3px;overflow:hidden;">';
+            echo '<div style="height:100%;width:' . esc_attr($score) . '%;background:' . esc_attr($gc) . ';border-radius:3px;transition:width 0.3s;"></div>';
+            echo '</div>';
+            echo '<div style="font-size:0.7rem;color:#8c8f9a;margin-top:6px;">Weight: ' . esc_html($weight) . '%</div>';
+            echo '</div>';
+        }
+        echo '</div>';
+
+        // Detail panels
+        echo '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">';
+
+        // Lighthouse panel
+        echo '<div style="background:#fff;border:1px solid #c3c4c7;border-radius:8px;padding:20px;">';
+        echo '<h3 style="margin:0 0 12px;font-size:1rem;">Lighthouse Scores</h3>';
+        foreach ($data['lighthouse'] as $cat => $val) {
+            list($g, $gc) = self::score_grade($val);
+            $label = ucwords(str_replace('_', ' ', $cat));
+            echo '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0;">';
+            echo '<span>' . esc_html($label) . '</span>';
+            echo '<span style="color:' . esc_attr($gc) . ';font-weight:600;">' . esc_html($val) . '</span>';
+            echo '</div>';
+        }
+        echo '</div>';
+
+        // E2E panel
+        echo '<div style="background:#fff;border:1px solid #c3c4c7;border-radius:8px;padding:20px;">';
+        echo '<h3 style="margin:0 0 12px;font-size:1rem;">E2E Test Results</h3>';
+        $e2e = $data['e2e'];
+        echo '<div style="display:flex;gap:20px;">';
+        echo '<div style="text-align:center;"><div style="font-size:1.8rem;font-weight:700;color:#22c55e;">' . esc_html($e2e['pass']) . '</div><div style="font-size:0.75rem;color:#646970;">Passed</div></div>';
+        echo '<div style="text-align:center;"><div style="font-size:1.8rem;font-weight:700;color:#ef4444;">' . esc_html($e2e['fail']) . '</div><div style="font-size:0.75rem;color:#646970;">Failed</div></div>';
+        echo '<div style="text-align:center;"><div style="font-size:1.8rem;font-weight:700;color:#8c8f9a;">' . esc_html($e2e['skip']) . '</div><div style="font-size:0.75rem;color:#646970;">Skipped</div></div>';
+        echo '</div>';
+        echo '</div>';
+
+        // QA suite panel
+        echo '<div style="background:#fff;border:1px solid #c3c4c7;border-radius:8px;padding:20px;">';
+        echo '<h3 style="margin:0 0 12px;font-size:1rem;">QA Suite (qa.sh)</h3>';
+        $qa = $data['qa_suite'];
+        echo '<div style="display:flex;gap:20px;">';
+        echo '<div style="text-align:center;"><div style="font-size:1.8rem;font-weight:700;color:#22c55e;">' . esc_html($qa['pass']) . '</div><div style="font-size:0.75rem;color:#646970;">Pass</div></div>';
+        echo '<div style="text-align:center;"><div style="font-size:1.8rem;font-weight:700;color:#ef4444;">' . esc_html($qa['fail']) . '</div><div style="font-size:0.75rem;color:#646970;">Fail</div></div>';
+        echo '<div style="text-align:center;"><div style="font-size:1.8rem;font-weight:700;color:#eab308;">' . esc_html($qa['warn']) . '</div><div style="font-size:0.75rem;color:#646970;">Warn</div></div>';
+        echo '</div>';
+        echo '</div>';
+
+        // Lint + Secret scan panel
+        echo '<div style="background:#fff;border:1px solid #c3c4c7;border-radius:8px;padding:20px;">';
+        echo '<h3 style="margin:0 0 12px;font-size:1rem;">Lint & Security</h3>';
+        echo '<div style="display:flex;gap:24px;">';
+        echo '<div><div style="font-size:0.78rem;color:#646970;">PHP Lint Errors</div><div style="font-size:1.4rem;font-weight:700;color:' . ($data['lint']['errors'] > 0 ? '#ef4444' : '#22c55e') . ';">' . esc_html($data['lint']['errors']) . '</div></div>';
+        echo '<div><div style="font-size:0.78rem;color:#646970;">Secret Scan</div><div style="font-size:1.4rem;font-weight:700;color:' . ($data['secret_scan']['status'] === 'pass' ? '#22c55e' : '#ef4444') . ';">' . esc_html(strtoupper($data['secret_scan']['status'])) . '</div></div>';
+        echo '</div>';
+        echo '</div>';
+
+        echo '</div>'; // grid
+
+        // Refresh button
+        echo '<div style="margin-top:20px;text-align:center;">';
+        echo '<button id="gol-score-refresh" class="button button-secondary">Refresh Score Data</button>';
+        echo '</div>';
+
+        echo '</div>'; // wrap
+
+        // Inline JS
+        echo '<script>';
+        echo '(function(){';
+        echo 'var api={ajaxUrl:' . wp_json_encode(admin_url('admin-ajax.php')) . ',nonce:' . wp_json_encode(wp_create_nonce('gabochie_go_live_nonce')) . '};';
+        echo 'document.getElementById("gol-score-refresh").addEventListener("click",function(e){e.preventDefault();location.reload();});';
+        echo '})();';
+        echo '</script>';
+    }
+
+    public static function ajax_score_refresh() {
+        check_ajax_referer('gabochie_go_live_nonce');
+        if (!current_user_can('manage_options')) wp_send_json_error();
+        wp_send_json_success(array('data' => self::score_data()));
     }
 }
 
