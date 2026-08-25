@@ -6,13 +6,15 @@
 if (!defined('ABSPATH')) exit;
 
 function gabochie_value_scripts() {
-    // Preconnect for Google Fonts
+    // Preconnect + preload for Google Fonts (critical path)
     add_action('wp_head', function () {
         echo '<link rel="preconnect" href="https://fonts.googleapis.com">' . "\n";
         echo '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' . "\n";
+        // Preload critical font files to avoid FOIT on above-the-fold text
+        echo '<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Jost:wght@300;400;500&display=swap">' . "\n";
     }, 1);
 
-    // Brand fonts (gabochiedesign.com typography)
+    // Brand fonts (gabochiedesign.com typography) — font-display:swap prevents FOIT
     wp_enqueue_style(
         'gabochie-value-fonts',
         'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap',

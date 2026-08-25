@@ -494,18 +494,135 @@
 
   /* ---------- CTA analytics tracking ---------- */
   (function () {
-    $$('.btn-gold, .btn-ghost, .btn-ghost-w, .btn-solid, .whatsapp-btn, .whatsapp-fab, .svc, .share-btn').forEach(function (el) {
+    var ctaSelectors = [
+      '.btn-gold', '.btn-ghost', '.btn-ghost-w', '.btn-solid',
+      '.whatsapp-btn', '.whatsapp-fab', '.svc', '.share-btn',
+      '.nav-cta', '.nav-portal', '.st-cta', '.btn-recovery',
+      '.foot-col a', '.foot-legal a', '.foot-social a',
+      '.proj-cta a', '.faq-cta-btns a', '.dia-cta a',
+      '.rec-ctas a', '.hero-actions a', '.journey-banner a'
+    ].join(', ');
+
+    $$(ctaSelectors).forEach(function (el) {
       el.addEventListener('click', function () {
-        var label = el.textContent.trim().substring(0, 50) || el.getAttribute('aria-label') || 'cta';
+        var label = el.textContent.trim().substring(0, 60) || el.getAttribute('aria-label') || 'cta';
         var href = el.getAttribute('href') || '';
         var type = 'cta_click';
         if (href.indexOf('wa.me') !== -1) type = 'whatsapp_click';
         else if (href.indexOf('tel:') !== -1) type = 'phone_click';
         else if (el.classList.contains('share-btn')) type = 'share_click';
         else if (el.classList.contains('svc')) type = 'service_click';
-        window.Gabochie.track(type, { label: label, href: href.substring(0, 100) });
+        else if (el.classList.contains('whatsapp-fab')) type = 'whatsapp_fab_click';
+        else if (el.classList.contains('nav-cta') || el.classList.contains('nav-portal')) type = 'nav_cta_click';
+        else if (el.classList.contains('st-cta')) type = 'journey_stage_click';
+        else if (el.closest('.foot-col') || el.closest('.foot-social')) type = 'footer_click';
+        else if (el.closest('.faq-cta')) type = 'faq_cta_click';
+        window.Gabochie.track(type, { label: label, href: href.substring(0, 120) });
       });
     });
+  })();
+
+  /* ---------- FAQ accordion tracking ---------- */
+  (function () {
+    $$('.faq-q').forEach(function (q) {
+      q.addEventListener('click', function () {
+        var item = q.parentElement;
+        var isOpen = item.classList.contains('open');
+        var question = q.textContent.trim().replace(/\s+/g, ' ').substring(0, 80);
+        window.Gabochie.track('faq_interact', { question: question, action: isOpen ? 'open' : 'close' });
+      });
+    });
+  })();
+
+  /* ---------- scroll depth tracking ---------- */
+  (function () {
+    var thresholds = [25, 50, 75, 100];
+    var fired = {};
+    function check() {
+      var st = window.pageYOffset || document.documentElement.scrollTop;
+      var h = document.documentElement.scrollHeight - window.innerHeight;
+      if (h <= 0) return;
+      var pct = Math.round((st / h) * 100);
+      for (var i = 0; i < thresholds.length; i++) {
+        var t = thresholds[i];
+        if (pct >= t && !fired[t]) {
+          fired[t] = true;
+          window.Gabochie.track('scroll_depth', { percent: t });
+        }
+      }
+    }
+    window.addEventListener('scroll', check, { passive: true });
+    check();
+  })();
+
+  /* ---------- section visibility tracking ---------- */
+  (function () {
+    if (!window.IntersectionObserver) return;
+    var sections = [
+      { id: 'hero',     name: 'hero' },
+      { id: 'why',      name: 'why_alone' },
+      { id: 'clarity',  name: 'wizard' },
+      { id: 'value',    name: 'value' },
+      { id: 'journey',  name: 'journey' },
+      { id: 'services', name: 'services' },
+      { id: 'trust',    name: 'trust' },
+      { id: 'testimonials', name: 'testimonials' },
+      { id: 'projects', name: 'projects' },
+      { id: 'diaspora', name: 'diaspora' },
+      { id: 'recovery', name: 'recovery' },
+      { id: 'resources', name: 'resources' },
+      { id: 'faq',      name: 'faq' },
+      { id: 'project-form', name: 'project_form' }
+    ];
+    var seen = {};
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var id = e.target.id;
+        if (seen[id]) return;
+        seen[id] = true;
+        var match = sections.filter(function (s) { return s.id === id; })[0];
+        window.Gabochie.track('section_view', { section: match ? match.name : id });
+      });
+    }, { threshold: 0.15 });
+    sections.forEach(function (s) {
+      var el = document.getElementById(s.id);
+      if (el) io.observe(el);
+    });
+  })();
+
+  /* ---------- performance metrics (web-vitals) ---------- */
+  (function () {
+    function onEntry(list) {
+      list.getEntries().forEach(function (entry) {
+        if (entry.name === 'largest-contentful-paint') {
+          window.Gabochie.track('perf_lcp', { ms: Math.round(entry.startTime) });
+        }
+        if (entry.name === 'first-input') {
+          window.Gabochie.track('perf_inp', { ms: Math.round(entry.processingStart - entry.startTime) });
+        }
+      });
+    }
+    if (window.PerformanceObserver) {
+      try {
+        var lcpObs = new PerformanceObserver(onEntry);
+        lcpObs.observe({ type: 'largest-contentful-paint', buffered: true });
+      } catch (e) {}
+      try {
+        var inpObs = new PerformanceObserver(onEntry);
+        inpObs.observe({ type: 'first-input', buffered: true });
+      } catch (e) {}
+      try {
+        var clsObs = new PerformanceObserver(function (list) {
+          var cls = 0;
+          list.getEntries().forEach(function (entry) {
+            if (!entry.hadRecentInput) cls += entry.value;
+          });
+          if (cls > 0) window.Gabochie.track('perf_cls', { value: Math.round(cls * 1000) });
+        });
+        clsObs.observe({ type: 'layout-shift', buffered: true });
+      } catch (e) {}
+    }
   })();
 
 })();
