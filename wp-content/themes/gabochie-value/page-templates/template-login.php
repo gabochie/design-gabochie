@@ -87,7 +87,7 @@ $show_register = isset($_GET['action']) && $_GET['action'] === 'register';
                         <label style="display:block;font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--charcoal);margin-bottom:0.4rem;font-weight:500">Project Type</label>
                         <select style="width:100%;padding:0.85rem 1rem;border:1px solid var(--border);border-radius:var(--r-sm);font-family:'Jost',sans-serif;font-size:0.95rem;background:var(--ivory);color:var(--charcoal)">
                             <option value="">Select a service...</option>
-                            <option value="architectural">Architectural Design</option>
+                            <option value="building">Building Design</option>
                             <option value="interior">Interior Design</option>
                             <option value="planning">Space Planning</option>
                             <option value="renovation">Renovation & Remodeling</option>

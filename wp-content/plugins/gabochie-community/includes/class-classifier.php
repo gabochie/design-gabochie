@@ -81,11 +81,11 @@ final class Gabochie_Community_Classifier {
 		foreach ( Gabochie_Community_Post_Types::STAGES as $slug => $label ) {
 			$stages[] = "- $slug: $label";
 		}
-		return 'You classify questions posted to a Ghana-based development facilitation and architecture community (Gabochie Design). '
+		return 'You classify questions posted to a Ghana-based development facilitation and design community (Gabochie Design). '
 			. "Respond with STRICT JSON only, no prose: {\"stage\":\"<slug>\",\"lead\":true|false,\"lead_reason\":\"<one short sentence>\"}\n\n"
 			. 'Journey stages (slug: label):' . "\n" . implode( "\n", $stages ) . "\n\n"
 			. 'Choose the single journey stage that best matches the asker\'s stage in the building journey. '
-			. 'A lead is someone with a real project who is seeking professional help (design, feasibility, cost estimate, hiring an architect/consultant). '
+			. 'A lead is someone with a real project who is seeking professional help (design, feasibility, cost estimate, hiring a consultant). '
 			. 'Casual or general information seekers are NOT leads.';
 	}
 

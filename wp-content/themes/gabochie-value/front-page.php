@@ -40,9 +40,9 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
     </div>
   </div>
   <div class="hero-art">
-    <img src="<?php echo esc_url(GABOCHIE_VALUE_URI . '/assets/images/hero.jpg'); ?>" alt="Gabochie Design architectural project" width="540" height="440" fetchpriority="high">
+    <img src="<?php echo esc_url(GABOCHIE_VALUE_URI . '/assets/images/hero.jpg'); ?>" alt="Gabochie Design building project" width="540" height="440" fetchpriority="high">
     <div class="hero-art-overlay">
-      <span>Development advisory &middot; Architecture practice</span>
+      <span>Development advisory &middot; Design practice</span>
       <strong>Gabochie Design</strong>
     </div>
   </div>
@@ -144,7 +144,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
         <article class="stage"><div class="st-n">02</div><h3 class="st-t">Explore</h3><dl><dt>What clients usually need</dt><dd>Understand what the site and idea can support.</dd><dt>How we help</dt><dd>Site &amp; Development Potential &mdash; constraints, opportunities, yield.</dd><dt>Typical next decision</dt><dd>Confirm the development route.</dd></dl><a class="st-cta" href="<?php echo esc_url($clarity); ?>">Get Clarity</a></article>
         <article class="stage"><div class="st-n">03</div><h3 class="st-t">Validate</h3><dl><dt>What clients usually need</dt><dd>Know if the project is worth starting.</dd><dt>How we help</dt><dd>Feasibility &amp; Project Viability &mdash; costs, returns, risk.</dd><dt>Typical next decision</dt><dd>Set the budget and proceed or stop.</dd></dl><a class="st-cta" href="<?php echo esc_url($clarity); ?>">Get Clarity</a></article>
         <article class="stage"><div class="st-n">04</div><h3 class="st-t">Plan</h3><dl><dt>What clients usually need</dt><dd>A roadmap that sequences decisions and money.</dd><dt>How we help</dt><dd>Development Strategy &mdash; phased programme, governance.</dd><dt>Typical next decision</dt><dd>Approve the development plan.</dd></dl><a class="st-cta" href="<?php echo esc_url($clarity); ?>">Get Clarity</a></article>
-        <article class="stage"><div class="st-n">05</div><h3 class="st-t">Design</h3><dl><dt>What clients usually need</dt><dd>Drawings that are buildable and right-sized.</dd><dt>How we help</dt><dd>Architectural Design &mdash; concept to detailed design, BIM.</dd><dt>Typical next decision</dt><dd>Approve the design for pricing.</dd></dl><a class="st-cta" href="<?php echo esc_url($clarity); ?>">Get Clarity</a></article>
+        <article class="stage"><div class="st-n">05</div><h3 class="st-t">Design</h3><dl><dt>What clients usually need</dt><dd>Drawings that are buildable and right-sized.</dd><dt>How we help</dt><dd>Building Design &mdash; concept to detailed design, BIM.</dd><dt>Typical next decision</dt><dd>Approve the design for pricing.</dd></dl><a class="st-cta" href="<?php echo esc_url($clarity); ?>">Get Clarity</a></article>
         <article class="stage"><div class="st-n">06</div><h3 class="st-t">Price</h3><dl><dt>What clients usually need</dt><dd>A credible, honest cost picture.</dd><dt>How we help</dt><dd>Cost &amp; Value Intelligence &mdash; estimates, value engineering.</dd><dt>Typical next decision</dt><dd>Lock the budget and procurement route.</dd></dl><a class="st-cta" href="<?php echo esc_url($clarity); ?>">Get Clarity</a></article>
         <article class="stage"><div class="st-n">07</div><h3 class="st-t">Approve</h3><dl><dt>What clients usually need</dt><dd>Permits and approvals without surprises.</dd><dt>How we help</dt><dd>Planning &amp; Approval Support &mdash; documents, submissions.</dd><dt>Typical next decision</dt><dd>Receive approvals and start procurement.</dd></dl><a class="st-cta" href="<?php echo esc_url($clarity); ?>">Get Clarity</a></article>
         <article class="stage"><div class="st-n">08</div><h3 class="st-t">Build</h3><dl><dt>What clients usually need</dt><dd>A build that matches the drawings and budget.</dd><dt>How we help</dt><dd>Project Delivery &amp; Construction Administration.</dd><dt>Typical next decision</dt><dd>Appoint contractor and begin construction.</dd></dl><a class="st-cta" href="<?php echo esc_url($clarity); ?>">Get Clarity</a></article>
@@ -181,7 +181,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
     <div class="phase reveal">
       <div class="phase-head"><span class="ph-n">Phase 02</span><span class="ph-line"></span><h3>Design &amp; Document</h3></div>
       <div class="svc-grid">
-        <a class="svc" href="<?php echo esc_url($clarity); ?>"><div class="svc-n">05</div><h3 class="svc-title">Architectural Design</h3><p class="svc-desc">Right-sized, buildable architecture &mdash; concept to detailed drawings.</p><span class="svc-when">Ready to design</span><span class="svc-cta">Get started &rarr;</span></a>
+        <a class="svc" href="<?php echo esc_url($clarity); ?>"><div class="svc-n">05</div><h3 class="svc-title">Building Design</h3><p class="svc-desc">Right-sized, buildable design &mdash; concept to detailed drawings.</p><span class="svc-when">Ready to design</span><span class="svc-cta">Get started &rarr;</span></a>
         <a class="svc" href="<?php echo esc_url($clarity); ?>"><div class="svc-n">06</div><h3 class="svc-title">BIM &amp; Digital Project Information</h3><p class="svc-desc">Coordinated digital documentation that reduces site surprises.</p><span class="svc-when">Drawings matter</span><span class="svc-cta">Get started &rarr;</span></a>
         <a class="svc" href="<?php echo esc_url($clarity); ?>"><div class="svc-n">07</div><h3 class="svc-title">Cost &amp; Value Intelligence</h3><p class="svc-desc">Honest cost estimates and value engineering from day one.</p><span class="svc-when">Budget is a concern</span><span class="svc-cta">Get started &rarr;</span></a>
         <a class="svc" href="<?php echo esc_url($clarity); ?>"><div class="svc-n">08</div><h3 class="svc-title">Planning &amp; Approval Support</h3><p class="svc-desc">Permit strategy, drawings and submissions that get through.</p><span class="svc-when">Approvals are due</span><span class="svc-cta">Get started &rarr;</span></a>
@@ -328,7 +328,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
         <div class="dia-feats">
           <div class="dia-f reveal">
             <div class="dia-f-ico"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-            <div><div class="dia-f-title">One trusted point of contact</div><div class="dia-f-desc">A single accountable architect who knows your project end to end.</div></div>
+            <div><div class="dia-f-title">One trusted point of contact</div><div class="dia-f-desc">A single accountable professional who knows your project end to end.</div></div>
           </div>
           <div class="dia-f reveal reveal-delay-1">
             <div class="dia-f-ico"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
@@ -348,7 +348,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
         </div>
       </div>
       <div class="dia-map reveal">
-        <img src="https://images.unsplash.com/photo-1573164713988-8665fc963095?auto=format&fit=crop&w=900&q=80" alt="Architect reviewing a project progress report on a laptop" width="680" height="560" loading="lazy">
+        <img src="https://images.unsplash.com/photo-1573164713988-8665fc963095?auto=format&fit=crop&w=900&q=80" alt="Professional reviewing a project progress report on a laptop" width="680" height="560" loading="lazy">
       </div>
     </div>
   </div>
@@ -460,7 +460,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
       </div>
       <div class="faq-item">
         <button class="faq-q" aria-expanded="false">Do you design and build? <span class="fq-ico">+</span></button>
-        <div class="faq-a"><p>We are a development facilitation and architectural consultancy, not a contractor. We help you determine what to build, whether it's viable, how it should be designed and costed &mdash; and we coordinate and protect your interest across procurement and construction.</p></div>
+        <div class="faq-a"><p>We are a development facilitation and design consultancy, not a contractor. We help you determine what to build, whether it's viable, how it should be designed and costed &mdash; and we coordinate and protect your interest across procurement and construction.</p></div>
       </div>
       <div class="faq-item">
         <button class="faq-q" aria-expanded="false">My project has already started &mdash; can you step in? <span class="fq-ico">+</span></button>

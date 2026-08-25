@@ -29,7 +29,7 @@ $social_svgs = array(
       <p>From first idea to completed project and beyond &mdash; we help you make better decisions at every stage of your building journey.</p>
       <div class="foot-trust">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4"/><path d="M12 2l7 4v5c0 5.25-3.5 9.74-7 11-3.5-1.26-7-5.75-7-11V6l7-4z"/></svg>
-        <span>Licensed &middot; Ghana Institute of Architects</span>
+        <span>Registered &middot; Ghana</span>
       </div>
       <div class="foot-social">
         <?php foreach ($socials as $name => $url) : $svg = $social_svgs[$name] ?? ''; ?>
@@ -43,7 +43,7 @@ $social_svgs = array(
       <p class="foot-heading">Services</p>
       <ul>
         <li><a href="<?php echo esc_url(gabochie_value_section_url('services')); ?>">Clarity &amp; Feasibility</a></li>
-        <li><a href="<?php echo esc_url(gabochie_value_section_url('services')); ?>">Architectural Design</a></li>
+        <li><a href="<?php echo esc_url(gabochie_value_section_url('services')); ?>">Building Design</a></li>
         <li><a href="<?php echo esc_url(gabochie_value_section_url('services')); ?>">Cost &amp; Value Intelligence</a></li>
         <li><a href="<?php echo esc_url(gabochie_value_section_url('services')); ?>">Procurement &amp; Delivery</a></li>
         <li><a href="<?php echo esc_url(gabochie_value_section_url('recovery')); ?>">Project Recovery</a></li>

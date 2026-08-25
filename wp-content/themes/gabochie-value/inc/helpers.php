@@ -65,13 +65,13 @@ function gabochie_value_json_ld() {
         '@type'       => 'ProfessionalService',
         'name'        => 'Gabochie Design',
         'slogan'      => 'Value-Driven Development Facilitation',
-        'description' => 'A value-driven development facilitation and architectural consultancy serving homeowners, investors, developers and the Ghanaian diaspora — from feasibility through design, cost, approvals, procurement, delivery and beyond.',
+        'description' => 'A value-driven development facilitation and design consultancy serving homeowners, investors, developers and the Ghanaian diaspora — from feasibility through design, cost, approvals, procurement, delivery and beyond.',
         'url'         => home_url('/'),
         'telephone'   => '+' . gabochie_value_whatsapp(),
         'address'     => array('@type' => 'PostalAddress', 'addressLocality' => 'Sakumono, Tema', 'addressCountry' => 'GH'),
         'sameAs'      => array_values(gabochie_value_social_links()),
         'areaServed'  => array('Ghana', 'Diaspora'),
-        'knowsAbout'  => array('Architecture', 'Feasibility', 'Cost intelligence', 'Construction', 'Property development', "Owner's representation"),
+        'knowsAbout'  => array('Development facilitation', 'Feasibility', 'Cost intelligence', 'Building design', 'Construction', 'Property development', "Owner's representation"),
     );
     echo '<script type="application/ld+json">' . wp_json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . '</script>' . "\n";
 }

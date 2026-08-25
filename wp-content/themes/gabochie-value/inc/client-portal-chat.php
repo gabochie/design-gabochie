@@ -86,8 +86,8 @@ function gabochie_value_chat_build_response($message, $context) {
         return "Our packages start at $800 for the Concept plan (AI floor plans + renders), $2,500 for Full Design, and $5,000 for Complete Service. Check our full pricing at " . home_url('/pricing/') . " or tell me what you're looking for!";
     }
 
-    if (preg_match('/\b(service|architect|interior|design)\b/', $msg)) {
-        return "We offer: Architectural Design, Interior Design, 3D Visualization, Project Management, AI Cost Calculator, and Diaspora Support. Which would you like to explore?";
+    if (preg_match('/\b(service|design|interior|build)\b/', $msg)) {
+        return "We offer: Building Design, Interior Design, 3D Visualization, Project Management, AI Cost Calculator, and Diaspora Support. Which would you like to explore?";
     }
 
     if (preg_match('/\b(human|talk|speak|call|contact|real person)\b/', $msg)) {

@@ -26,7 +26,7 @@ if (!defined('WPSEO_VERSION')) :
 $og_title = is_singular() ? get_the_title() : 'Gabochie Design — Value-Driven Development Facilitation, Ghana';
 $og_desc  = is_singular()
     ? wp_trim_words(get_the_excerpt() ?: get_the_content(), 30)
-    : 'A value-driven development facilitation and architectural consultancy serving homeowners, investors, developers and the Ghanaian diaspora — from feasibility through design, cost, approvals, procurement, delivery and beyond. Get Clarity.';
+    : 'A value-driven development facilitation and design consultancy serving homeowners, investors, developers and the Ghanaian diaspora — from feasibility through design, cost, approvals, procurement, delivery and beyond. Get Clarity.';
 $og_image = $hero_img_default;
 if (is_singular() && has_post_thumbnail()) {
     $thumb = wp_get_attachment_image_src(get_post_thumbnail_id(), 'large');

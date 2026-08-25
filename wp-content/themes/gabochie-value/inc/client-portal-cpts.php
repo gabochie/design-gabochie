@@ -61,7 +61,7 @@ add_action('init', function () {
         'project_location'     => array('type' => 'string',  'default' => ''),
         'next_milestone'       => array('type' => 'string',  'default' => ''),
         'next_milestone_date'  => array('type' => 'string',  'default' => ''),
-        'service_type'         => array('type' => 'string',  'default' => 'architectural'),
+        'service_type'         => array('type' => 'string',  'default' => 'building'),
         'client_phone'         => array('type' => 'string',  'default' => ''),
         'referral_source'      => array('type' => 'string',  'default' => ''),
     );

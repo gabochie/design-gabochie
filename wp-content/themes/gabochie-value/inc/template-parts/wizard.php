@@ -47,7 +47,7 @@ if (!defined('ABSPATH')) exit;
               <span class="c-n">D</span><span class="c-t">I need to know if it's viable</span><span class="c-d">Feasibility before anything is committed</span>
             </button>
             <button type="button" class="choice" data-journey="design">
-              <span class="c-n">E</span><span class="c-t">I need architectural design</span><span class="c-d">Drawings, brief, concept</span>
+              <span class="c-n">E</span><span class="c-t">I need building design</span><span class="c-d">Drawings, brief, concept</span>
             </button>
             <button type="button" class="choice" data-journey="drawings">
               <span class="c-n">F</span><span class="c-t">I already have drawings</span><span class="c-d">Need review, cost check or next steps</span>
