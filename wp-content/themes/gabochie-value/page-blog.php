@@ -39,7 +39,7 @@ $cats = get_categories( array( 'hide_empty' => true ) );
     <div class="hero-rule"></div>
     <p class="hero-sub"><?php esc_html_e( 'Practical guidance on building in Ghana, diaspora property and value-driven design.', 'gabochie-value' ); ?></p>
     <div class="hero-actions">
-      <a class="btn-gold" href="<?php echo esc_url( $clarity ); ?>">Get Clarity</a>
+      <a class="btn-gold" href="<?php echo esc_url( $clarity ); ?>">Start Here</a>
     </div>
     <div class="hero-note">Prefer to talk? Call or WhatsApp <?php echo esc_html( $phone ); ?></div>
   </div>

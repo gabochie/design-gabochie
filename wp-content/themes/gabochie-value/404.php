@@ -21,7 +21,7 @@ $phone   = gabochie_value_phone();
     <p class="hero-sub">Let's get you back on track &mdash; your building journey is easier than you think.</p>
     <div class="hero-actions">
       <a class="btn-gold" href="<?php echo esc_url(home_url('/')); ?>"><?php esc_html_e('Back to home', 'gabochie-value'); ?></a>
-      <a class="btn-ghost-w" href="<?php echo esc_url($clarity); ?>">Get Clarity</a>
+      <a class="btn-ghost-w" href="<?php echo esc_url($clarity); ?>">Start Here</a>
     </div>
     <div class="hero-note">Prefer to talk? Call or WhatsApp <?php echo esc_html($phone); ?></div>
   </div>

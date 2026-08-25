@@ -28,7 +28,7 @@ $post_title = get_the_title();
     <h1 class="hero-h1"><?php the_title(); ?></h1>
     <div class="hero-rule"></div>
     <div class="hero-actions">
-      <a class="btn-gold" href="<?php echo esc_url($clarity); ?>">Get Clarity</a>
+      <a class="btn-gold" href="<?php echo esc_url($clarity); ?>">Start Here</a>
     </div>
     <div class="hero-note">Prefer to talk? Call or WhatsApp <?php echo esc_html($phone); ?></div>
   </div>
@@ -63,7 +63,7 @@ $post_title = get_the_title();
       <h3>Ready to move forward?</h3>
       <p>Get a tailored recommendation in five minutes &mdash; no jargon, no pressure.</p>
       <div class="post-inline-cta-btns">
-        <a class="btn-gold" href="<?php echo esc_url($clarity); ?>">Get Clarity</a>
+        <a class="btn-gold" href="<?php echo esc_url($clarity); ?>">Start Here</a>
         <a class="btn-ghost" href="tel:<?php echo esc_attr($phone_tel); ?>">Call <?php echo esc_html($phone); ?></a>
       </div>
     </div>
