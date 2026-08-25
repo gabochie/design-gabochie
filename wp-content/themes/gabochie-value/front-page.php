@@ -20,7 +20,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
   <div class="hero-left">
     <div class="hero-location"><span class="hero-location-dot"></span> Sakumono &middot; Tema &mdash; Ghana</div>
     <h1 class="hero-h1">Your building journey does not have to be <em>confusing.</em></h1>
-    <div class="hero-h1-dim">Value-Driven Architectural Consultancy</div>
+    <div class="hero-h1-dim">Value-Driven Development Facilitation</div>
     <div class="hero-rule"></div>
     <p class="hero-sub">Land, an idea, drawings, or a half-built project &mdash; we help you make the right decision at every stage, from first idea to completed project and beyond. No jargon. No pressure.</p>
     <div class="hero-actions">
@@ -42,7 +42,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
   <div class="hero-art">
     <img src="<?php echo esc_url(GABOCHIE_VALUE_URI . '/assets/images/hero.jpg'); ?>" alt="Gabochie Design architectural project" width="540" height="440" fetchpriority="high">
     <div class="hero-art-overlay">
-      <span>Private advisory &middot; Architecture practice</span>
+      <span>Development advisory &middot; Architecture practice</span>
       <strong>Gabochie Design</strong>
     </div>
   </div>
@@ -51,21 +51,21 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
 <!-- ========== TICKER ========== -->
 <div class="ticker" aria-hidden="true">
   <div class="ticker-inner">
-    <span class="t-item">Value-Driven Architecture</span>
+    <span class="t-item">Value-Driven Development</span>
     <span class="t-item">Feasibility First</span>
     <span class="t-item">Cost Transparency</span>
     <span class="t-item">Join at Any Stage</span>
     <span class="t-item">Diaspora-Friendly</span>
     <span class="t-item">Site &amp; Development Intelligence</span>
-    <span class="t-item">Design That Builds Value</span>
+    <span class="t-item">Development That Creates Value</span>
     <span class="t-item">Sakumono &middot; Tema &middot; Ghana</span>
-    <span class="t-item">Value-Driven Architecture</span>
+    <span class="t-item">Value-Driven Development</span>
     <span class="t-item">Feasibility First</span>
     <span class="t-item">Cost Transparency</span>
     <span class="t-item">Join at Any Stage</span>
     <span class="t-item">Diaspora-Friendly</span>
     <span class="t-item">Site &amp; Development Intelligence</span>
-    <span class="t-item">Design That Builds Value</span>
+    <span class="t-item">Development That Creates Value</span>
     <span class="t-item">Sakumono &middot; Tema &middot; Ghana</span>
   </div>
 </div>
@@ -460,7 +460,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
       </div>
       <div class="faq-item">
         <button class="faq-q" aria-expanded="false">Do you design and build? <span class="fq-ico">+</span></button>
-        <div class="faq-a"><p>We are an architectural consultancy, not a contractor. We design, coordinate and protect your interest across procurement and construction &mdash; and we help you select and manage a contractor you can trust.</p></div>
+        <div class="faq-a"><p>We are a development facilitation and architectural consultancy, not a contractor. We help you determine what to build, whether it's viable, how it should be designed and costed &mdash; and we coordinate and protect your interest across procurement and construction.</p></div>
       </div>
       <div class="faq-item">
         <button class="faq-q" aria-expanded="false">My project has already started &mdash; can you step in? <span class="fq-ico">+</span></button>

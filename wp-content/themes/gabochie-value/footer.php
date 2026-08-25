@@ -99,7 +99,7 @@ $social_svgs = array(
 
   <!-- Bottom bar: copyright + legal links -->
   <div class="foot-bottom">
-    <span>&copy; <span id="year"></span> Gabochie Design &mdash; Value-Driven Architectural Consultancy. All rights reserved.</span>
+    <span>&copy; <span id="year"></span> Gabochie Design &mdash; Value-Driven Development Facilitation. All rights reserved.</span>
     <div class="foot-legal">
       <a href="<?php echo esc_url(home_url('/privacy-policy/')); ?>">Privacy</a>
       <a href="<?php echo esc_url(home_url('/terms-of-service/')); ?>">Terms</a>

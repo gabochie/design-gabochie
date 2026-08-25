@@ -23,10 +23,10 @@ $hero_img_default = GABOCHIE_VALUE_URI . '/assets/images/hero.jpg';
  * 28+ no longer defines that class.
  */
 if (!defined('WPSEO_VERSION')) :
-$og_title = is_singular() ? get_the_title() : 'Gabochie Design — Value-Driven Architectural Consultancy, Ghana';
+$og_title = is_singular() ? get_the_title() : 'Gabochie Design — Value-Driven Development Facilitation, Ghana';
 $og_desc  = is_singular()
     ? wp_trim_words(get_the_excerpt() ?: get_the_content(), 30)
-    : 'A value-driven architectural consultancy and built-environment advisory for ambitious homeowners, investors, developers and the Ghanaian diaspora. From first idea to feasibility, design, cost, construction and beyond. Get Clarity.';
+    : 'A value-driven development facilitation and architectural consultancy serving homeowners, investors, developers and the Ghanaian diaspora — from feasibility through design, cost, approvals, procurement, delivery and beyond. Get Clarity.';
 $og_image = $hero_img_default;
 if (is_singular() && has_post_thumbnail()) {
     $thumb = wp_get_attachment_image_src(get_post_thumbnail_id(), 'large');

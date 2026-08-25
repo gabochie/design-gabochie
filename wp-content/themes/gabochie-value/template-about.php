@@ -22,7 +22,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
     <h1 class="hero-h1">The consultancy behind <em>the promise.</em></h1>
     <div class="hero-h1-dim">Built on trust, evidence and long-term thinking</div>
     <div class="hero-rule"></div>
-    <p class="hero-sub">Gabochie Design is an architectural consultancy that believes the best projects begin with honest answers &mdash; not beautiful drawings. We help clients build the right thing, control cost honestly, and protect their interest from brief to handover.</p>
+    <p class="hero-sub">Gabochie Design is a development facilitation and architectural consultancy that believes the best projects begin with honest answers &mdash; not beautiful drawings. We help clients build the right thing, control cost honestly, and protect their interest from brief to handover.</p>
     <div class="hero-actions">
       <a class="btn-gold" href="<?php echo esc_url($clarity); ?>">Get Clarity</a>
       <a class="btn-ghost-w" href="<?php echo esc_url(gabochie_value_section_url('services')); ?>">See what we do</a>
