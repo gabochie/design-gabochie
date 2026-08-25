@@ -428,7 +428,7 @@ section { padding: 4.5rem 2.5rem; }
 
 /* ============ FOOTER ============ */
 footer { background: var(--teal-dark); padding: 3.5rem 2.5rem 2rem; color: rgba(250,247,242,0.5); }
-.foot-grid { max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1.2fr 1.3fr; gap: 3rem; padding-bottom: 3.5rem; border-bottom: 1px solid rgba(201,169,110,0.12); }
+.foot-grid { max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1.2fr 1fr; gap: 2.5rem; padding-bottom: 3.5rem; border-bottom: 1px solid rgba(201,169,110,0.12); }
 .foot-brand .logo-link { margin-bottom: 1.25rem; }
 .foot-brand p { font-size: 0.88rem; line-height: 1.85; color: rgba(250,247,242,0.42); max-width: 300px; font-weight: 400; }
 .foot-social { display: flex; gap: 0.7rem; margin-top: 1.5rem; }
