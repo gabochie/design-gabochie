@@ -103,7 +103,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
       </div>
     </div>
     <div class="hero-actions" style="margin-top:2.5rem">
-      <a class="btn-solid" href="<?php echo esc_url($clarity); ?>">Get Clarity</a>
+      <a class="btn-solid" href="<?php echo esc_url($clarity); ?>">Start Here</a>
       <span class="reassure-line">No pressure. No jargon. You'll leave with a direction.</span>
     </div>
   </div>
@@ -126,7 +126,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
       <blockquote>Making better use of your capital &mdash; building the right thing, avoiding preventable mistakes, and protecting the long-term value of the property.</blockquote>
       <div>
         <p>Better decisions happen when design, cost, feasibility and delivery sit under one roof. That's what we do &mdash; whether you're in Accra or abroad.</p>
-        <a class="btn-ghost-w" href="<?php echo esc_url($clarity); ?>" style="margin-top:1.5rem;display:inline-block">Get Clarity</a>
+        <a class="btn-ghost-w" href="<?php echo esc_url($clarity); ?>" style="margin-top:1.5rem;display:inline-block">Start Here</a>
       </div>
     </div>
   </div>
@@ -154,10 +154,10 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
     </div>
     <div class="journey-banner reveal">
       <p>You don't have to start at the beginning. <em>We'll meet you where you are.</em></p>
-      <a class="btn-gold" href="<?php echo esc_url($clarity); ?>">Get Clarity</a>
+      <a class="btn-gold" href="<?php echo esc_url($clarity); ?>">Start Here</a>
+
     </div>
-  </div>
-</section>
+  </section>
 
 <!-- ========== SERVICES ========== -->
 <section class="services" id="services">
@@ -530,7 +530,7 @@ get_template_part('inc/template-parts/cta-band', null, array(
     'title'   => 'Not sure what you need? <em>Start there.</em>',
     'sub'     => 'Answer five questions in the wizard and leave with a direction &mdash; or talk to us directly. Either way, no pressure and no jargon.',
     'actions' => array(
-        array('class' => 'btn-gold', 'href' => $clarity, 'text' => 'Get Clarity'),
+        array('class' => 'btn-gold', 'href' => $clarity, 'text' => 'Start Here'),
         array('class' => 'whatsapp-btn', 'href' => $wa_base . 'Hello%20Gabochie%20Design%20%E2%80%94%20from%20your%20website.', 'text' => 'WhatsApp Us', 'icon' => 'whatsapp'),
         array('class' => 'btn-ghost-w', 'href' => 'tel:' . $phone_tel, 'text' => 'Call ' . $phone),
     ),
