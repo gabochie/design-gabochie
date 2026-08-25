@@ -428,13 +428,16 @@ section { padding: 4.5rem 2.5rem; }
 
 /* ============ FOOTER ============ */
 footer { background: var(--teal-dark); padding: 3.5rem 2.5rem 2rem; color: rgba(250,247,242,0.5); }
-.foot-grid { max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1.2fr 1fr; gap: 2.5rem; padding-bottom: 3.5rem; border-bottom: 1px solid rgba(201,169,110,0.12); }
+.foot-grid { max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1.3fr 1fr 1.3fr; gap: 3rem; padding-bottom: 3.5rem; border-bottom: 1px solid rgba(201,169,110,0.12); }
 .foot-brand .logo-link { margin-bottom: 1.25rem; }
 .foot-brand p { font-size: 0.88rem; line-height: 1.85; color: rgba(250,247,242,0.42); max-width: 300px; font-weight: 400; }
-.foot-social { display: flex; gap: 0.7rem; margin-top: 1.5rem; }
-.foot-social a { width: 38px; height: 38px; border: 1px solid rgba(201,169,110,0.25); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: rgba(250,247,242,0.5); }
+.foot-trust { display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem; padding: 0.5rem 0.85rem; background: rgba(201,169,110,0.08); border: 1px solid rgba(201,169,110,0.15); border-radius: var(--r-sm); width: fit-content; }
+.foot-trust svg { width: 14px; height: 14px; stroke: var(--gold); flex-shrink: 0; }
+.foot-trust span { font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(250,247,242,0.5); font-weight: 500; }
+.foot-social { display: flex; gap: 0.7rem; margin-top: 1.25rem; }
+.foot-social a { width: 36px; height: 36px; border: 1px solid rgba(201,169,110,0.25); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: rgba(250,247,242,0.5); }
 .foot-social a:hover { border-color: var(--gold); color: var(--gold); }
-.foot-social svg { width: 15px; height: 15px; fill: currentColor; }
+.foot-social svg { width: 14px; height: 14px; fill: currentColor; }
 .foot-col h4 { font-size: 0.66rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 1.4rem; font-weight: 500; }
 .foot-col ul { list-style: none; display: flex; flex-direction: column; gap: 0.8rem; }
 .foot-col a { font-size: 0.88rem; color: rgba(250,247,242,0.5); font-weight: 400; }
@@ -442,8 +445,9 @@ footer { background: var(--teal-dark); padding: 3.5rem 2.5rem 2rem; color: rgba(
 .foot-col li.foot-contact { font-size: 0.88rem; color: rgba(250,247,242,0.5); display: flex; gap: 0.7rem; align-items: flex-start; font-weight: 400; }
 .foot-col li.foot-contact svg { width: 15px; height: 15px; stroke: var(--gold); fill: none; stroke-width: 1.5; margin-top: 4px; flex-shrink: 0; }
 .foot-bottom { max-width: 1280px; margin: 0 auto; padding-top: 1.75rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; font-size: 0.78rem; color: rgba(250,247,242,0.3); font-weight: 400; }
-.foot-bottom a { color: rgba(250,247,242,0.3); }
-.foot-bottom a:hover { color: var(--gold); }
+.foot-legal { display: flex; gap: 1.25rem; flex-wrap: wrap; }
+.foot-legal a { color: rgba(250,247,242,0.35); font-size: 0.78rem; }
+.foot-legal a:hover { color: var(--gold); }
 
 /* ============ FLOATING ============ */
 .back-to-top { position: fixed; bottom: 2rem; right: 2rem; width: 44px; height: 44px; border-radius: 50%; background: var(--teal); color: #FAF7F2; border: none; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all 0.3s; z-index: 1000; box-shadow: 0 4px 16px rgba(7,46,40,0.3); }
@@ -578,6 +582,9 @@ img.alignleft, img.alignright, img.aligncenter { display: block; }
   .cta-art { display: none; }
   .cta-content { padding: 3.5rem 1.5rem; }
   .foot-grid { grid-template-columns: 1fr; gap: 2.25rem; }
+  .foot-trust { width: auto; }
+  .foot-bottom { flex-direction: column; text-align: center; gap: 0.75rem; }
+  .foot-legal { justify-content: center; }
   .wiz-opt-group { grid-template-columns: 1fr; }
   .journey-banner { padding: 1.5rem; }
   .page-hero { padding: 5rem 1.25rem 2.5rem; }
