@@ -45,13 +45,6 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
       <span>Private advisory &middot; Architecture practice</span>
       <strong>Gabochie Design</strong>
     </div>
-    <div class="faq-cta reveal">
-      <p>Still have questions?</p>
-      <div class="faq-cta-btns">
-        <a class="btn-gold" href="<?php echo esc_url($wa_base . 'Hello%20Gabochie%20Design%20%E2%80%94%20I%20have%20a%20question.'); ?>" target="_blank" rel="noopener">WhatsApp Us</a>
-        <a class="btn-ghost" href="tel:<?php echo esc_attr($phone_tel); ?>">Call <?php echo esc_html($phone); ?></a>
-      </div>
-    </div>
   </div>
 </section>
 
@@ -480,6 +473,50 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
       <div class="faq-item">
         <button class="faq-q" aria-expanded="false">What does "value-driven" actually mean? <span class="fq-ico">+</span></button>
         <div class="faq-a"><p>It means we measure our work by the value it protects and creates for you &mdash; better use of capital, fewer preventable mistakes, controlled cost and a property that keeps its value over time. We don't simply ask what to design; we ask what you should build, why, and what it should cost.</p></div>
+      </div>
+    </div>
+    <div class="faq-cta reveal">
+      <p>Still have questions?</p>
+      <div class="faq-cta-btns">
+        <a class="btn-gold" href="<?php echo esc_url($wa_base . 'Hello%20Gabochie%20Design%20%E2%80%94%20I%20have%20a%20question.'); ?>" target="_blank" rel="noopener">WhatsApp Us</a>
+        <a class="btn-ghost" href="tel:<?php echo esc_attr($phone_tel); ?>">Call <?php echo esc_html($phone); ?></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== INLINE PROJECT FORM ========== -->
+<section class="project-form" id="project-form">
+  <div class="container">
+    <div class="pf-grid">
+      <div class="pf-text">
+        <div class="sec-ey"><span>Tell us about your project</span></div>
+        <h2 class="sec-h2 reveal">Not ready for the wizard? <em>Start with a message.</em></h2>
+        <p class="sec-lead reveal">Drop your details below and we'll get back to you within one working day with a clear next step.</p>
+      </div>
+      <div class="pf-form-wrap reveal">
+        <form class="pf-form" id="projectForm" novalidate>
+          <div class="wiz-field">
+            <label for="pfName2">Full name <span class="req">*</span></label>
+            <input type="text" id="pfName2" name="name" autocomplete="name" required>
+          </div>
+          <div class="wiz-field">
+            <label for="pfEmail2">Email <span class="req">*</span></label>
+            <input type="email" id="pfEmail2" name="email" autocomplete="email" required>
+          </div>
+          <div class="wiz-field">
+            <label for="pfPhone2">Phone / WhatsApp</label>
+            <input type="tel" id="pfPhone2" name="phone" autocomplete="tel">
+          </div>
+          <div class="wiz-field">
+            <label for="pfMessage2">Tell us about your project</label>
+            <textarea id="pfMessage2" name="message" rows="3" placeholder="What are you building? Where is it? What stage are you at?"></textarea>
+          </div>
+          <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="gd-hp" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+          <input type="hidden" name="source" value="homepage-form">
+          <button type="submit" class="btn-gold">Send Message</button>
+        </form>
+        <div class="guide-ok" id="pfOk" style="display:none;text-align:center;padding:1.5rem">Got it &mdash; we'll be in touch within one working day.</div>
       </div>
     </div>
   </div>

@@ -204,6 +204,19 @@
       leads.push({ ts: Date.now(), journey: state.journey, journeyLabel: (JOURNEY[state.journey] || {}).label, blocker: state.blocker, blockerLabel: (BLOCKERS[state.blocker] || {}).label, profile: state.profile });
       localStorage.setItem('gd_leads', JSON.stringify(leads));
     } catch (e) {}
+    /* server-side lead capture */
+    fetch('/wp-json/gabochie/v1/guide-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: state.profile.email,
+        source: 'wizard',
+        name: state.profile.name,
+        phone: state.profile.phone || '',
+        journey: (JOURNEY[state.journey] || {}).label || '',
+        blocker: (BLOCKERS[state.blocker] || {}).label || ''
+      })
+    }).catch(function () {});
   }
 
   /* journey selections */
@@ -326,6 +339,70 @@
       }).then(function (res) {
         if (res.ok && res.data && res.data.success) {
           var ok = form.parentElement.querySelector('.guide-ok, .foot-newsletter-ok');
+          form.style.display = 'none';
+          if (ok) ok.style.display = 'block';
+        } else {
+          if (btn) { btn.disabled = false; btn.textContent = btnText; }
+        }
+      }).catch(function () {
+        if (btn) { btn.disabled = false; btn.textContent = btnText; }
+      });
+    });
+  });
+
+  /* homepage inline project form */
+  var projectForm = $('#projectForm');
+  if (projectForm) projectForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = (projectForm.querySelector('[name=name]') || {}).value || '';
+    var email = (projectForm.querySelector('[name=email]') || {}).value || '';
+    if (!name.trim() || !email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+    var phone = (projectForm.querySelector('[name=phone]') || {}).value || '';
+    var message = (projectForm.querySelector('[name=message]') || {}).value || '';
+    var hp = projectForm.querySelector('[name=website]');
+    var btn = projectForm.querySelector('button[type=submit]');
+    var btnText = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = 'Sending\u2026'; }
+    fetch('/wp-json/gabochie/v1/guide-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email.trim(), source: 'homepage-form', name: name.trim(), phone: phone, message: message, website: hp ? hp.value : '' })
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, data: d }; });
+    }).then(function (res) {
+      if (res.ok && res.data && res.data.success) {
+        var ok = $('#pfOk');
+        projectForm.style.display = 'none';
+        if (ok) ok.style.display = 'block';
+      } else {
+        if (btn) { btn.disabled = false; btn.textContent = btnText; }
+      }
+    }).catch(function () {
+      if (btn) { btn.disabled = false; btn.textContent = btnText; }
+    });
+  });
+
+  /* blog post email capture */
+  $$('.post-capture-form').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var input = form.querySelector('input[type=email]');
+      var email = (input ? input.value : '').trim();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+      var hp = form.querySelector('[name=website]');
+      var source = (form.querySelector('[name=source]') || {}).value || 'blog';
+      var btn = form.querySelector('button[type=submit]');
+      var btnText = btn ? btn.textContent : '';
+      if (btn) { btn.disabled = true; btn.textContent = 'Sending\u2026'; }
+      fetch('/wp-json/gabochie/v1/guide-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, source: source, website: hp ? hp.value : '' })
+      }).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, data: d }; });
+      }).then(function (res) {
+        if (res.ok && res.data && res.data.success) {
+          var ok = form.parentElement.querySelector('.guide-ok');
           form.style.display = 'none';
           if (ok) ok.style.display = 'block';
         } else {
