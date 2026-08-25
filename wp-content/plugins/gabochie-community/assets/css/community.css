@@ -47,32 +47,39 @@
 	flex-shrink: 0;
 }
 
-/* ---- Stage filter pills (theme .blog-filter grammar) ---- */
+/* ---- Stage filter pills ---- */
 .gqc-chips {
 	display: flex;
 	flex-wrap: wrap;
-	gap: .75rem;
+	justify-content: center;
+	gap: .65rem;
 	margin: 0 0 2.5rem;
+	padding: 1.25rem 1.5rem;
+	background: var(--teal-pale, rgba(7,46,40,.04));
+	border: 1px solid var(--border-light, rgba(0,0,0,.06));
+	border-radius: var(--r, 8px);
 }
 
 .gqc-chip {
 	display: inline-flex;
 	align-items: center;
-	padding: .65rem 1.4rem;
-	font-size: .78rem;
+	padding: .55rem 1.15rem;
+	font-size: .73rem;
 	letter-spacing: .1em;
 	text-transform: uppercase;
 	color: var(--teal);
 	border: 1px solid var(--border);
 	border-radius: 999px;
-	transition: border-color .25s ease, color .25s ease;
+	transition: border-color .25s ease, color .25s ease, background .25s ease;
 	text-decoration: none;
 	white-space: nowrap;
+	background: #fff;
 }
 
 .gqc-chip:hover {
 	border-color: var(--gold);
 	color: var(--gold);
+	background: rgba(201,169,110,.06);
 }
 
 .gqc-chip.is-active {
