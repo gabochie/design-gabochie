@@ -29,6 +29,12 @@ require_once GABOCHIE_VALUE_DIR . '/inc/client-portal-webhooks.php';
 require_once GABOCHIE_VALUE_DIR . '/inc/client-portal-chat.php';
 
 /* ============================================
+   DEVELOPMENT READINESS SCORE (Phase B)
+   ============================================ */
+require_once GABOCHIE_VALUE_DIR . '/inc/client-portal-readiness.php';
+require_once GABOCHIE_VALUE_DIR . '/inc/client-portal-readiness-api.php';
+
+/* ============================================
    MEMBERSHIP — Client Login & Redirects
    ============================================ */
 add_filter('login_redirect', function ($redirect_to, $requested_redirect_to, $user) {

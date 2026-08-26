@@ -179,6 +179,17 @@ function d2_cost_total($pid) {
 .d2-tab-content{display:none}
 .d2-tab-content.active{display:block}
 
+/* ─── READINESS SCORE ─── */
+.gr-section .gr-dim-bar{margin-bottom:.5rem}
+.gr-dim-bar-label{display:flex;justify-content:space-between;font-size:.75rem;margin-bottom:.2rem}
+.gr-dim-bar-label span:first-child{font-weight:500;color:var(--charcoal)}
+.gr-dim-bar-label span:last-child{font-weight:600}
+.gr-dim-bar-track{height:8px;background:var(--cream-dark);border-radius:4px;overflow:hidden}
+.gr-dim-bar-fill{height:100%;border-radius:4px;transition:width .6s ease-out}
+.gr-strength-item,.gr-gap-item{display:flex;align-items:center;gap:.4rem;padding:.3rem 0;font-size:.78rem;color:#555}
+.gr-strength-dot{width:6px;height:6px;border-radius:50%;background:#27AE60;flex-shrink:0}
+.gr-gap-dot{width:6px;height:6px;border-radius:50%;background:#E67E22;flex-shrink:0}
+
 @media(max-width:768px){
     .d2-hero{grid-template-columns:repeat(2,1fr)}
     .d2-grid{grid-template-columns:1fr}
@@ -244,6 +255,38 @@ function d2_cost_total($pid) {
         <div class="d2-stat-label">Activity</div>
         <div class="d2-stat-value" style="font-size:1.2rem"><?php echo $msg_stats['unread']; ?> unread</div>
         <div class="d2-stat-sub"><?php echo $m_counts['completed'] . '/' . $m_counts['total']; ?> milestones done &middot; <?php echo $doc_count; ?> docs</div>
+    </div>
+</div>
+
+<!-- ═══ READINESS SCORE ═══ -->
+<div class="d2-section gr-section" id="gr-readiness" style="margin-bottom:1.5rem">
+    <div class="d2-section-head">
+        <h3 style="display:flex;align-items:center;gap:.5rem">
+            <span style="font-size:1.1rem">&#9679;</span> Development Readiness Score&trade;
+        </h3>
+        <span class="d2-badge" id="gr-overall-badge">Loading&hellip;</span>
+    </div>
+    <div class="d2-section-body" style="display:grid;grid-template-columns:140px 1fr;gap:1.5rem;align-items:start">
+        <div id="gr-ring" style="text-align:center"></div>
+        <div>
+            <div id="gr-dimensions" style="margin-bottom:1rem"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                <div>
+                    <div style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--teal);margin-bottom:.4rem">Strengths</div>
+                    <div id="gr-strengths"></div>
+                </div>
+                <div>
+                    <div style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#E67E22;margin-bottom:.4rem">Top Gaps</div>
+                    <div id="gr-weaknesses"></div>
+                </div>
+            </div>
+            <div id="gr-upgrade" style="display:none;margin-top:1rem;padding:.75rem 1rem;background:rgba(201,169,110,.08);border-radius:8px;border:1px solid rgba(201,169,110,.2)">
+                <a href="<?php echo esc_url(home_url('/membership-levels/')); ?>" style="color:var(--gold);font-weight:600;font-size:.82rem;text-decoration:none">
+                    Unlock Full Analysis &rarr;
+                </a>
+                <div style="font-size:.72rem;color:var(--mist);margin-top:.2rem">Get detailed recommendations, cost analysis, and AI-powered insights</div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -540,6 +583,82 @@ function d2_cost_total($pid) {
     /* Auto-scroll messages */
     var msgList = document.getElementById('d2-messages-list');
     if (msgList) msgList.scrollTop = msgList.scrollHeight;
+
+    /* ─── READINESS SCORE ─── */
+    var app = document.getElementById('d2-app');
+    var pid = app ? app.getAttribute('data-project') : 0;
+    var rest = app ? app.getAttribute('data-rest') : '';
+    var wpNonce = app ? app.getAttribute('data-nonce') : '';
+    if (!pid || !rest) return;
+
+    function grColor(score) {
+        if (score >= 70) return '#27AE60';
+        if (score >= 40) return '#F39C12';
+        return '#E74C3C';
+    }
+    function grStatus(score) {
+        if (score >= 70) return 'green';
+        if (score >= 40) return 'amber';
+        return 'red';
+    }
+
+    fetch(rest + 'projects/' + pid + '/readiness', {
+        headers: { 'X-WP-Nonce': wpNonce }
+    }).then(function(r){ return r.json(); }).then(function(d) {
+        if (!d.ok) return;
+
+        /* Overall badge */
+        var badge = document.getElementById('gr-overall-badge');
+        badge.textContent = d.overall + '/100';
+        badge.className = 'd2-badge ' + grStatus(d.overall);
+
+        /* Score ring */
+        var color = grColor(d.overall);
+        var circ = 2 * 45;
+        var offset = circ - (d.overall / 100) * circ;
+        document.getElementById('gr-ring').innerHTML =
+            '<svg width="120" height="120" viewBox="0 0 100 100">' +
+            '<circle cx="50" cy="50" r="45" fill="none" stroke="#E8E8E4" stroke-width="8"/>' +
+            '<circle cx="50" cy="50" r="45" fill="none" stroke="' + color + '" stroke-width="8" ' +
+            'stroke-dasharray="' + circ + '" stroke-dashoffset="' + offset + '" ' +
+            'stroke-linecap="round" transform="rotate(-90 50 50)" ' +
+            'style="transition:stroke-dashoffset 1s ease-out"/>' +
+            '<text x="50" y="48" text-anchor="middle" font-size="22" font-weight="700" fill="' + color + '">' + d.overall + '</text>' +
+            '<text x="50" y="62" text-anchor="middle" font-size="8" fill="#888">/ 100</text></svg>';
+
+        /* Dimension bars */
+        var dimsHtml = '';
+        var dims = d.dimensions;
+        var keys = Object.keys(dims);
+        for (var i = 0; i < keys.length; i++) {
+            var k = keys[i];
+            var dim = dims[k];
+            var c = grColor(dim.score);
+            dimsHtml += '<div class="gr-dim-bar">' +
+                '<div class="gr-dim-bar-label"><span>' + dim.label + '</span><span style="color:' + c + '">' + dim.score + '%</span></div>' +
+                '<div class="gr-dim-bar-track"><div class="gr-dim-bar-fill" style="width:' + dim.score + '%;background:' + c + '"></div></div></div>';
+        }
+        document.getElementById('gr-dimensions').innerHTML = dimsHtml;
+
+        /* Strengths */
+        var sHtml = '';
+        for (var j = 0; j < d.strengths.length; j++) {
+            sHtml += '<div class="gr-strength-item"><span class="gr-strength-dot"></span>' + d.strengths[j] + '</div>';
+        }
+        document.getElementById('gr-strengths').innerHTML = sHtml || '<div style="font-size:.78rem;color:var(--mist)">No strengths identified yet</div>';
+
+        /* Weaknesses */
+        var wHtml = '';
+        for (var m = 0; m < d.weaknesses.length; m++) {
+            wHtml += '<div class="gr-gap-item"><span class="gr-gap-dot"></span>' + d.weaknesses[m] + '</div>';
+        }
+        document.getElementById('gr-weaknesses').innerHTML = wHtml || '<div style="font-size:.78rem;color:var(--mist)">No gaps identified yet</div>';
+
+        /* Upgrade prompt */
+        if (d.upgrade_prompt) {
+            document.getElementById('gr-upgrade').style.display = 'block';
+        }
+    });
 })();
 
 function d2SendMessage(){
