@@ -296,6 +296,7 @@ $wa_base  = 'https://wa.me/' . $whatsapp . '?text=';
 
             <!-- CTA -->
             <div class="onb-profile-ctas">
+              <div class="onb-err onb-step-err" id="onbStepErr" style="display:none"></div>
               <button type="button" class="btn-gold onb-create-btn" id="onbCreateBtn">Create My Free Account &amp; Project</button>
               <p class="onb-fine-print">By creating an account you agree to our terms. We'll never share your data.</p>
             </div>

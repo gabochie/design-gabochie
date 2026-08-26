@@ -44,6 +44,10 @@ $show_register = isset($_GET['action']) && $_GET['action'] === 'register';
                     <div style="background:#fef2f2;border:1px solid #fecaca;color:#991b1b;padding:0.75rem 1rem;border-radius:var(--r-sm);margin-bottom:1.5rem;font-size:0.85rem">Invalid email or password. Please try again.</div>
                 <?php endif; ?>
 
+                <?php if (isset($_GET['account']) && $_GET['account'] === 'exists') : ?>
+                    <div style="background:#F0FDF4;border:1px solid #BBF7D0;color:#166534;padding:0.75rem 1rem;border-radius:var(--r-sm);margin-bottom:1.5rem;font-size:0.85rem">An account with this email already exists. Please sign in below.</div>
+                <?php endif; ?>
+
                 <?php echo do_shortcode('[pmpro_login]'); ?>
 
                 <p style="text-align:center;margin-top:1rem"><a href="<?php echo esc_url(add_query_arg('action', 'register')); ?>" style="color:var(--teal);text-decoration:underline;font-size:0.85rem">Don't have an account? Create one free</a></p>

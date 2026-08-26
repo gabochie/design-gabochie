@@ -120,6 +120,8 @@
 
 /* ---- Profile CTAs ---- */
 .onb-profile-ctas { text-align: center; padding: 1.5rem 0; }
+.onb-step-err { text-align: left; background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B; padding: 0.75rem 1rem; border-radius: var(--r-sm); font-size: 0.85rem; margin-bottom: 1rem; }
+.onb-step-err a { color: var(--teal); text-decoration: underline; }
 .onb-create-btn { display: inline-block; padding: 0.9rem 2.5rem; background: var(--gold); color: var(--teal-dark); border: none; border-radius: var(--r-sm); font-family: 'Jost', sans-serif; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.08em; cursor: pointer; transition: background 0.25s, transform 0.2s; }
 .onb-create-btn:hover { background: #ddb96e; transform: translateY(-1px); }
 .onb-create-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
