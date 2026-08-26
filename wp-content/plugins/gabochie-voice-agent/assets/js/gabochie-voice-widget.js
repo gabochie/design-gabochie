@@ -179,7 +179,7 @@
   <div class="listening-indicator" id="listening-indicator" hidden>\
     <div class="pulse-dot"></div> Listening... speak now\
   </div>\
-  <div class="lang-hint">Speak in English or Twi-nglish</div>\
+  <div class="lang-hint">Speak in English, Twi, or Ga</div>\
   <div class="controls">\
     <button class="ctrl" id="mic" aria-label="Start speaking" title="Speak">' + ICONS.mic + '</button>\
     <input type="text" class="text-input" id="text-input" placeholder="Or type a message..." />\
