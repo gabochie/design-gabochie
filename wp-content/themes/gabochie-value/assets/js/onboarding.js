@@ -402,6 +402,12 @@
       descEl.addEventListener('input', function () { state.project_description = descEl.value; });
     }
 
+    /* Land location select */
+    var locEl = $('#onbLandLocation');
+    if (locEl) {
+      locEl.addEventListener('change', function () { state.land_location = locEl.value; });
+    }
+
     /* Next button */
     if (nextBtn) {
       nextBtn.addEventListener('click', function () {
