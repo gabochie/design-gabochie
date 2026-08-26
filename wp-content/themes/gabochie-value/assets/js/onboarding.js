@@ -355,7 +355,11 @@
       .then(function (r) { return r.json(); })
       .then(function (res) {
         if (res.success) {
-          /* Show success */
+          /* Track */
+          if (window.Gabochie && window.Gabochie.track) {
+            window.Gabochie.track('gd_onb_complete', { goal: state.goal, budget: state.budget_range });
+          }
+          /* Show success state briefly, then redirect to dashboard */
           var panel = $('#onbProfilePanel');
           var success = $('#onbSuccess');
           var nav = $('#onbNav');
@@ -364,10 +368,9 @@
           }
           if (success) success.style.display = 'block';
           if (nav) nav.style.display = 'none';
-          /* Track */
-          if (window.Gabochie && window.Gabochie.track) {
-            window.Gabochie.track('gd_onb_complete', { goal: state.goal, budget: state.budget_range });
-          }
+          /* Auto-redirect to dashboard after 2 seconds */
+          var dashUrl = (res.data && res.data.dashboard_url) || '/dashboard/';
+          setTimeout(function () { window.location.href = dashUrl; }, 2000);
         } else {
           if (btn) { btn.disabled = false; btn.textContent = 'Create My Free Account & Project'; }
           showError((res.data && res.data.message) || 'Something went wrong. Please try again.');

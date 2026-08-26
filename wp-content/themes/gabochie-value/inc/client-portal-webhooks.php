@@ -93,6 +93,11 @@ function gabochie_value_onboarding_create() {
     if (is_wp_error($uid)) {
         wp_send_json_error(array('message' => $uid->get_error_message()), 500);
     }
+
+    /* Log the user in immediately so they land on the dashboard */
+    wp_set_current_user($uid);
+    wp_set_auth_cookie($uid, true);
+
     if ($phone) {
         update_user_meta($uid, 'gabochie_phone', $phone);
     }
@@ -167,10 +172,10 @@ function gabochie_value_onboarding_create() {
     }
 
     wp_send_json_success(array(
-        'user_id'    => $uid,
-        'project_id' => $pid ?: 0,
-        'message'    => 'Account and project created successfully.',
-        'login_url'  => esc_url(home_url('/login/')),
+        'user_id'     => $uid,
+        'project_id'  => $pid ?: 0,
+        'message'     => 'Account and project created successfully.',
+        'dashboard_url' => esc_url(home_url('/dashboard/')),
     ));
 }
 
