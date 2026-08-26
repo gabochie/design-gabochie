@@ -195,6 +195,9 @@
     }
     if (state.step === 2) {
       if (!state.budget_range) { showError('Please select a budget range — "Just exploring" works too.'); return false; }
+      /* Read land_location directly from DOM (select2 may not fire change event) */
+      var locSel = $('#onbLandLocation');
+      if (locSel && locSel.value) state.land_location = locSel.value;
       return true;
     }
     if (state.step === 3) {
