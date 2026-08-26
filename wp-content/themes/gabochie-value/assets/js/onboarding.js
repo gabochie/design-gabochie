@@ -360,6 +360,7 @@
     fetch(AJAX_URL, { method: 'POST', body: data })
       .then(function (r) { return r.json(); })
       .then(function (res) {
+        console.log('[onb] ajax response:', JSON.stringify(res).substring(0, 200));
         if (res.success) {
           /* Track */
           if (window.Gabochie && window.Gabochie.track) {
@@ -376,7 +377,8 @@
           if (nav) nav.style.display = 'none';
           /* Redirect to dashboard immediately */
           var dashUrl = (res.data && res.data.dashboard_url) || '/dashboard/';
-          window.location.href = dashUrl;
+          console.log('[onb] success! redirecting to:', dashUrl);
+          window.location.assign(dashUrl);
         } else {
           if (btn) { btn.disabled = false; btn.textContent = 'Create My Free Account & Project'; }
           showError((res.data && res.data.message) || 'Something went wrong. Please try again.');
