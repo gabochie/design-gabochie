@@ -68,7 +68,7 @@
 /* ---- Chips ---- */
 .onb-chip-grid { display: flex; flex-wrap: wrap; gap: 0.6rem; }
 .onb-chip-grid.cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); }
-.onb-chip { background: var(--cream); border: 1px solid var(--border-light); border-radius: var(--r-sm); padding: 0.7rem 1rem; cursor: pointer; font-family: 'Jost', sans-serif; font-size: 0.82rem; color: var(--charcoal); text-align: left; transition: all 0.2s; min-height: 42px; display: flex; align-items: center; }
+.onb-chip { background: var(--cream); border: 1px solid var(--border-light); border-radius: var(--r-sm); padding: 0.7rem 1rem; cursor: pointer; font-family: 'Jost', sans-serif; font-size: 0.82rem; color: var(--charcoal); text-align: left; transition: all 0.2s; min-height: 44px; display: flex; align-items: center; }
 .onb-chip:hover { border-color: var(--gold); }
 .onb-chip.sel { background: var(--teal-dark); color: #FAF7F2; border-color: var(--teal-dark); }
 .onb-chip.sel::before { content: '\2713 '; color: var(--gold); margin-right: 0.3rem; font-weight: 700; }
