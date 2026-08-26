@@ -141,7 +141,7 @@ final class Gabochie_Voice_Rest {
 	 * Call Gemini API with the message and conversation history.
 	 */
 	private function call_gemini( $message, $history, $api_key ) {
-		$model  = get_option( 'ghbc_llm_model', 'gemini-flash-latest' );
+		$model  = get_option( 'ghbc_llm_model', 'gemini-3.5-flash' );
 		$url    = 'https://generativelanguage.googleapis.com/v1beta/models/' . $model . ':generateContent?key=' . $api_key;
 
 		// Build contents array from history
