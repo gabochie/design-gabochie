@@ -187,7 +187,9 @@ final class Gabochie_Voice_Rest {
 					'threshold' => 'BLOCK_NONE',
 				),
 			),
-			'maxOutputTokens'   => 150,
+			'generationConfig'  => array(
+				'maxOutputTokens' => 150,
+			),
 		);
 
 		$response = wp_remote_post(
