@@ -154,7 +154,18 @@
   .onb-nav { padding: 1.2rem 1.4rem; }
 }
 @media (max-width: 420px) {
-  .onb-goal-grid { grid-template-columns: 1fr; }
-  .onb-goal.notsure { grid-column: span 1; }
+  .onb-goal-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .onb-goal { padding: 1rem 0.75rem; min-height: 80px; }
+  .onb-goal-icon { font-size: 1.3rem; }
+  .onb-goal-label { font-size: 0.82rem; }
+  .onb-goal-desc { font-size: 0.72rem; }
+  .onb-goal.notsure { grid-column: span 2; }
   .onb-profile-grid { grid-template-columns: 1fr; }
+  .onb-hero-h1 { font-size: clamp(1.5rem, 6vw, 2rem); }
+  .onb-hero-sub { font-size: 0.9rem; }
+  .onb-q { font-size: 1.2rem; }
+  .onb-body { padding: 1.5rem 1rem 1.25rem; }
+  .onb-nav { padding: 1rem; gap: 1rem; flex-wrap: wrap; }
+  .onb-nav .btn-ghost { font-size: 0.7rem; min-height: 44px; display: flex; align-items: center; }
+  .onb-nav .btn-solid { min-height: 44px; display: flex; align-items: center; }
 }
