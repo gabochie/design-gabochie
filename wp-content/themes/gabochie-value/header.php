@@ -82,7 +82,7 @@ $og_type = is_singular('post') ? 'article' : 'website';
   </ul>
   <?php endif; ?>
   <div class="nav-right">
-    <a class="nav-cta" href="<?php echo esc_url(gabochie_value_clarity_url()); ?>">Start Here</a>
+    <a class="nav-cta" href="<?php echo esc_url(home_url('/onboarding/')); ?>">Start Here</a>
     <?php if (is_user_logged_in()) : ?>
       <a class="nav-portal" href="<?php echo esc_url(home_url('/dashboard/')); ?>">Dashboard</a>
     <?php else : ?>
@@ -96,7 +96,7 @@ $og_type = is_singular('post') ? 'article' : 'website';
   </div>
 </nav>
 <div class="mobile-menu" id="mobileMenu">
-  <a class="mobile-cta" href="<?php echo esc_url(gabochie_value_clarity_url()); ?>">Start Here</a>
+  <a class="mobile-cta" href="<?php echo esc_url(home_url('/onboarding/')); ?>">Start Here</a>
   <a href="<?php echo esc_url(gabochie_value_section_url('services')); ?>">Services</a>
   <a href="<?php echo esc_url(home_url('/about/')); ?>">About</a>
   <a href="<?php echo esc_url(home_url('/blog/')); ?>">Blog</a>

@@ -43,5 +43,27 @@ function gabochie_value_scripts() {
         'homeUrl'   => home_url('/'),
         'whatsapp'  => gabochie_value_whatsapp(),
     ));
+
+    /* ---- Onboarding page assets ---- */
+    if (is_page_template('page-templates/template-onboarding.php')) {
+        wp_enqueue_style(
+            'gabochie-onb',
+            GABOCHIE_VALUE_URI . '/assets/css/onboarding.css',
+            array('gabochie-value-main'),
+            GABOCHIE_VALUE_VERSION
+        );
+        wp_enqueue_script(
+            'gabochie-onb',
+            GABOCHIE_VALUE_URI . '/assets/js/onboarding.js',
+            array(),
+            GABOCHIE_VALUE_VERSION,
+            true
+        );
+        wp_localize_script('gabochie-onb', 'gabochieOnb', array(
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'nonce'   => wp_create_nonce('gabochie_onb_nonce'),
+            'loginUrl' => esc_url(home_url('/login/')),
+        ));
+    }
 }
 add_action('wp_enqueue_scripts', 'gabochie_value_scripts', 99);

@@ -64,6 +64,17 @@ add_action('init', function () {
         'service_type'         => array('type' => 'string',  'default' => 'building'),
         'client_phone'         => array('type' => 'string',  'default' => ''),
         'referral_source'      => array('type' => 'string',  'default' => ''),
+        // Onboarding fields — Development Intelligence
+        'dev_goal'             => array('type' => 'string',  'default' => ''),
+        'property_type'        => array('type' => 'string',  'default' => ''),
+        'land_status'          => array('type' => 'string',  'default' => ''),
+        'land_location'        => array('type' => 'string',  'default' => ''),
+        'development_scale'    => array('type' => 'string',  'default' => ''),
+        'budget_range'         => array('type' => 'string',  'default' => ''),
+        'timeline'             => array('type' => 'string',  'default' => ''),
+        'involvement'          => array('type' => 'string',  'default' => ''),
+        'location_based'       => array('type' => 'string',  'default' => ''),
+        'project_description'  => array('type' => 'string',  'default' => ''),
     );
 
     foreach ($meta_fields as $key => $config) {

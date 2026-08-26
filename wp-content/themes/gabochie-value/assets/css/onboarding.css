@@ -1,0 +1,158 @@
+/* ============================================
+   ONBOARDING WIZARD — Development Opportunity
+   @package Gabochie_Value
+   ============================================ */
+
+/* ---- Hero ---- */
+.onb-main { padding-bottom: 6rem; }
+.onb-hero { padding: 7rem 2.5rem 3rem; background: var(--teal-dark); color: #FAF7F2; }
+.onb-hero .breadcrumb { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(250,247,242,0.4); margin-bottom: 1.5rem; }
+.onb-hero .breadcrumb a { color: rgba(250,247,242,0.4); text-decoration: none; }
+.onb-hero .breadcrumb a:hover { color: var(--gold); }
+.onb-hero-h1 { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 4vw, 3.2rem); font-weight: 400; line-height: 1.2; margin-bottom: 1rem; }
+.onb-hero-h1 em { font-style: italic; color: var(--gold); }
+.onb-hero-sub { font-size: 1.05rem; color: rgba(250,247,242,0.65); max-width: 640px; line-height: 1.7; }
+
+/* ---- Card ---- */
+.onb-wizard { padding: 0 2.5rem; margin-top: -2rem; position: relative; z-index: 10; }
+.onb-card { max-width: 960px; margin: 0 auto; background: var(--ivory); border-radius: var(--r-lg); border: 1px solid var(--border-light); box-shadow: 0 16px 64px rgba(0,0,0,0.12); overflow: hidden; }
+
+/* ---- Progress bar ---- */
+.onb-progress { display: flex; align-items: center; gap: 0.5rem; padding: 1.2rem 2.5rem; background: var(--teal-dark); flex-wrap: wrap; }
+.onb-p-step { display: flex; align-items: center; gap: 0.5rem; font-size: 0.64rem; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(250,247,242,0.3); }
+.onb-p-step .op-num { width: 24px; height: 24px; border-radius: 50%; border: 1px solid rgba(201,169,110,0.3); display: flex; align-items: center; justify-content: center; font-size: 0.62rem; color: var(--gold); flex-shrink: 0; transition: all 0.3s; }
+.onb-p-step.active { color: rgba(250,247,242,0.9); }
+.onb-p-step.active .op-num { border-color: var(--gold); color: var(--gold); background: rgba(201,169,110,0.12); }
+.onb-p-step.done { color: rgba(250,247,242,0.5); }
+.onb-p-step.done .op-num { background: var(--gold); color: var(--teal-dark); border-color: var(--gold); }
+.onb-p-step .op-dash { width: 28px; height: 1px; background: rgba(201,169,110,0.2); }
+
+/* ---- Body ---- */
+.onb-body { padding: 3rem 2.5rem 2.5rem; min-height: 420px; }
+.onb-step { display: none; }
+.onb-step.active { display: block; animation: fadeUp 0.4s ease both; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+.onb-q { font-family: 'Playfair Display', serif; font-size: clamp(1.5rem, 2.4vw, 2rem); font-weight: 400; color: var(--charcoal); line-height: 1.3; margin-bottom: 0.6rem; }
+.onb-q em { font-style: italic; color: var(--gold); }
+.onb-hint { font-size: 0.88rem; color: var(--mist); margin-bottom: 2rem; line-height: 1.7; }
+
+/* ---- Goal grid ---- */
+.onb-goal-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.onb-goal { position: relative; background: var(--cream); border: 1px solid var(--border-light); border-radius: var(--r); padding: 1.3rem 1.1rem; cursor: pointer; text-align: left; transition: all 0.25s; display: flex; flex-direction: column; gap: 0.5rem; font-family: 'Jost', sans-serif; min-height: 100px; }
+.onb-goal:hover { border-color: var(--gold); transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+.onb-goal.sel { border-color: var(--teal); background: var(--teal-light); box-shadow: 0 0 0 2px var(--teal); }
+.onb-goal.notsure { grid-column: span 1; border-style: dashed; }
+.og-icon { font-size: 1.5rem; line-height: 1; }
+.og-title { font-size: 0.88rem; font-weight: 500; color: var(--charcoal); line-height: 1.35; }
+.og-desc { font-size: 0.72rem; color: var(--mist); line-height: 1.5; }
+
+/* ---- Fields ---- */
+.onb-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 1.75rem 2.5rem; }
+.onb-field { display: flex; flex-direction: column; }
+.onb-field-full { grid-column: 1 / -1; }
+.onb-field label { display: block; font-size: 0.78rem; font-weight: 500; color: var(--charcoal); margin-bottom: 0.6rem; letter-spacing: 0.04em; }
+.onb-field label .req { color: var(--gold); }
+.onb-field input, .onb-field select, .onb-field textarea {
+  width: 100%; padding: 0.85rem 1rem; font-family: 'Jost', sans-serif; font-size: 0.95rem;
+  color: var(--charcoal); background: var(--cream); border: 1px solid var(--border);
+  border-radius: var(--r-sm); outline: none; transition: border-color 0.2s; appearance: none;
+}
+.onb-field input:focus, .onb-field select:focus, .onb-field textarea:focus { border-color: var(--teal); }
+.onb-field select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B8A84' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 1rem center;
+}
+.onb-field textarea { resize: vertical; min-height: 80px; }
+
+/* ---- Chips ---- */
+.onb-chip-grid { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.onb-chip-grid.cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); }
+.onb-chip { background: var(--cream); border: 1px solid var(--border-light); border-radius: var(--r-sm); padding: 0.7rem 1rem; cursor: pointer; font-family: 'Jost', sans-serif; font-size: 0.82rem; color: var(--charcoal); text-align: left; transition: all 0.2s; min-height: 42px; display: flex; align-items: center; }
+.onb-chip:hover { border-color: var(--gold); }
+.onb-chip.sel { background: var(--teal-dark); color: #FAF7F2; border-color: var(--teal-dark); }
+.onb-chip.sel::before { content: '\2713 '; color: var(--gold); margin-right: 0.3rem; font-weight: 700; }
+
+/* ---- Account fields ---- */
+.onb-account-fields { grid-template-columns: 1fr 1fr; }
+.onb-account-fields .onb-field:last-child { grid-column: 1 / -1; }
+
+/* ---- Navigation ---- */
+.onb-nav { display: flex; align-items: center; gap: 1.5rem; padding: 1.5rem 2.5rem; border-top: 1px solid var(--border-light); }
+.onb-nav .btn-ghost { margin-right: auto; }
+.onb-nav .btn-solid { background: var(--teal); color: #FAF7F2; border: none; padding: 0.75rem 2.2rem; border-radius: var(--r-sm); font-family: 'Jost', sans-serif; font-size: 0.74rem; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; font-weight: 500; transition: background 0.25s; }
+.onb-nav .btn-solid:hover { background: var(--teal-deep); }
+.onb-err { color: #C25E3A; font-size: 0.8rem; display: none; font-weight: 400; }
+
+/* ---- Readiness Score Card ---- */
+.onb-score-card { display: flex; align-items: center; gap: 2.5rem; padding: 2rem; background: var(--cream); border: 1px solid var(--border-light); border-radius: var(--r); margin-bottom: 2rem; }
+.onb-score-ring { position: relative; width: 120px; height: 120px; flex-shrink: 0; }
+.onb-score-ring svg { width: 100%; height: 100%; }
+.onb-score-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: var(--teal); }
+.onb-score-label { position: absolute; bottom: 18px; left: 0; right: 0; text-align: center; font-size: 0.62rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--mist); }
+.onb-score-details { display: flex; flex-direction: column; gap: 0.75rem; }
+.osd-row { display: flex; align-items: center; gap: 0.6rem; font-size: 0.88rem; color: var(--charcoal); }
+.osd-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.osd-dot.green { background: #22C55E; }
+.osd-dot.amber { background: #F59E0B; }
+
+/* ---- Profile Grid ---- */
+.onb-profile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; }
+.onb-pf-item { background: var(--cream); border: 1px solid var(--border-light); border-radius: var(--r-sm); padding: 1rem 1.25rem; }
+.opf-label { font-size: 0.64rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--mist); margin-bottom: 0.3rem; font-weight: 500; }
+.opf-val { font-size: 0.95rem; font-weight: 500; color: var(--charcoal); }
+
+/* ---- Profile Header ---- */
+.onb-profile-header { margin-bottom: 2rem; }
+.onb-profile-ey { font-size: 0.66rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.75rem; font-weight: 600; }
+.onb-profile-title { font-family: 'Playfair Display', serif; font-size: clamp(1.6rem, 2.5vw, 2.2rem); font-weight: 400; color: var(--charcoal); margin-bottom: 0.5rem; }
+.onb-profile-title em { font-style: italic; color: var(--gold); }
+.onb-profile-sub { font-size: 0.9rem; color: var(--mist); line-height: 1.7; }
+
+/* ---- Next Steps ---- */
+.onb-next-steps { margin-bottom: 2rem; }
+.onb-next-steps h3 { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 400; color: var(--charcoal); margin-bottom: 1rem; }
+.onb-rec-item { display: flex; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid var(--border-light); }
+.onb-rec-item:last-child { border-bottom: none; }
+.ori-icon { font-size: 1.3rem; flex-shrink: 0; width: 36px; text-align: center; }
+.ori-title { font-size: 0.92rem; font-weight: 500; color: var(--charcoal); margin-bottom: 0.2rem; }
+.ori-desc { font-size: 0.82rem; color: var(--mist); line-height: 1.6; }
+
+/* ---- Profile CTAs ---- */
+.onb-profile-ctas { text-align: center; padding: 1.5rem 0; }
+.onb-create-btn { display: inline-block; padding: 0.9rem 2.5rem; background: var(--gold); color: var(--teal-dark); border: none; border-radius: var(--r-sm); font-family: 'Jost', sans-serif; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.08em; cursor: pointer; transition: background 0.25s, transform 0.2s; }
+.onb-create-btn:hover { background: #ddb96e; transform: translateY(-1px); }
+.onb-create-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.onb-fine-print { font-size: 0.75rem; color: var(--mist); margin-top: 1rem; }
+
+/* ---- Success ---- */
+.onb-success { text-align: center; padding: 2rem 1rem; }
+.onb-success-mark { width: 72px; height: 72px; border-radius: 50%; background: var(--teal-light); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: var(--teal); font-size: 1.8rem; }
+.onb-success h3 { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 400; color: var(--charcoal); margin-bottom: 0.75rem; }
+.onb-success p { color: var(--mist); font-size: 0.95rem; line-height: 1.7; max-width: 480px; margin: 0 auto 2rem; }
+.onb-success-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 1024px) {
+  .onb-goal-grid { grid-template-columns: repeat(3, 1fr); }
+  .onb-chip-grid.cols-3 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+  .onb-hero { padding: 6rem 1.25rem 2.5rem; }
+  .onb-wizard { padding: 0 1.25rem; }
+  .onb-body { padding: 2rem 1.4rem 1.5rem; }
+  .onb-progress { padding: 1rem 1.4rem; }
+  .onb-p-step .op-dash { display: none; }
+  .onb-goal-grid { grid-template-columns: repeat(2, 1fr); }
+  .onb-fields { grid-template-columns: 1fr; }
+  .onb-account-fields { grid-template-columns: 1fr; }
+  .onb-chip-grid.cols-3 { grid-template-columns: 1fr; }
+  .onb-score-card { flex-direction: column; text-align: center; }
+  .onb-profile-grid { grid-template-columns: 1fr 1fr; }
+  .onb-nav { padding: 1.2rem 1.4rem; }
+}
+@media (max-width: 420px) {
+  .onb-goal-grid { grid-template-columns: 1fr; }
+  .onb-goal.notsure { grid-column: span 1; }
+  .onb-profile-grid { grid-template-columns: 1fr; }
+}

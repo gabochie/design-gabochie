@@ -24,7 +24,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
     <div class="hero-rule"></div>
     <p class="hero-sub">Land, an idea, drawings, or a half-built project &mdash; we help you make the right decision at every stage, from first idea to completed project and beyond. No jargon. No pressure.</p>
     <div class="hero-actions">
-      <a class="btn-gold" href="<?php echo esc_url($clarity); ?>">Start Here</a>
+      <a class="btn-gold" href="<?php echo esc_url(home_url('/onboarding/')); ?>">Start Here</a>
       <a class="btn-ghost-w" href="<?php echo esc_url(gabochie_value_section_url('journey')); ?>">See how it works</a>
     </div>
     <div class="hero-note">Prefer to talk? Call or WhatsApp <?php echo esc_html($phone); ?></div>

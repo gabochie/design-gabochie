@@ -66,6 +66,114 @@ function gabochie_value_log_agent_action($action, $data = array()) {
     update_option('gabochie_agent_log', $log);
 }
 
+/* ---- Onboarding: create account + project in one call ---- */
+add_action('wp_ajax_nopriv_gabochie_onb_create', 'gabochie_value_onboarding_create');
+function gabochie_value_onboarding_create() {
+    check_ajax_referer('gabochie_onb_nonce', 'nonce');
+
+    $name  = sanitize_text_field(wp_unslash($_POST['name'] ?? ''));
+    $email = sanitize_email($_POST['email'] ?? '');
+    $phone = sanitize_text_field(wp_unslash($_POST['phone'] ?? ''));
+
+    if (!$name) {
+        wp_send_json_error(array('message' => 'Please enter your name.'), 400);
+    }
+    if (!is_email($email)) {
+        wp_send_json_error(array('message' => 'A valid email address is required.'), 400);
+    }
+
+    /* Check for existing user */
+    $existing = get_user_by('email', $email);
+    if ($existing) {
+        wp_send_json_error(array('message' => 'An account with this email already exists. Please <a href="' . esc_url(home_url('/login/')) . '">sign in</a>.'), 409);
+    }
+
+    /* Create user */
+    $uid = gabochie_value_ensure_user($email, $name);
+    if (is_wp_error($uid)) {
+        wp_send_json_error(array('message' => $uid->get_error_message()), 500);
+    }
+    if ($phone) {
+        update_user_meta($uid, 'gabochie_phone', $phone);
+    }
+
+    /* Sanitize all onboarding fields */
+    $goal             = sanitize_text_field(wp_unslash($_POST['goal'] ?? ''));
+    $property_type    = sanitize_text_field(wp_unslash($_POST['property_type'] ?? ''));
+    $land_status      = sanitize_text_field(wp_unslash($_POST['land_status'] ?? ''));
+    $land_location    = sanitize_text_field(wp_unslash($_POST['land_location'] ?? ''));
+    $development_scale = sanitize_text_field(wp_unslash($_POST['development_scale'] ?? ''));
+    $budget_range     = sanitize_text_field(wp_unslash($_POST['budget_range'] ?? ''));
+    $timeline         = sanitize_text_field(wp_unslash($_POST['timeline'] ?? ''));
+    $location_based   = sanitize_text_field(wp_unslash($_POST['location_based'] ?? ''));
+    $project_desc     = sanitize_textarea_field(wp_unslash($_POST['project_description'] ?? ''));
+
+    /* Build a descriptive project title */
+    $goal_labels = array(
+        'build_home' => 'Residential Build', 'develop_income' => 'Income Development',
+        'have_land' => 'Land Development', 'have_capital' => 'Capital Deployment',
+        'unfinished' => 'Project Recovery', 'renovate' => 'Renovation',
+        'commercial' => 'Commercial Development', 'attract_investors' => 'Investor-Ready Project',
+        'invest' => 'Investment Opportunity', 'professional' => 'Professional Engagement',
+        'organisation' => 'Organisation Project', 'notsure' => 'Development Consultation',
+    );
+    $goal_label = $goal_labels[$goal] ?? 'Development Inquiry';
+    $loc_label  = $land_location ? ' (' . str_replace('-', ' ', $land_location) . ')' : '';
+    $post_title = $name . ' — ' . $goal_label . $loc_label;
+
+    $pid = wp_insert_post(array(
+        'post_type'   => 'client_project',
+        'post_title'  => $post_title,
+        'post_author' => $uid,
+        'post_status' => 'publish',
+        'meta_input'  => array(
+            'project_status'      => 'new',
+            'project_stage'       => 'Discovery',
+            'dev_goal'            => $goal,
+            'property_type'       => $property_type,
+            'land_status'         => $land_status,
+            'land_location'       => $land_location,
+            'development_scale'   => $development_scale,
+            'budget_range'        => $budget_range,
+            'timeline'            => $timeline,
+            'location_based'      => $location_based,
+            'project_description' => $project_desc,
+            'client_phone'        => $phone,
+        ),
+    ));
+
+    gabochie_value_log_agent_action('onboarding_complete', array(
+        'user_id'  => $uid,
+        'email'    => $email,
+        'name'     => $name,
+        'goal'     => $goal,
+        'budget'   => $budget_range,
+        'project'  => $pid ?: 0,
+    ));
+
+    /* Send welcome email */
+    if ($pid) {
+        $site_name = get_bloginfo('name');
+        wp_mail($email, 'Your Development Opportunity — ' . $site_name,
+            "Hi {$name},\n\n" .
+            "Welcome to {$site_name}. Your Development Opportunity profile has been created.\n\n" .
+            "Your project goal: {$goal_label}\n" .
+            "Project ID: #{$pid}\n\n" .
+            "Log in to view your project and recommended next steps:\n" .
+            esc_url(home_url('/login/')) . "\n\n" .
+            "— The " . $site_name . " Team",
+            array('Content-Type: text/plain; charset=UTF-8')
+        );
+    }
+
+    wp_send_json_success(array(
+        'user_id'    => $uid,
+        'project_id' => $pid ?: 0,
+        'message'    => 'Account and project created successfully.',
+        'login_url'  => esc_url(home_url('/login/')),
+    ));
+}
+
 add_action('wp_ajax_gabochie_agent_update', 'gabochie_value_ajax_agent_update');
 function gabochie_value_ajax_agent_update() {
     if (!current_user_can('manage_options')) {
