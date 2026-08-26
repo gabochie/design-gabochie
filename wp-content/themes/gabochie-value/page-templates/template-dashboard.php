@@ -14,10 +14,16 @@ $user = wp_get_current_user();
 ?>
 
 <section class="page-hero" style="padding-bottom:3rem">
-    <div class="container">
-        <div class="breadcrumb"><a href="<?php echo esc_url(home_url('/')); ?>">Home</a> / Dashboard</div>
-        <h1>Welcome, <em><?php echo esc_html($user->display_name ?: $user->user_login); ?></em></h1>
-        <p>Your project hub — track progress, review designs, and stay in the loop.</p>
+    <div class="container" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem">
+        <div>
+            <div class="breadcrumb"><a href="<?php echo esc_url(home_url('/')); ?>">Home</a> / Dashboard</div>
+            <h1>Welcome, <em><?php echo esc_html($user->display_name ?: $user->user_login); ?></em></h1>
+            <p>Your project hub — track progress, review designs, and stay in the loop.</p>
+        </div>
+        <a href="<?php echo esc_url(wp_logout_url(home_url('/login/'))); ?>" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.6rem 1.2rem;border:1px solid rgba(250,247,242,0.3);border-radius:var(--r-sm);color:rgba(250,247,242,0.8);text-decoration:none;font-size:0.8rem;letter-spacing:0.05em;transition:all 0.2s;min-height:44px;white-space:nowrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:16px;height:16px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Sign Out
+        </a>
     </div>
 </section>
 
