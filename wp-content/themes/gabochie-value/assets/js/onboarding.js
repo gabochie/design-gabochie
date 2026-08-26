@@ -379,12 +379,6 @@
           setTimeout(function () { window.location.href = dashUrl; }, 2000);
         } else {
           if (btn) { btn.disabled = false; btn.textContent = 'Create My Free Account & Project'; }
-          /* 409 = email already exists → redirect to login */
-          if (res.data && res.data.message && res.data.message.indexOf('already exists') !== -1) {
-            var loginBase = (window.gabochieOnb && window.gabochieOnb.loginUrl) || '/login/';
-            window.location.href = loginBase + '?account=exists';
-            return;
-          }
           showError((res.data && res.data.message) || 'Something went wrong. Please try again.');
         }
       })

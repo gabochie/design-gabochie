@@ -76,22 +76,31 @@ function gabochie_value_onboarding_create() {
     $phone = sanitize_text_field(wp_unslash($_POST['phone'] ?? ''));
 
     if (!$name) {
-        wp_send_json_error(array('message' => 'Please enter your name.'), 400);
+        wp_send_json_success(array('success' => false, 'message' => 'Please enter your name.'));
+        exit;
     }
     if (!is_email($email)) {
-        wp_send_json_error(array('message' => 'A valid email address is required.'), 400);
+        wp_send_json_success(array('success' => false, 'message' => 'A valid email address is required.'));
+        exit;
     }
 
-    /* Check for existing user */
+    /* Existing user → log them in and redirect to dashboard */
     $existing = get_user_by('email', $email);
     if ($existing) {
-        wp_send_json_error(array('message' => 'An account with this email already exists. Please <a href="' . esc_url(home_url('/login/')) . '">sign in</a>.'), 409);
+        wp_set_current_user($existing->ID);
+        wp_set_auth_cookie($existing->ID, true);
+        wp_send_json_success(array(
+            'message'      => 'Welcome back! Logging you in.',
+            'dashboard_url' => esc_url(home_url('/dashboard/')),
+        ));
+        exit;
     }
 
     /* Create user */
     $uid = gabochie_value_ensure_user($email, $name);
     if (is_wp_error($uid)) {
-        wp_send_json_error(array('message' => $uid->get_error_message()), 500);
+        wp_send_json_success(array('success' => false, 'message' => $uid->get_error_message()));
+        exit;
     }
 
     /* Log the user in immediately so they land on the dashboard */
@@ -172,9 +181,9 @@ function gabochie_value_onboarding_create() {
     }
 
     wp_send_json_success(array(
-        'user_id'     => $uid,
-        'project_id'  => $pid ?: 0,
-        'message'     => 'Account and project created successfully.',
+        'user_id'       => $uid,
+        'project_id'    => $pid ?: 0,
+        'message'       => 'Account and project created successfully.',
         'dashboard_url' => esc_url(home_url('/dashboard/')),
     ));
 }
