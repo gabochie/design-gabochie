@@ -1,8 +1,7 @@
 <?php
 /**
- * Frontend widget: enqueues the built voice widget bundle and prints the
- * mount point. The widget only renders once a Worker host is configured,
- * so enabling the plugin alone does not change the frontend.
+ * Frontend widget: enqueues the voice widget JS and prints the mount point.
+ * WordPress-native: uses Web Speech API (browser STT/TTS) + Gemini proxy.
  *
  * @package Gabochie_Voice_Agent
  */
@@ -26,8 +25,12 @@ final class Gabochie_Voice_Widget {
 	}
 
 	public function render() {
-		$host = gabochie_voice_agent_host();
-		if ( '' === $host || is_admin() || wp_doing_ajax() ) {
+		if ( is_admin() || wp_doing_ajax() ) {
+			return;
+		}
+
+		$api_key = gabochie_voice_agent_gemini_key();
+		if ( empty( $api_key ) ) {
 			return;
 		}
 
@@ -41,15 +44,16 @@ final class Gabochie_Voice_Widget {
 		);
 		wp_localize_script(
 			$handle,
-			'GabochieVoiceAgent',
+			'GabochieVoiceConfig',
 			array(
-				'host'     => untrailingslashit( $host ),
-				'agent'    => 'GabochieVoiceAgent',
-				'siteName' => get_bloginfo( 'name' ),
+				'ajax_url'   => admin_url( 'admin-ajax.php' ),
+				'rest_url'   => rest_url( 'gabochie-voice/v1/chat' ),
+				'nonce'      => wp_create_nonce( 'wp_rest' ),
+				'site_name'  => get_bloginfo( 'name' ),
+				'onboarding' => home_url( '/onboarding/' ),
 			)
 		);
 
-		// The widget mounts its shadow DOM inside this element.
 		echo '<div id="gabochie-voice-widget"></div>';
 	}
 }

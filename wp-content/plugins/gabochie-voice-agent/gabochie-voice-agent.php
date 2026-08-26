@@ -1,15 +1,15 @@
 <?php
 /**
  * Plugin Name: Gabochie Voice Agent
- * Description: Public-facing, lead-qualifying voice agent. Adds the voice widget to the frontend and an intake endpoint (POST /wp-json/gabochie-voice/v1/voice-lead, header X-Gabochie-Voice-Key) for the GabochieVoiceAgent Cloudflare Worker.
- * Version: 1.0.0
+ * Description: WordPress-native voice agent with English + Twi-nglish support. Browser-based speech recognition and synthesis with Gemini AI. Lead-qualifying conversational assistant.
+ * Version: 2.0.0
  * Author: Gabochie Design
  * Text Domain: gabochie-voice-agent
  */
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'GABOCHIE_VOICE_AGENT_VERSION', '1.0.0' );
+define( 'GABOCHIE_VOICE_AGENT_VERSION', '2.0.0' );
 define( 'GABOCHIE_VOICE_AGENT_DIR', plugin_dir_path( __FILE__ ) );
 define( 'GABOCHIE_VOICE_AGENT_URL', plugin_dir_url( __FILE__ ) );
 
@@ -18,26 +18,22 @@ require_once GABOCHIE_VOICE_AGENT_DIR . 'includes/class-widget.php';
 require_once GABOCHIE_VOICE_AGENT_DIR . 'includes/class-settings.php';
 
 /**
- * Host of the voice-agent Worker (scheme + hostname, no trailing slash),
- * e.g. https://gabochie-voice-agent.example.workers.dev
- * Override in wp-config.php: define( 'GABOCHIE_VOICE_AGENT_HOST', '...' );
+ * Get the Gemini API key. Checks plugin settings first, falls back to GhBC.
  */
-function gabochie_voice_agent_host() {
-	if ( defined( 'GABOCHIE_VOICE_AGENT_HOST' ) ) {
-		return (string) GABOCHIE_VOICE_AGENT_HOST;
+function gabochie_voice_agent_gemini_key() {
+	$key = get_option( 'gabochie_voice_agent_gemini_key', '' );
+	if ( empty( $key ) ) {
+		$key = get_option( 'ghbc_llm_key', '' );
 	}
-	return (string) get_option( 'gabochie_voice_agent_host', '' );
+	return $key;
 }
 
 /**
- * Shared secret the Worker sends as the X-Gabochie-Voice-Key header.
- * Override in wp-config.php: define( 'GABOCHIE_VOICE_AGENT_KEY', '...' );
+ * Get the system prompt for the voice agent.
  */
-function gabochie_voice_agent_key() {
-	if ( defined( 'GABOCHIE_VOICE_AGENT_KEY' ) ) {
-		return (string) GABOCHIE_VOICE_AGENT_KEY;
-	}
-	return (string) get_option( 'gabochie_voice_agent_key', '' );
+function gabochie_voice_agent_system_prompt() {
+	$default = 'You are Gabochie, a friendly building consultant helping people in Ghana with construction, permits, and building projects. You speak in casual Ghanaian English mixed with Twi phrases. Be warm, helpful, and encouraging. Keep responses concise (2-3 sentences max) since this is a voice conversation. If someone wants to start a project, guide them to fill out the onboarding form at /onboarding/. You know about: building permits in Accra, construction costs in Ghana, finding contractors, land ownership, and the Ghana Building Code (GS 1207:2018).';
+	return apply_filters( 'gabochie_voice_agent_prompt', $default );
 }
 
 final class Gabochie_Voice_Agent {

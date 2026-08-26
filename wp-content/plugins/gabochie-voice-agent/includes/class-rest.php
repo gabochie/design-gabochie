@@ -1,10 +1,8 @@
 <?php
 /**
- * Lead intake: lead CPT + REST endpoint consumed by the voice-agent Worker.
- *
- * The Worker authenticates with the X-Gabochie-Voice-Key header (compared
- * with hash_equals), and submissions are rate-limited per email address to
- * mirror the vbbi-core voice lead endpoint on gabochie.com.
+ * REST API endpoints for the voice agent.
+ * - POST /wp-json/gabochie-voice/v1/chat — Gemini conversation (proxied, key server-side)
+ * - POST /wp-json/gabochie-voice/v1/voice-lead — Lead capture from voice conversation
  *
  * @package Gabochie_Voice_Agent
  */
@@ -25,7 +23,7 @@ final class Gabochie_Voice_Rest {
 
 	private function __construct() {
 		add_action( 'init', array( $this, 'register_lead_type' ) );
-		add_action( 'rest_api_init', array( $this, 'register_route' ) );
+		add_action( 'rest_api_init', array( $this, 'register_routes' ) );
 		add_filter( 'manage_gabochie_lead_posts_columns', array( $this, 'lead_columns' ) );
 		add_action( 'manage_gabochie_lead_posts_custom_column', array( $this, 'lead_column_content' ), 10, 2 );
 	}
@@ -59,31 +57,174 @@ final class Gabochie_Voice_Rest {
 
 	/* -------------------------------------------------------------- REST */
 
-	public function register_route() {
+	public function register_routes() {
+		// Chat endpoint — proxies to Gemini
+		register_rest_route(
+			'gabochie-voice/v1',
+			'/chat',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'handle_chat' ),
+				'permission_callback' => '__return_true',
+			)
+		);
+
+		// Lead capture endpoint
 		register_rest_route(
 			'gabochie-voice/v1',
 			'/voice-lead',
 			array(
 				'methods'             => 'POST',
 				'callback'            => array( $this, 'handle_voice_lead' ),
-				'permission_callback' => array( $this, 'check_voice_key' ),
+				'permission_callback' => '__return_true',
 			)
 		);
 	}
 
-	public function check_voice_key( WP_REST_Request $request ) {
-		$sent     = (string) $request->get_header( 'X-Gabochie-Voice-Key' );
-		$expected = gabochie_voice_agent_key();
-		if ( '' === $expected || '' === $sent || ! hash_equals( $expected, $sent ) ) {
+	/**
+	 * Handle chat request — proxy to Gemini API with system prompt.
+	 */
+	public function handle_chat( WP_REST_Request $request ) {
+		$params = $request->get_json_params();
+		$params = is_array( $params ) ? $params : array();
+
+		$message    = isset( $params['message'] ) ? sanitize_text_field( (string) $params['message'] ) : '';
+		$history    = isset( $params['history'] ) && is_array( $params['history'] ) ? $params['history'] : array();
+		$session_id = isset( $params['session_id'] ) ? sanitize_text_field( (string) $params['session_id'] ) : '';
+
+		if ( empty( $message ) ) {
 			return new WP_Error(
-				'gva_forbidden',
-				__( 'Invalid voice agent key.', 'gabochie-voice-agent' ),
-				array( 'status' => 401 )
+				'gva_empty_message',
+				__( 'Message is required.', 'gabochie-voice-agent' ),
+				array( 'status' => 400 )
 			);
 		}
-		return true;
+
+		$api_key = gabochie_voice_agent_gemini_key();
+		if ( empty( $api_key ) ) {
+			return new WP_Error(
+				'gva_no_api_key',
+				__( 'Voice agent is not configured. Please set a Gemini API key.', 'gabochie-voice-agent' ),
+				array( 'status' => 500 )
+			);
+		}
+
+		// Rate limit: 30 messages per session per 10 minutes
+		if ( $session_id ) {
+			$rate_key  = 'gva_chat_' . md5( $session_id );
+			$chat_count = (int) get_transient( $rate_key );
+			if ( $chat_count >= 30 ) {
+				return new WP_Error(
+					'gva_rate_limited',
+					__( 'Too many messages. Please wait a moment.', 'gabochie-voice-agent' ),
+					array( 'status' => 429 )
+				);
+			}
+			set_transient( $rate_key, $chat_count + 1, 600 );
+		}
+
+		$reply = $this->call_gemini( $message, $history, $api_key );
+
+		if ( is_wp_error( $reply ) ) {
+			return $reply;
+		}
+
+		return rest_ensure_response(
+			array(
+				'success' => true,
+				'reply'   => $reply,
+			)
+		);
 	}
 
+	/**
+	 * Call Gemini API with the message and conversation history.
+	 */
+	private function call_gemini( $message, $history, $api_key ) {
+		$model  = get_option( 'ghbc_llm_model', 'gemini-flash-latest' );
+		$url    = 'https://generativelanguage.googleapis.com/v1beta/models/' . $model . ':generateContent?key=' . $api_key;
+
+		// Build contents array from history
+		$contents = array();
+		foreach ( $history as $msg ) {
+			$role = isset( $msg['role'] ) ? $msg['role'] : ( 'assistant' === ( $msg['role'] ?? '' ) ? 'model' : 'user' );
+			$text = isset( $msg['text'] ) ? $msg['text'] : ( $msg['content'] ?? '' );
+			if ( empty( $text ) ) {
+				continue;
+			}
+			$contents[] = array(
+				'role'  => $role === 'assistant' ? 'model' : 'user',
+				'parts' => array( array( 'text' => $text ) ),
+			);
+		}
+
+		// Add current message
+		$contents[] = array(
+			'role'  => 'user',
+			'parts' => array( array( 'text' => $message ) ),
+		);
+
+		$body = array(
+			'system_instruction' => array(
+				'parts' => array( array( 'text' => gabochie_voice_agent_system_prompt() ) ),
+			),
+			'contents'          => $contents,
+			'safetySettings'    => array(
+				array(
+					'category'  => 'HARM_CATEGORY_HARASSMENT',
+					'threshold' => 'BLOCK_NONE',
+				),
+				array(
+					'category'  => 'HARM_CATEGORY_HATE_SPEECH',
+					'threshold' => 'BLOCK_NONE',
+				),
+				array(
+					'category'  => 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+					'threshold' => 'BLOCK_NONE',
+				),
+				array(
+					'category'  => 'HARM_CATEGORY_DANGEROUS_CONTENT',
+					'threshold' => 'BLOCK_NONE',
+				),
+			),
+			'maxOutputTokens'   => 150,
+		);
+
+		$response = wp_remote_post(
+			$url,
+			array(
+				'headers' => array( 'Content-Type' => 'application/json' ),
+				'body'    => wp_json_encode( $body ),
+				'timeout' => 15,
+			)
+		);
+
+		if ( is_wp_error( $response ) ) {
+			return new WP_Error(
+				'gva_gemini_error',
+				__( 'Failed to connect to AI service.', 'gabochie-voice-agent' ),
+				array( 'status' => 502 )
+			);
+		}
+
+		$code = wp_remote_retrieve_response_code( $response );
+		$data = json_decode( wp_remote_retrieve_body( $response ), true );
+
+		if ( 200 !== $code || empty( $data['candidates'][0]['content']['parts'][0]['text'] ) ) {
+			$error_msg = $data['error']['message'] ?? 'Unknown Gemini error';
+			return new WP_Error(
+				'gva_gemini_error',
+				sprintf( __( 'AI error: %s', 'gabochie-voice-agent' ), $error_msg ),
+				array( 'status' => 502 )
+			);
+		}
+
+		return $data['candidates'][0]['content']['parts'][0]['text'];
+	}
+
+	/**
+	 * Handle voice lead submission.
+	 */
 	public function handle_voice_lead( WP_REST_Request $request ) {
 		$params = $request->get_json_params();
 		$params = is_array( $params ) ? $params : array();
@@ -102,7 +243,7 @@ final class Gabochie_Voice_Rest {
 			'referrer'      => isset( $params['referrer'] ) ? sanitize_text_field( (string) $params['referrer'] ) : 'voice-agent',
 		);
 
-		if ( '' === $lead['name'] || ! is_email( $lead['email'] ) ) {
+		if ( empty( $lead['name'] ) || ! is_email( $lead['email'] ) ) {
 			return new WP_Error(
 				'gva_invalid_lead',
 				__( 'A name and a valid email address are required.', 'gabochie-voice-agent' ),
@@ -110,6 +251,7 @@ final class Gabochie_Voice_Rest {
 			);
 		}
 
+		// Rate limit: 3 leads per email per hour
 		$rate = $this->rate_limit( $lead['email'] );
 		if ( is_wp_error( $rate ) ) {
 			return $rate;
@@ -122,15 +264,13 @@ final class Gabochie_Voice_Rest {
 
 		$this->notify( $lead, $lead_id );
 
-		$response = rest_ensure_response(
+		return rest_ensure_response(
 			array(
 				'success' => true,
 				'lead_id' => $lead_id,
 				'message' => 'Thanks — your project has been received.',
 			)
 		);
-		$response->set_status( 201 );
-		return $response;
 	}
 
 	/* -------------------------------------------------------- Rate limit */

@@ -1,8 +1,7 @@
 <?php
 /**
  * Settings screen: Settings -> Voice Agent.
- * Holds the Worker host URL and the shared intake key. Both can be overridden
- * with constants in wp-config.php (GABOCHIE_VOICE_AGENT_HOST / _KEY).
+ * Holds the Gemini API key (falls back to GhBC key if empty).
  *
  * @package Gabochie_Voice_Agent
  */
@@ -39,15 +38,7 @@ final class Gabochie_Voice_Settings {
 	public function register_settings() {
 		register_setting(
 			'gabochie_voice',
-			'gabochie_voice_agent_host',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => 'esc_url_raw',
-			)
-		);
-		register_setting(
-			'gabochie_voice',
-			'gabochie_voice_agent_key',
+			'gabochie_voice_agent_gemini_key',
 			array(
 				'type'              => 'string',
 				'sanitize_callback' => 'sanitize_text_field',
@@ -59,45 +50,54 @@ final class Gabochie_Voice_Settings {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
+
+		$ghbc_key = get_option( 'ghbc_llm_key', '' );
+		$ghbc_key_set = ! empty( $ghbc_key );
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Gabochie Voice Agent', 'gabochie-voice-agent' ); ?></h1>
+
+			<div class="card" style="max-width: 600px; padding: 20px; margin-bottom: 20px;">
+				<h2 style="margin-top: 0;"><?php esc_html_e( 'How it works', 'gabochie-voice-agent' ); ?></h2>
+				<ol>
+					<li><?php esc_html_e( 'Visitors click the microphone button on your site', 'gabochie-voice-agent' ); ?></li>
+					<li><?php esc_html_e( 'They speak in English or Twi-nglish (casual Ghanaian English)', 'gabochie-voice-agent' ); ?></li>
+					<li><?php esc_html_e( 'The agent responds with building advice in the same language', 'gabochie-voice-agent' ); ?></li>
+					<li><?php esc_html_e( 'Qualifying leads are captured and you get notified by email', 'gabochie-voice-agent' ); ?></li>
+				</ol>
+				<p><strong><?php esc_html_e( 'Requirements:', 'gabochie-voice-agent' ); ?></strong></p>
+				<ul>
+					<li><?php esc_html_e( 'Works in Chrome, Edge, and Safari (browser speech recognition)', 'gabochie-voice-agent' ); ?></li>
+					<li><?php esc_html_e( 'Requires HTTPS (secure context for microphone access)', 'gabochie-voice-agent' ); ?></li>
+					<li><?php esc_html_e( 'Gemini API key for AI responses', 'gabochie-voice-agent' ); ?></li>
+				</ul>
+			</div>
+
 			<form method="post" action="options.php">
 				<?php settings_fields( 'gabochie_voice' ); ?>
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row">
-							<label for="gabochie_voice_agent_host"><?php esc_html_e( 'Worker host', 'gabochie-voice-agent' ); ?></label>
+							<label for="gabochie_voice_agent_gemini_key"><?php esc_html_e( 'Gemini API Key', 'gabochie-voice-agent' ); ?></label>
 						</th>
 						<td>
-							<input id="gabochie_voice_agent_host" name="gabochie_voice_agent_host" type="url" class="regular-text"
-								value="<?php echo esc_attr( gabochie_voice_agent_host() ); ?>"
-								placeholder="https://gabochie-voice-agent.example.workers.dev" />
-							<p class="description">
-								<?php esc_html_e( 'The Cloudflare Worker hosting the voice agent. The widget appears site-wide once this is set.', 'gabochie-voice-agent' ); ?>
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row">
-							<label for="gabochie_voice_agent_key"><?php esc_html_e( 'Shared key', 'gabochie-voice-agent' ); ?></label>
-						</th>
-						<td>
-							<input id="gabochie_voice_agent_key" name="gabochie_voice_agent_key" type="text" class="regular-text"
-								value="<?php echo esc_attr( gabochie_voice_agent_key() ); ?>" />
-							<p class="description">
-								<?php esc_html_e( 'The Worker sends this as the X-Gabochie-Voice-Key header. It must match the VOICE_AGENT_KEY secret set on the Worker.', 'gabochie-voice-agent' ); ?>
-							</p>
+							<input id="gabochie_voice_agent_gemini_key" name="gabochie_voice_agent_gemini_key" type="password" class="regular-text"
+								value="<?php echo esc_attr( gabochie_voice_agent_gemini_key() ); ?>"
+								placeholder="AIza..." />
+							<?php if ( $ghbc_key_set ) : ?>
+								<p class="description" style="color: #00a32a;">
+									<?php esc_html_e( 'Using GhBC LLM key as fallback. You can override it here.', 'gabochie-voice-agent' ); ?>
+								</p>
+							<?php else : ?>
+								<p class="description">
+									<?php esc_html_e( 'Get a key from https://aistudio.google.com/apikey', 'gabochie-voice-agent' ); ?>
+								</p>
+							<?php endif; ?>
 						</td>
 					</tr>
 				</table>
 				<?php submit_button(); ?>
 			</form>
-			<p>
-				<?php esc_html_e( 'Override both in wp-config.php to keep them out of the database:', 'gabochie-voice-agent' ); ?>
-				<code>define( 'GABOCHIE_VOICE_AGENT_HOST', 'https://…' );</code>
-				<code>define( 'GABOCHIE_VOICE_AGENT_KEY', '…' );</code>
-			</p>
 		</div>
 		<?php
 	}
