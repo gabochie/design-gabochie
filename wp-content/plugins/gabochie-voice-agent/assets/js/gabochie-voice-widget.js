@@ -1,6 +1,6 @@
 /**
- * Gabochie Voice Agent — WordPress-native widget
- * Uses Web Speech API (browser STT/TTS) + Gemini proxy via WP REST.
+ * Gabochie Voice Agent — WordPress-native widget (v2.1)
+ * Auto-greets, always listening, mature female voice.
  *
  * @package Gabochie_Voice_Agent
  */
@@ -30,6 +30,10 @@
   var speaking = false;
   var listening = false;
   var panelOpen = false;
+  var greeted = false; /* only greet once per session */
+  var autoListen = false; /* auto-restart mic after TTS finishes */
+  var voicesLoaded = false;
+  var preferredVoice = null;
 
   /* -------------------------------------------------------- SVGs ----- */
   var ICONS = {
@@ -147,6 +151,16 @@
     text-align: center; padding: 4px; font-size: 11px; color: #6B7B78;\
     background: #F2FAF8; border-top: 1px solid #E8F4F2;\
   }\
+  .listening-indicator {\
+    display: flex; align-items: center; justify-content: center; gap: 6px;\
+    padding: 6px; font-size: 12px; color: #0D5C52; background: #E8F4F2;\
+  }\
+  .listening-indicator[hidden] { display: none; }\
+  .pulse-dot {\
+    width: 6px; height: 6px; border-radius: 50%; background: #C0392B;\
+    animation: blink 1s infinite;\
+  }\
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }\
 </style>';
 
   /* -------------------------------------------------------- HTML ----- */
@@ -162,6 +176,9 @@
     <button class="icon-btn" id="close" aria-label="Close">' + ICONS.close + '</button>\
   </div>\
   <div class="transcript" id="transcript"></div>\
+  <div class="listening-indicator" id="listening-indicator" hidden>\
+    <div class="pulse-dot"></div> Listening... speak now\
+  </div>\
   <div class="lang-hint">Speak in English or Twi-nglish</div>\
   <div class="controls">\
     <button class="ctrl" id="mic" aria-label="Start speaking" title="Speak">' + ICONS.mic + '</button>\
@@ -171,6 +188,49 @@
   </div>\
   <div class="error" id="error" hidden></div>\
 </div>';
+
+  /* ---- Voice selection: prefer mature female ---- */
+  function pickVoice() {
+    if (!synth) return null;
+    var voices = synth.getVoices();
+    if (!voices.length) return null;
+
+    /* Priority order for female voices */
+    var femalePatterns = [
+      'Microsoft Zira',        /* Windows female */
+      'Google UK English Female',
+      'Google US English',     /* often female */
+      'Samantha',              /* macOS female */
+      'Karen',                 /* macOS (AU) female */
+      'Moira',                 /* macOS (IE) female */
+      'Tessa',                 /* macOS (ZA) female */
+      'Victoria',              /* macOS female */
+      'Alice',                 /* Chrome OS female */
+      'Allison',               /* US English female */
+      'Julie',                 /* US English female */
+      'Microsoft Hazel',       /* Windows female */
+    ];
+
+    /* 1. Exact match */
+    for (var i = 0; i < femalePatterns.length; i++) {
+      for (var j = 0; j < voices.length; j++) {
+        if (voices[j].name.indexOf(femalePatterns[i]) !== -1) return voices[j];
+      }
+    }
+
+    /* 2. Any English voice with a female-sounding name */
+    var english = voices.filter(function (v) { return v.lang.startsWith('en'); });
+    var femaleNames = ['female', 'woman', 'girl', 'zira', 'samantha', 'karen', 'hazel', 'moira', 'tessa', 'victoria', 'alice', 'allison', 'julie', 'google uk english female'];
+    for (var k = 0; k < english.length; k++) {
+      var lower = english[k].name.toLowerCase();
+      for (var m = 0; m < femaleNames.length; m++) {
+        if (lower.indexOf(femaleNames[m]) !== -1) return english[k];
+      }
+    }
+
+    /* 3. First English voice (fallback) */
+    return english[0] || voices[0];
+  }
 
   /* ---------------------------------------------------- init ----- */
   function init() {
@@ -193,8 +253,22 @@
     var closeBtn = shadow.getElementById('close');
     var textInput = shadow.getElementById('text-input');
     var errorEl = shadow.getElementById('error');
+    var listeningIndicator = shadow.getElementById('listening-indicator');
     var siteName = shadow.querySelector('.site-name');
     siteName.textContent = CFG.site_name;
+
+    /* ---- pick voice once voices are loaded ---- */
+    function ensureVoice() {
+      if (preferredVoice) return;
+      preferredVoice = pickVoice();
+    }
+    if (synth) {
+      synth.getVoices();
+      synth.onvoiceschanged = function () {
+        synth.getVoices();
+        ensureVoice();
+      };
+    }
 
     /* ------------------------------------------------ toggle ----- */
     function togglePanel() {
@@ -203,14 +277,27 @@
       } else {
         panel.hidden = false;
         panelOpen = true;
-        addSystem('Hi! I\'m Gabochie. Ask me anything about building in Ghana.');
-        textInput.focus();
+
+        if (!greeted) {
+          greeted = true;
+          var greeting = 'Hello! I\'m Gabochie, your building consultant. ' +
+            'Ask me anything about building in Ghana — I\'m here to help.';
+          addBubble('assistant', greeting);
+          history.push({ role: 'assistant', text: greeting });
+          /* Speak the greeting, then auto-start listening */
+          autoListen = true;
+          speakText(greeting);
+        } else {
+          /* Already greeted — just start listening */
+          startListening();
+        }
       }
     }
 
     function closePanel() {
       panel.hidden = true;
       panelOpen = false;
+      autoListen = false;
       stopListening();
       synth && synth.cancel();
       speaking = false;
@@ -227,6 +314,10 @@
       fab.classList.toggle('listening', !!active);
     }
 
+    function showListeningIndicator(show) {
+      listeningIndicator.hidden = !show;
+    }
+
     /* ------------------------------------------------ transcript -- */
     function addBubble(role, text) {
       if (!text || !text.trim()) return;
@@ -235,10 +326,6 @@
       d.textContent = text;
       transcriptEl.appendChild(d);
       transcriptEl.scrollTop = transcriptEl.scrollHeight;
-    }
-
-    function addSystem(text) {
-      addBubble('system', text);
     }
 
     function setInterim(text) {
@@ -289,13 +376,14 @@
             setStatus('Ready', false);
             return;
           }
-          var reply = data.reply || data.data?.reply || 'Sorry, I couldn\'t understand that.';
+          var reply = data.reply || (data.data && data.data.reply) || 'Sorry, I couldn\'t understand that.';
           addBubble('assistant', reply);
           history.push({ role: 'assistant', text: reply });
           setStatus('Speaking...', true);
+          autoListen = true;
           speakText(reply);
         })
-        .catch(function (err) {
+        .catch(function () {
           showError('Connection error. Please try again.');
           setStatus('Ready', false);
         });
@@ -304,40 +392,42 @@
     /* ------------------------------------------------ TTS ----- */
     function speakText(text) {
       if (!synth) {
-        setStatus('Ready', false);
+        onTTSComplete();
         return;
       }
       synth.cancel();
-      var utter = new SpeechSynthesisUtterance(text);
-      utter.rate = 0.95;
-      utter.pitch = 1.0;
+      ensureVoice();
 
-      // Try to find an English voice
-      var voices = synth.getVoices();
-      var english = voices.filter(function (v) {
-        return v.lang.startsWith('en');
-      });
-      if (english.length > 0) {
-        utter.voice = english[0];
+      var utter = new SpeechSynthesisUtterance(text);
+      utter.rate = 0.88;       /* slightly slower for mature feel */
+      utter.pitch = 1.15;      /* slightly higher for feminine tone */
+      utter.volume = 1.0;
+
+      if (preferredVoice) {
+        utter.voice = preferredVoice;
       }
 
       utter.onend = function () {
         speaking = false;
-        setStatus('Ready', false);
+        onTTSComplete();
       };
       utter.onerror = function () {
         speaking = false;
-        setStatus('Ready', false);
+        onTTSComplete();
       };
 
       speaking = true;
       synth.speak(utter);
     }
 
-    // Pre-load voices
-    if (synth) {
-      synth.getVoices();
-      synth.onvoiceschanged = function () { synth.getVoices(); };
+    function onTTSComplete() {
+      if (panelOpen && autoListen) {
+        /* Auto-start listening after speaking */
+        autoListen = false;
+        startListening();
+      } else {
+        setStatus('Ready', false);
+      }
     }
 
     /* ------------------------------------------------ STT ----- */
@@ -349,25 +439,24 @@
         return;
       }
       if (listening) {
-        stopListening();
-        return;
+        return; /* already listening */
       }
-
-      // Cancel TTS if speaking
-      if (synth && speaking) {
-        synth.cancel();
+      if (speaking) {
+        synth && synth.cancel();
         speaking = false;
       }
 
       recognition = new SpeechRecognition();
-      recognition.continuous = false;
+      recognition.continuous = true;       /* stay listening until stopped */
       recognition.interimResults = true;
-      recognition.lang = 'en-GH'; // Ghanaian English
+      recognition.lang = 'en-GH';
+      recognition.maxAlternatives = 1;
 
       recognition.onstart = function () {
         listening = true;
         setStatus('Listening...', true);
         micBtn.classList.add('active');
+        showListeningIndicator(true);
       };
 
       recognition.onresult = function (event) {
@@ -391,38 +480,70 @@
 
       recognition.onerror = function (event) {
         if (event.error === 'no-speech') {
-          setStatus('Ready', false);
+          /* No speech detected — restart listening silently */
+          if (panelOpen && !speaking) {
+            stopListening();
+            setTimeout(function () {
+              if (panelOpen && !speaking && !listening) startListening();
+            }, 300);
+          }
         } else if (event.error === 'not-allowed') {
-          showError('Microphone access denied. Please allow microphone access.');
+          showError('Microphone access denied. Please allow microphone access in your browser settings.');
+          stopListening();
+        } else if (event.error === 'aborted') {
+          /* Intentional abort — ignore */
         } else {
           showError('Speech error: ' + event.error);
+          stopListening();
         }
-        stopListening();
       };
 
       recognition.onend = function () {
-        stopListening();
+        if (listening) {
+          /* Unexpected end — restart if panel open */
+          listening = false;
+          micBtn.classList.remove('active');
+          showListeningIndicator(false);
+          if (panelOpen && !speaking) {
+            setTimeout(function () {
+              if (panelOpen && !speaking && !listening) startListening();
+            }, 200);
+          }
+        }
       };
 
-      recognition.start();
+      try {
+        recognition.start();
+      } catch (_) {
+        /* already started */
+      }
     }
 
     function stopListening() {
       listening = false;
       micBtn.classList.remove('active');
+      showListeningIndicator(false);
       if (recognition) {
-        try { recognition.stop(); } catch (_) {}
+        try { recognition.abort(); } catch (_) {}
         recognition = null;
       }
     }
 
-    micBtn.addEventListener('click', startListening);
+    micBtn.addEventListener('click', function () {
+      if (listening) {
+        stopListening();
+        autoListen = false;
+      } else {
+        startListening();
+      }
+    });
 
     /* ------------------------------------------------ text input -- */
     function handleSend() {
       var text = textInput.value.trim();
       if (!text) return;
       textInput.value = '';
+      autoListen = true; /* auto-listen after AI responds */
       sendToAI(text);
     }
 
