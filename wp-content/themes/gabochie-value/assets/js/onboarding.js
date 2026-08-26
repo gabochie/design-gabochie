@@ -374,9 +374,9 @@
           }
           if (success) success.style.display = 'block';
           if (nav) nav.style.display = 'none';
-          /* Auto-redirect to dashboard after 2 seconds */
+          /* Redirect to dashboard immediately */
           var dashUrl = (res.data && res.data.dashboard_url) || '/dashboard/';
-          setTimeout(function () { window.location.href = dashUrl; }, 2000);
+          window.location.href = dashUrl;
         } else {
           if (btn) { btn.disabled = false; btn.textContent = 'Create My Free Account & Project'; }
           showError((res.data && res.data.message) || 'Something went wrong. Please try again.');
