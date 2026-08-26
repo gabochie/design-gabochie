@@ -84,13 +84,19 @@ function gabochie_value_onboarding_create() {
         exit;
     }
 
-    /* Existing user → log them in and redirect to dashboard */
+    /* Existing user → log them in, ensure they have Free Lead, redirect to dashboard */
     $existing = get_user_by('email', $email);
     if ($existing) {
         wp_set_current_user($existing->ID);
         wp_set_auth_cookie($existing->ID, true);
+        /* Ensure existing user has Free Lead membership */
+        if (function_exists('pmpro_changeMembershipLevel') && !pmpro_hasMembershipLevel(null, $existing->ID)) {
+            global $wpdb;
+            $free_level = $wpdb->get_var("SELECT id FROM {$wpdb->prefix}pmpro_membership_levels WHERE name = 'Free Lead' LIMIT 1");
+            if ($free_level) pmpro_changeMembershipLevel((int) $free_level, $existing->ID);
+        }
         wp_send_json_success(array(
-            'message'      => 'Welcome back! Logging you in.',
+            'message'       => 'Welcome back! Logging you in.',
             'dashboard_url' => esc_url(home_url('/dashboard/')),
         ));
         exit;
