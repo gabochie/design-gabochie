@@ -50,3 +50,9 @@ function gabochie_value_force_classic_wc_templates($has_block_template, $templat
     return false;
 }
 add_filter('woocommerce_has_block_template', 'gabochie_value_force_classic_wc_templates', 10, 2);
+
+/**
+ * Permanently disable WooCommerce "Coming Soon" mode.
+ * WC 11.0 enables this by default and blocks the entire store.
+ */
+add_filter('option_woocommerce_coming_soon', '__return_zero');
