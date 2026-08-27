@@ -35,6 +35,11 @@ require_once GABOCHIE_VALUE_DIR . '/inc/client-portal-readiness.php';
 require_once GABOCHIE_VALUE_DIR . '/inc/client-portal-readiness-api.php';
 
 /* ============================================
+   TASK VERIFICATION ENDPOINT
+   ============================================ */
+require_once GABOCHIE_VALUE_DIR . '/inc/client-portal-verify.php';
+
+/* ============================================
    MEMBERSHIP — Client Login & Redirects
    ============================================ */
 add_filter('login_redirect', function ($redirect_to, $requested_redirect_to, $user) {

@@ -18,6 +18,20 @@ function gabochie_value_setup() {
     add_theme_support('customize-selective-refresh-widgets');
     add_theme_support('wp-block-styles');
     add_theme_support('align-wide');
+    add_theme_support('woocommerce', array(
+        'thumbnail_image_width' => 400,
+        'single_image_width'    => 600,
+        'product_grid'          => array(
+            'default_rows'    => 3,
+            'min_rows'        => 1,
+            'default_columns' => 3,
+            'min_columns'     => 1,
+            'max_columns'     => 4,
+        ),
+    ));
+    add_theme_support('wc-product-gallery-zoom');
+    add_theme_support('wc-product-gallery-lightbox');
+    add_theme_support('wc-product-gallery-slider');
 
     register_nav_menus(array(
         'primary' => __('Primary Navigation', 'gabochie-value'),
