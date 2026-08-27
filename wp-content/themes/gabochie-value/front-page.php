@@ -19,13 +19,13 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
 <section class="hero" id="top">
   <div class="hero-left">
     <div class="hero-location"><span class="hero-location-dot"></span> Sakumono &middot; Tema &mdash; Ghana</div>
-    <h1 class="hero-h1">Your building journey does not have to be <em>confusing.</em></h1>
-    <div class="hero-h1-dim">Value-Driven Development Facilitation</div>
+    <h1 class="hero-h1">Make development <em>understandable, measurable, investable.</em></h1>
+    <div class="hero-h1-dim">The Development Intelligence Platform for Ghana</div>
     <div class="hero-rule"></div>
-    <p class="hero-sub">Land, an idea, drawings, or a half-built project &mdash; we help you make the right decision at every stage, from first idea to completed project and beyond. No jargon. No pressure.</p>
+    <p class="hero-sub">From land and capital to a viable, executable, value-producing project &mdash; know what to build, what it costs, how it can perform, and exactly what to do next. One coordinated development system, no jargon, no surprises.</p>
     <div class="hero-actions">
-      <a class="btn-gold" href="<?php echo esc_url(home_url('/onboarding/')); ?>">Start Here</a>
-      <a class="btn-ghost-w" href="<?php echo esc_url(gabochie_value_section_url('journey')); ?>">See how it works</a>
+      <a class="btn-gold" href="<?php echo esc_url(home_url('/onboarding/')); ?>">Start a Development</a>
+      <a class="btn-ghost-w" href="<?php echo esc_url(home_url('/building-cost-calculator/')); ?>">Explore Development Intelligence</a>
     </div>
     <div class="hero-note">Prefer to talk? Call or WhatsApp <?php echo esc_html($phone); ?></div>
     <?php if (!is_user_logged_in()) : ?>
@@ -34,16 +34,62 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
     <div class="hero-note" style="margin-top:0.5rem;font-size:0.78rem"><a href="<?php echo esc_url(home_url('/dashboard/')); ?>" style="color:var(--gold);text-decoration:underline">Go to your dashboard</a></div>
     <?php endif; ?>
     <div class="hero-stats">
-      <div><div class="stat-n">50<sup>+</sup></div><div class="stat-l">Projects guided from idea to handover</div></div>
-      <div><div class="stat-n">10</div><div class="stat-l">Stages on your building journey</div></div>
+      <div><div class="stat-n">14</div><div class="stat-l">Facilitated services across four phases</div></div>
+      <div><div class="stat-n">&lt;60s</div><div class="stat-l">Free cost estimate on the calculator</div></div>
       <div><div class="stat-n">100%</div><div class="stat-l">Transparent, documented process</div></div>
     </div>
   </div>
   <div class="hero-art">
     <img src="<?php echo esc_url(GABOCHIE_VALUE_URI . '/assets/images/hero.jpg'); ?>" alt="Gabochie Design building project" width="540" height="440" fetchpriority="high">
     <div class="hero-art-overlay">
-      <span>Development advisory &middot; Design practice</span>
+      <span>Development intelligence &middot; Facilitation</span>
       <strong>Gabochie Design</strong>
+    </div>
+  </div>
+</section>
+
+<!-- ========== PLATFORM ========== -->
+<style>
+.platform-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.25rem}
+.pl-card{background:var(--cream);border:1px solid rgba(201,169,110,.35);border-radius:.9rem;padding:1.6rem 1.5rem;display:flex;flex-direction:column;gap:.55rem;text-decoration:none;color:var(--charcoal);transition:transform .2s,border-color .2s,box-shadow .2s}
+.pl-card:hover{transform:translateY(-4px);border-color:var(--gold);box-shadow:0 12px 30px rgba(28,43,40,.08)}
+.pl-n{font-size:.8rem;letter-spacing:.14em;color:var(--gold);font-weight:600}
+.pl-card h3{font-size:1.15rem;font-family:'Playfair Display',Georgia,serif;color:var(--charcoal);margin:0}
+.pl-card p{font-size:.92rem;line-height:1.55;margin:0;color:inherit}
+.pl-cta{margin-top:auto;color:var(--teal);font-weight:600;font-size:.9rem}
+@media(max-width:1000px){.platform-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.platform-grid{grid-template-columns:1fr}}
+</style>
+<section class="platform" id="platform">
+  <div class="container">
+    <div class="sec-ey"><span>The platform</span></div>
+    <h2 class="sec-h2 reveal">One development system. <em>Four answers you need.</em></h2>
+    <p class="sec-lead reveal">Every development decision comes down to four questions. Get clear answers &mdash; free, instantly, in one place.</p>
+    <div class="platform-grid">
+      <a class="pl-card reveal" href="<?php echo esc_url(home_url('/onboarding/')); ?>">
+        <div class="pl-n">01</div>
+        <h3>Know what to build</h3>
+        <p>Answer five questions in the development wizard and get the smallest useful next step &mdash; or the right service to start with.</p>
+        <span class="pl-cta">Start the wizard &rarr;</span>
+      </a>
+      <a class="pl-card reveal reveal-delay-1" href="<?php echo esc_url(home_url('/building-cost-calculator/')); ?>">
+        <div class="pl-n">02</div>
+        <h3>Know what it costs</h3>
+        <p>Estimate your building cost in seconds with our Ghana-rates calculator &mdash; before you commit a single cedi.</p>
+        <span class="pl-cta">Estimate your build &rarr;</span>
+      </a>
+      <a class="pl-card reveal reveal-delay-2" href="<?php echo esc_url(home_url('/community/')); ?>">
+        <div class="pl-n">03</div>
+        <h3>Know how it can perform</h3>
+        <p>Ask the community and our AI assistant about land, feasibility, approvals and build practice in Ghana.</p>
+        <span class="pl-cta">Ask the community &rarr;</span>
+      </a>
+      <a class="pl-card reveal reveal-delay-3" href="<?php echo esc_url(home_url('/membership-levels/')); ?>">
+        <div class="pl-n">04</div>
+        <h3>Know what to do next</h3>
+        <p>Put a coordinated development system behind you &mdash; feasibility to handover &mdash; and keep your project moving.</p>
+        <span class="pl-cta">See the plans &rarr;</span>
+      </a>
     </div>
   </div>
 </section>
@@ -51,21 +97,25 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
 <!-- ========== TICKER ========== -->
 <div class="ticker" aria-hidden="true">
   <div class="ticker-inner">
-    <span class="t-item">Value-Driven Development</span>
+    <span class="t-item">Development Intelligence Platform</span>
+    <span class="t-item">Know What To Build</span>
+    <span class="t-item">Know What It Costs</span>
+    <span class="t-item">Know How It Performs</span>
+    <span class="t-item">Know What To Do Next</span>
     <span class="t-item">Feasibility First</span>
     <span class="t-item">Cost Transparency</span>
-    <span class="t-item">Join at Any Stage</span>
-    <span class="t-item">Diaspora-Friendly</span>
     <span class="t-item">Site &amp; Development Intelligence</span>
-    <span class="t-item">Development That Creates Value</span>
+    <span class="t-item">Value-Driven Development Facilitation</span>
     <span class="t-item">Sakumono &middot; Tema &middot; Ghana</span>
-    <span class="t-item">Value-Driven Development</span>
+    <span class="t-item">Development Intelligence Platform</span>
+    <span class="t-item">Know What To Build</span>
+    <span class="t-item">Know What It Costs</span>
+    <span class="t-item">Know How It Performs</span>
+    <span class="t-item">Know What To Do Next</span>
     <span class="t-item">Feasibility First</span>
     <span class="t-item">Cost Transparency</span>
-    <span class="t-item">Join at Any Stage</span>
-    <span class="t-item">Diaspora-Friendly</span>
     <span class="t-item">Site &amp; Development Intelligence</span>
-    <span class="t-item">Development That Creates Value</span>
+    <span class="t-item">Value-Driven Development Facilitation</span>
     <span class="t-item">Sakumono &middot; Tema &middot; Ghana</span>
   </div>
 </div>
@@ -114,7 +164,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
 <!-- ========== VALUE ========== -->
 <section class="value" id="value">
   <div class="container">
-    <div class="sec-ey"><span>Our value proposition</span></div>
+    <div class="sec-ey"><span>The development system</span></div>
     <h2 class="sec-h2 reveal">Value-driven is a <em>discipline,</em> not a slogan.</h2>
     <p class="sec-lead reveal">We don't simply ask, "What should we design?" We ask: what should you build, why should you build it, what should it cost &mdash; and how do we help you get the best possible outcome?</p>
     <div class="value-pillars">
@@ -135,7 +185,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
 <!-- ========== JOURNEY ========== -->
 <section class="journey" id="journey">
   <div class="container">
-    <div class="sec-ey"><span>Your building journey</span></div>
+    <div class="sec-ey"><span>The development journey</span></div>
     <h2 class="sec-h2 reveal">You can join the journey <em>anywhere.</em></h2>
     <p class="sec-lead reveal">You don't have to start at the beginning. If you're already somewhere in the journey, we'll meet you there.</p>
     <div class="stage-track">
@@ -387,7 +437,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
 <!-- ========== RESOURCES ========== -->
 <section class="resources" id="resources">
   <div class="container">
-    <div class="sec-ey"><span>Resources</span></div>
+    <div class="sec-ey"><span>Development intelligence</span></div>
     <h2 class="sec-h2 reveal">Help before you commit.</h2>
     <p class="sec-lead reveal">Practical guides for homeowners, investors and the diaspora &mdash; honest, no-strings resources to help you make better decisions.</p>
     <div class="res-grid">
