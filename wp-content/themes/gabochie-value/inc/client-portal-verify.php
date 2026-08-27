@@ -1,19 +1,39 @@
 <?php
 /**
- * Task Verification Endpoint
+ * Task Verification + Live Status Endpoints
  * @package Gabochie_Value
  * 
  * GET /wp-json/gabochie/v1/verify-tasks
- * Returns verification status for all phase checklist tasks.
+ *   Returns verification status for all phase checklist tasks.
+ * GET /wp-json/gabochie/v1/live-status
+ *   Returns comprehensive site status (core, theme, plugins, pages, content, etc.)
  * No auth required (read-only checks).
  */
 
 if (!defined('ABSPATH')) exit;
 
 add_action('rest_api_init', function () {
+    // CORS for verify endpoints
+    $uri = $_SERVER['REQUEST_URI'] ?? '';
+    if (strpos($uri, '/gabochie/v1/verify') !== false || strpos($uri, '/gabochie/v1/live-status') !== false) {
+        header('Access-Control-Allow-Origin: *');
+        header('Access-Control-Allow-Methods: GET, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type');
+        if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+            status_header(200);
+            exit();
+        }
+    }
+
     register_rest_route('gabochie/v1', '/verify-tasks', array(
         'methods'             => 'GET',
         'callback'            => 'gabochie_verify_tasks',
+        'permission_callback' => '__return_true',
+    ));
+
+    register_rest_route('gabochie/v1', '/live-status', array(
+        'methods'             => 'GET',
+        'callback'            => 'gabochie_live_status',
         'permission_callback' => '__return_true',
     ));
 });
@@ -67,6 +87,158 @@ function gabochie_verify_tasks() {
     $results['phaseE-6'] = _verify_plugin_active('gabochie-command-center');
 
     return rest_ensure_response($results);
+}
+
+function gabochie_live_status() {
+    $status = array(
+        'timestamp' => current_time('mysql'),
+        'site_url'  => home_url('/'),
+        'environment' => defined('WP_ENVIRONMENT_TYPE') ? WP_ENVIRONMENT_TYPE : 'production',
+    );
+
+    // 1. WordPress core
+    $status['wordpress'] = array(
+        'version' => get_bloginfo('version'),
+        'multisite' => is_multisite(),
+    );
+
+    // 2. Theme
+    $theme = wp_get_theme();
+    $status['theme'] = array(
+        'name' => $theme->get('Name'),
+        'version' => $theme->get('Version'),
+        'active' => true,
+    );
+
+    // 3. Plugins (active)
+    $active_plugins = get_option('active_plugins', array());
+    $status['plugins'] = array(
+        'count' => count($active_plugins),
+        'active' => array_map(function($p) {
+            $data = get_plugin_data(WP_PLUGIN_DIR . '/' . $p);
+            return array(
+                'slug' => explode('/', $p)[0],
+                'name' => $data['Name'],
+                'version' => $data['Version'],
+            );
+        }, $active_plugins),
+    );
+
+    // 4. Custom Post Types
+    $cpt_args = array('show_in_rest' => true, 'public' => true);
+    $cpts = get_post_types($cpt_args, 'objects');
+    $status['cpts'] = array(
+        'count' => count($cpts),
+        'types' => array_keys($cpts),
+    );
+
+    // 5. Pages (key membership/portal pages)
+    $key_pages = array(
+        'dashboard' => '/dashboard/',
+        'login' => '/client-login/',
+        'membership-levels' => '/membership-levels/',
+        'membership-account' => '/membership-account/',
+        'membership-checkout' => '/membership-checkout/',
+        'membership-billing' => '/membership-billing/',
+        'membership-cancel' => '/membership-cancel/',
+        'membership-confirmation' => '/membership-confirmation/',
+        'membership-invoices' => '/membership-invoices/',
+        'onboarding' => '/onboarding/',
+        'pricing' => '/pricing/',
+        'community' => '/community/',
+        'go-live' => '/go-live/',
+        'shop' => '/shop/',
+        'cart' => '/cart/',
+        'checkout' => '/checkout/',
+    );
+    $pages_found = array();
+    foreach ($key_pages as $name => $slug) {
+        $page = get_page_by_path($slug);
+        $pages_found[$name] = $page && $page->post_status === 'publish';
+    }
+    $status['pages'] = array(
+        'found' => count(array_filter($pages_found)),
+        'total' => count($pages_found),
+        'details' => $pages_found,
+    );
+
+    // 6. Published posts count
+    $status['content'] = array(
+        'posts' => wp_count_posts('post')->publish,
+        'pages' => wp_count_posts('page')->publish,
+        'media' => wp_count_posts('attachment')->inherit,
+    );
+
+    // 7. WooCommerce
+    $status['woocommerce'] = array(
+        'active' => class_exists('WooCommerce'),
+        'products' => post_type_exists('product') ? wp_count_posts('product')->publish : 0,
+        'orders' => post_type_exists('shop_order') ? wp_count_posts('shop_order')->publish : 0,
+    );
+
+    // 8. Membership (PMPro)
+    global $wpdb;
+    $levels_table = $wpdb->prefix . 'pmpro_membership_levels';
+    $level_count = $wpdb->get_var("SELECT COUNT(*) FROM $levels_table");
+    $users_table = $wpdb->prefix . 'pmpro_memberships_users';
+    $member_count = $wpdb->get_var("SELECT COUNT(*) FROM $users_table WHERE status = 'active'");
+    $status['membership'] = array(
+        'active' => defined('PMPRO_VERSION'),
+        'levels' => (int) $level_count,
+        'active_members' => (int) $member_count,
+    );
+
+    // 9. Payment gateways
+    $gateways = array();
+    if (class_exists('WooCommerce')) {
+        $available = WC()->payment_gateways()->get_available_payment_gateways();
+        foreach ($available as $id => $gw) {
+            $gateways[] = array(
+                'id' => $id,
+                'title' => $gw->get_title(),
+                'enabled' => $gw->is_enabled(),
+            );
+        }
+    }
+    $status['payment_gateways'] = $gateways;
+
+    // 10. REST API routes (key ones)
+    $routes = rest_get_server()->get_routes();
+    $key_routes = array(
+        'gabochie/v1/workspace',
+        'gabochie/v1/projects',
+        'gabochie/v1/readiness',
+        'gabochie-voice/v1/chat',
+        'gabochie/v1/mcp-status',
+    );
+    $route_status = array();
+    foreach ($key_routes as $r) {
+        $route_status[$r] = isset($routes['/' . $r]);
+    }
+    $status['rest_routes'] = $route_status;
+
+    // 11. PHP version
+    $status['php'] = array(
+        'version' => phpversion(),
+    );
+
+    // 12. Uploads writable
+    $upload_dir = wp_upload_dir();
+    $status['filesystem'] = array(
+        'uploads_writable' => is_writable($upload_dir['basedir']),
+    );
+
+    // 13. Maintenance mode
+    $status['maintenance'] = file_exists(ABSPATH . '.maintenance');
+
+    // 14. Plugin auto-updates
+    $auto_updates = get_option('auto_update_plugins', array());
+    $status['auto_updates'] = array(
+        'enabled' => !empty($auto_updates),
+        'count' => is_array($auto_updates) ? count($auto_updates) : 0,
+    );
+
+    return rest_ensure_response($status);
 }
 
 /* ─── Verification Helpers ─── */
