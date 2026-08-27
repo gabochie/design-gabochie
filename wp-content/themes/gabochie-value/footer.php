@@ -55,9 +55,11 @@ $social_svgs = array(
       <p class="foot-heading">Company</p>
       <ul>
         <li><a href="<?php echo esc_url(home_url('/about/')); ?>">About Us</a></li>
+        <li><a href="<?php echo esc_url(home_url('/development-quiz/')); ?>">Development Readiness Quiz</a></li>
+        <li><a href="<?php echo esc_url(home_url('/building-cost-calculator/')); ?>">Build Cost Calculator</a></li>
         <li><a href="<?php echo esc_url(home_url('/blog/')); ?>">Blog</a></li>
         <li><a href="<?php echo esc_url(home_url('/community/')); ?>">Community</a></li>
-        <li><a href="<?php echo esc_url(home_url('/login/')); ?>">Client Portal</a></li>
+        <li><a href="<?php echo esc_url(home_url('/client-login/')); ?>">Client Portal</a></li>
         <li><a href="<?php echo esc_url(gabochie_value_section_url('projects')); ?>">Projects</a></li>
       </ul>
     </div>
