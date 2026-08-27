@@ -3,12 +3,12 @@
  * Gabochie Value Theme Functions
  *
  * @package Gabochie_Value
- * @version 1.4.0
+ * @version 1.4.1
  */
 
 if (!defined('ABSPATH')) exit;
 
-define('GABOCHIE_VALUE_VERSION', '1.4.0');
+define('GABOCHIE_VALUE_VERSION', '1.4.1');
 define('GABOCHIE_VALUE_DIR', get_template_directory());
 define('GABOCHIE_VALUE_URI', get_template_directory_uri());
 
@@ -58,6 +58,44 @@ add_action('wp_login_failed', function ($username) {
         exit;
     }
 });
+
+/* ============================================
+   LEGACY / ORPHAN PAGE REDIRECTS (platform funnel)
+   Old-theme pages not part of the v3 nav are 301'd
+   to their canonical conversion destination.
+   ============================================ */
+add_action('template_redirect', function () {
+    if (is_admin()) return;
+    $page = get_queried_object();
+    if (!($page instanceof WP_Post) || 'page' !== $page->post_type) return;
+
+    $map = array(
+        'pricing'                     => '/membership-levels/',
+        'services'                    => 'section:services',
+        'portfolio'                   => 'section:projects',
+        'faq'                         => '/contact/',
+        'residential-cost-calculator' => '/building-cost-calculator/',
+        'nonresidential-cost-calculator' => '/building-cost-calculator/',
+        'architectural-design'        => 'section:services',
+        'interior-design'             => 'section:services',
+        '3d-renders'                  => 'section:services',
+        'project-management'          => 'section:services',
+        '3d-visualization'            => 'section:services',
+        'ai-consultation'             => '/onboarding/',
+        'diaspora-guide'              => 'section:diaspora',
+    );
+
+    $slug = $page->post_name;
+    if (!isset($map[$slug])) return;
+
+    $target = $map[$slug];
+    if (str_starts_with($target, 'section:')) {
+        wp_safe_redirect(gabochie_value_section_url(substr($target, 8)), 301);
+        exit;
+    }
+    wp_safe_redirect(home_url($target), 301);
+    exit;
+}, 5);
 
 add_action('init', function () {
     if (get_option('gabochie_value_pages_created')) return;

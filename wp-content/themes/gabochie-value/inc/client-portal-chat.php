@@ -83,11 +83,11 @@ function gabochie_value_chat_build_response($message, $context) {
     }
 
     if (preg_match('/\b(pricing|price|cost|budget|how much)\b/', $msg)) {
-        return "Our packages start at $800 for the Concept plan (AI floor plans + renders), $2,500 for Full Design, and $5,000 for Complete Service. Check our full pricing at " . home_url('/pricing/') . " or tell me what you're looking for!";
+        return "Pricing is honest and simple, and it starts free:\n\n- Free — start with the readiness quiz and a build-cost estimate.\n- Active Client — ₵399/month.\n- Premium Service — ₵1,299/month.\n\nSee what each plan includes and upgrade at " . home_url('/membership-levels/') . " — or tell me what you're building and I'll point you to the right start!";
     }
 
     if (preg_match('/\b(service|design|interior|build)\b/', $msg)) {
-        return "We offer: Building Design, Interior Design, 3D Visualization, Project Management, AI Cost Calculator, and Diaspora Support. Which would you like to explore?";
+        return "Everything you need sits under one roof: start with the five-question wizard so we understand your project, run the build-cost calculator to know what it should cost, and use the dashboard to keep every step documented. Where would you like to dive in?";
     }
 
     if (preg_match('/\b(human|talk|speak|call|contact|real person)\b/', $msg)) {
