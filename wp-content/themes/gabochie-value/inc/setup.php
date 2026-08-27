@@ -42,3 +42,14 @@ function gabochie_value_setup() {
     add_image_size('gabochie-value-card', 800, 500, true);
 }
 add_action('after_setup_theme', 'gabochie_value_setup');
+
+/**
+ * Force WooCommerce to use classic PHP templates, not block templates.
+ */
+function gabochie_value_force_classic_wc_templates($can_use, $type) {
+    if ($type === 'single-product' || $type === 'productCatalog' || $type === 'page') {
+        return false;
+    }
+    return $can_use;
+}
+add_filter('wc_is_block_template_request', 'gabochie_value_force_classic_wc_templates', 10, 2);
