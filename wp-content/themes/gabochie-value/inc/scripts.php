@@ -30,6 +30,14 @@ function gabochie_value_scripts() {
         GABOCHIE_VALUE_VERSION
     );
 
+    // Membership / portal styles (loaded on all pages)
+    wp_enqueue_style(
+        'gabochie-membership',
+        GABOCHIE_VALUE_URI . '/assets/css/membership.css',
+        array('gabochie-value-main'),
+        GABOCHIE_VALUE_VERSION
+    );
+
     // Main script (footer, no jQuery dependency)
     wp_enqueue_script(
         'gabochie-value-main',
