@@ -40,8 +40,8 @@ $quiz_data = [
     ],
 ];
 
-$calculator_url = home_url('/build-cost-calculator/');
-$signup_url     = home_url('/login/?action=register');
+$calculator_url = home_url('/building-cost-calculator/');
+$signup_url     = home_url('/client-login/');
 ?>
 
 <style>

@@ -166,6 +166,15 @@ add_filter('pmpro_login_url', function ($url) {
     return home_url('/login/');
 });
 
+// Redirect /login/ to /client-login/ (the actual login page)
+add_action('template_redirect', function () {
+    if (is_page('login') || (isset($_SERVER['REQUEST_URI']) && preg_match('#/login/?$#', $_SERVER['REQUEST_URI']))) {
+        $append = isset($_GET['action']) ? '?' . http_build_query($_GET) : '';
+        wp_redirect(home_url('/client-login/' . $append));
+        exit;
+    }
+});
+
 // Redirect PMPro checkout to linked WooCommerce product for paid levels
 add_action('template_redirect', function () {
     if (!is_page('membership-checkout') || empty($_GET['pmpro_level'])) return;
@@ -194,7 +203,7 @@ add_filter('pmpro_login_redirect', function ($redirect_to) {
 add_action('template_redirect', function () {
     if (!is_page('dashboard')) return;
     if (!is_user_logged_in()) {
-        wp_redirect(home_url('/login/'));
+        wp_redirect(home_url('/client-login/'));
         exit;
     }
     if (function_exists('pmpro_hasMembershipLevel') && !pmpro_hasMembershipLevel()) {
