@@ -2,13 +2,13 @@
 /**
  * Plugin Name: BuildCostGH Cost Calculator
  * Description: Ghana construction cost estimator — [buildcostgh_rc] shortcode, AJAX-driven RC calculator with residential & non-residential modes.
- * Version: 0.1.0
+ * Version: 0.2.0
  * Author: BuildCostGH
  */
 
 if (!defined('ABSPATH')) exit;
 
-define('BCGH_VERSION', '0.1.0');
+define('BCGH_VERSION', '0.2.0');
 define('BCGH_PATH', plugin_dir_path(__FILE__));
 define('BCGH_URL', plugin_dir_url(__FILE__));
 
