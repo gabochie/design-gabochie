@@ -36,21 +36,24 @@ $gv_badges = array(
 );
 
 function gv_level_price($l) {
-    if ($l->billing_amount > 0 && !empty($l->billing_cycle)) {
+    if ((float) $l->billing_amount > 0) {
         return pmpro_formatPrice($l->billing_amount);
     }
-    if ($l->initial_payment > 0) {
+    if ((float) $l->initial_payment > 0) {
         return pmpro_formatPrice($l->initial_payment);
     }
     return 'Free';
 }
 
 function gv_level_period($l) {
-    if ($l->billing_amount > 0 && !empty($l->billing_cycle)) {
-        $unit = !empty($l->billing_cycle_unit) ? $l->billing_cycle_unit : 'Month';
-        return 'per ' . strtolower($unit) . ($l->billing_cycle > 1 ? 's' : '');
+    if ((float) $l->billing_amount > 0) {
+        $unit = strtolower($l->cycle_period);
+        if ((int) $l->cycle_number > 1) {
+            return 'every ' . (int) $l->cycle_number . ' ' . $unit . 's';
+        }
+        return 'per ' . $unit;
     }
-    if ($l->initial_payment > 0) {
+    if ((float) $l->initial_payment > 0) {
         return 'one-time payment';
     }
     return 'no card required';
