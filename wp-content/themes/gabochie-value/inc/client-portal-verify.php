@@ -90,6 +90,11 @@ function gabochie_verify_tasks() {
 }
 
 function gabochie_live_status() {
+    // Ensure plugin helpers are available
+    if (!function_exists('get_plugin_data')) {
+        require_once ABSPATH . 'wp-admin/includes/plugin.php';
+    }
+
     $status = array(
         'timestamp' => current_time('mysql'),
         'site_url'  => home_url('/'),
@@ -190,14 +195,26 @@ function gabochie_live_status() {
 
     // 9. Payment gateways
     $gateways = array();
-    if (class_exists('WooCommerce')) {
-        $available = WC()->payment_gateways()->get_available_payment_gateways();
-        foreach ($available as $id => $gw) {
-            $gateways[] = array(
-                'id' => $id,
-                'title' => $gw->get_title(),
-                'enabled' => $gw->is_enabled(),
-            );
+    if (class_exists('WooCommerce') && function_exists('WC')) {
+        try {
+            $wc = WC();
+            if (is_object($wc) && method_exists($wc, 'payment_gateways')) {
+                $pg = $wc->payment_gateways();
+                if (is_object($pg) && method_exists($pg, 'get_available_payment_gateways')) {
+                    $available = $pg->get_available_payment_gateways();
+                    if (is_array($available)) {
+                        foreach ($available as $id => $gw) {
+                            $gateways[] = array(
+                                'id' => $id,
+                                'title' => is_object($gw) && method_exists($gw, 'get_title') ? $gw->get_title() : $id,
+                                'enabled' => is_object($gw) && method_exists($gw, 'is_enabled') ? $gw->is_enabled() : false,
+                            );
+                        }
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            $gateways = array(array('id' => 'error', 'title' => 'Gateway check failed', 'enabled' => false));
         }
     }
     $status['payment_gateways'] = $gateways;
