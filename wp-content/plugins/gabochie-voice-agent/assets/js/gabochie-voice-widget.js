@@ -556,6 +556,60 @@
     });
   }
 
+  /* -------------------------------------------------- deploy notifications ----- */
+  var lastDeploySeen = null;
+  var audioCtx = null;
+
+  function playChime() {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      /* Two-tone chime: 880Hz then 1175Hz, each 150ms */
+      [880, 1175].forEach(function(freq, i) {
+        var osc = audioCtx.createOscillator();
+        var gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime + i * 0.18);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + i * 0.18 + 0.3);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(audioCtx.currentTime + i * 0.18);
+        osc.stop(audioCtx.currentTime + i * 0.18 + 0.3);
+      });
+    } catch (_) {}
+  }
+
+  function checkDeployNotification() {
+    if (!CFG.rest_url) return;
+    var base = CFG.rest_url.replace('/gabochie-voice/v1/chat', '');
+    fetch(base + 'gabochie/v1/deploy-status', {
+      method: 'GET',
+      headers: { 'X-WP-Nonce': CFG.nonce },
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.pending && data.notification) {
+        var n = data.notification;
+        var key = n.timestamp + n.version;
+        if (lastDeploySeen !== key) {
+          lastDeploySeen = key;
+          /* Play chime and show notification */
+          playChime();
+          var msg = 'A new version just went live! ' + n.version + (n.message ? ' — ' + n.message : '');
+          addBubble('system', msg);
+          /* Also inject into AI context so Ama can mention it */
+          history.push({ role: 'system', text: 'DEPLOY NOTIFICATION: ' + msg });
+        }
+      }
+    })
+    .catch(function() {});
+  }
+
+  /* Poll every 30 seconds */
+  setInterval(checkDeployNotification, 30000);
+  /* Check once on load after 5 seconds */
+  setTimeout(checkDeployNotification, 5000);
+
   /* -------------------------------------------------------- boot ----- */
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init, { once: true });

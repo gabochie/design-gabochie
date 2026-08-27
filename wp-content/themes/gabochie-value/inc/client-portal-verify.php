@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) exit;
 add_action('rest_api_init', function () {
     // CORS for verify endpoints
     $uri = $_SERVER['REQUEST_URI'] ?? '';
-    if (strpos($uri, '/gabochie/v1/verify') !== false || strpos($uri, '/gabochie/v1/live-status') !== false) {
+    if (strpos($uri, '/gabochie/v1/verify') !== false || strpos($uri, '/gabochie/v1/live-status') !== false || strpos($uri, '/gabochie/v1/deploy-status') !== false) {
         header('Access-Control-Allow-Origin: *');
         header('Access-Control-Allow-Methods: GET, OPTIONS');
         header('Access-Control-Allow-Headers: Content-Type');
@@ -34,6 +34,13 @@ add_action('rest_api_init', function () {
     register_rest_route('gabochie/v1', '/live-status', array(
         'methods'             => 'GET',
         'callback'            => 'gabochie_live_status',
+        'permission_callback' => '__return_true',
+    ));
+
+    // Deploy notification endpoint — POST from deploy scripts, GET from voice widget
+    register_rest_route('gabochie/v1', '/deploy-status', array(
+        'methods'             => 'GET,POST,OPTIONS',
+        'callback'            => 'gabochie_deploy_status',
         'permission_callback' => '__return_true',
     ));
 });
@@ -255,7 +262,82 @@ function gabochie_live_status() {
         'count' => is_array($auto_updates) ? count($auto_updates) : 0,
     );
 
+    // 15. Deploy status (for Ama voice agent)
+    $deploy = get_option('gabochie_last_deploy', array());
+    $status['deploy'] = array(
+        'version'    => isset($deploy['version']) ? $deploy['version'] : 'unknown',
+        'timestamp'  => isset($deploy['timestamp']) ? $deploy['timestamp'] : '',
+        'message'    => isset($deploy['message']) ? $deploy['message'] : '',
+        'tag'        => isset($deploy['tag']) ? $deploy['tag'] : '',
+    );
+
+    // 16. Roadmap phase status (for Ama voice agent)
+    $status['roadmap'] = array(
+        'phases' => array(
+            'A' => array('name' => 'Project Workspace Core', 'status' => 'live', 'pct' => 100),
+            'B' => array('name' => 'Development Readiness Score', 'status' => 'live', 'pct' => 80),
+            'C' => array('name' => 'Feasibility Studio + CostSmart', 'status' => 'planned', 'pct' => 0),
+            'D' => array('name' => 'Development Strategy + Go Live', 'status' => 'partial', 'pct' => 40),
+            'E' => array('name' => 'AI Copilot + Reports', 'status' => 'partial', 'pct' => 30),
+            'F' => array('name' => 'User Identity & Trust System', 'status' => 'planned', 'pct' => 0),
+            'G' => array('name' => 'Go-To-Market', 'status' => 'planned', 'pct' => 0),
+        ),
+        'live_features' => array(
+            'Voice Agent (Ama v3.0)',
+            'Client Dashboard',
+            'Client Portal + Login',
+            'Onboarding Wizard',
+            'Pricing Page',
+            'Community Q&A',
+            'Development Readiness Quiz',
+            'Build Cost Calculator',
+            'Go Live Checklist Plugin',
+            'Command Center Plugin',
+            'Design Hub Plugin',
+        ),
+        'blocked_items' => array(
+            'Moolre payment gateway (sandbox mode)',
+            'Monthly billing (currently one-time)',
+            'Feasibility Studio (Phase C)',
+            'Development Intelligence Score engine',
+            'Homepage repositioned as platform',
+            'Thesis lead magnet',
+        ),
+    );
+
     return rest_ensure_response($status);
+}
+
+/* ─── Deploy Status Endpoint ─── */
+
+function gabochie_deploy_status($request) {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        // Store deploy notification (called by deploy scripts)
+        $body = json_decode(file_get_contents('php://input'), true);
+        if (!$body || !isset($body['version'])) {
+            return new WP_Error('missing_version', 'version required', array('status' => 400));
+        }
+        $notification = array(
+            'version'   => sanitize_text_field($body['version']),
+            'tag'       => isset($body['tag']) ? sanitize_text_field($body['tag']) : '',
+            'message'   => isset($body['message']) ? sanitize_text_field($body['message']) : '',
+            'timestamp' => current_time('mysql'),
+            'seen'      => false,
+        );
+        update_option('gabochie_last_deploy', $notification);
+        // Also store in a transient for the voice widget (expires after 1 hour)
+        set_transient('gabochie_deploy_notification', $notification, HOUR_IN_SECONDS);
+        return rest_ensure_response(array('ok' => true, 'deploy' => $notification));
+    }
+
+    // GET: Return last deploy notification
+    $deploy = get_option('gabochie_last_deploy', array());
+    $notification = get_transient('gabochie_deploy_notification');
+    return rest_ensure_response(array(
+        'last_deploy'    => $deploy,
+        'pending'        => $notification ? true : false,
+        'notification'   => $notification,
+    ));
 }
 
 /* ─── Verification Helpers ─── */
