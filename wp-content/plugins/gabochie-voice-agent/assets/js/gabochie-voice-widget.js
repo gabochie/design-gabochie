@@ -1,5 +1,5 @@
 /**
- * Gabochie Voice Agent — WordPress-native widget (v2.1)
+ * Ama — Gabochie Voice Agent widget (v3.0)
  * Auto-greets, always listening, mature female voice.
  *
  * @package Gabochie_Voice_Agent
@@ -165,10 +165,10 @@
 
   /* -------------------------------------------------------- HTML ----- */
   var HTML = '\
-<div class="fab" id="fab" aria-label="Talk to Gabochie" title="Talk to Gabochie">' + ICONS.mic + '</div>\
+<div class="fab" id="fab" aria-label="Talk to Ama" title="Talk to Ama">' + ICONS.mic + '</div>\
 <div class="panel" id="panel" hidden>\
   <div class="header">\
-    <div class="avatar">G</div>\
+    <div class="avatar">A</div>\
     <div class="titles">\
       <div class="site-name"></div>\
       <div class="status"><span class="dot" id="dot"></span><span id="status-label">Ready</span></div>\
@@ -280,8 +280,8 @@
 
         if (!greeted) {
           greeted = true;
-          var greeting = 'Hello! I\'m Gabochie, your building consultant. ' +
-            'Ask me anything about building in Ghana — I\'m here to help.';
+          var greeting = 'Hello! I\'m Ama, your building consultant at Gabochie Design. ' +
+            'Ask me anything about building in Ghana — I can help with costs, permits, readiness, or getting started.';
           addBubble('assistant', greeting);
           history.push({ role: 'assistant', text: greeting });
           /* Speak the greeting, then auto-start listening */
