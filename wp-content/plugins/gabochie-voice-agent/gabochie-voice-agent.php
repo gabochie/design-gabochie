@@ -2,14 +2,14 @@
 /**
  * Plugin Name: Ama — Gabochie Voice Agent
  * Description: Ama is the AI building consultant. Browser-based voice (English + Twi + Ga) powered by Gemini. Answers questions about building in Ghana, guides users to tools, and qualifies leads.
- * Version: 3.0.0
+ * Version: 3.2.0
  * Author: Gabochie Design
  * Text Domain: gabochie-voice-agent
  */
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'GABOCHIE_VOICE_AGENT_VERSION', '3.0.0' );
+define( 'GABOCHIE_VOICE_AGENT_VERSION', '3.2.0' );
 define( 'GABOCHIE_VOICE_AGENT_DIR', plugin_dir_path( __FILE__ ) );
 define( 'GABOCHIE_VOICE_AGENT_URL', plugin_dir_url( __FILE__ ) );
 

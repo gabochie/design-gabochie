@@ -70,6 +70,11 @@ function gv_level_period($l) {
 
 .gv-mem { background: var(--gv-cream); }
 
+/* PMPro 3.x adds `pmpro-levels` as a BODY class; membership.css's `.pmpro-levels`
+   grid (meant for the legacy wrapper) would turn <body> into a 3-col grid and
+   shrink-wrap our <main>. Reset it here at higher specificity. */
+body.pmpro-levels { display: block; }
+
 /* ── Intro ── */
 .gv-mem-intro {
     max-width: 720px;

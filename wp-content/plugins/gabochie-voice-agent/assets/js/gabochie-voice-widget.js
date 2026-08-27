@@ -581,7 +581,8 @@
 
   function checkDeployNotification() {
     if (!CFG.rest_url) return;
-    var base = CFG.rest_url.replace('/gabochie-voice/v1/chat', '');
+    var m = CFG.rest_url.match(/^(.+?\/wp-json)/);
+    var base = m ? m[1] + '/' : CFG.rest_url;
     fetch(base + 'gabochie/v1/deploy-status', {
       method: 'GET',
       headers: { 'X-WP-Nonce': CFG.nonce },
