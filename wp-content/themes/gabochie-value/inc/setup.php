@@ -46,10 +46,7 @@ add_action('after_setup_theme', 'gabochie_value_setup');
 /**
  * Force WooCommerce to use classic PHP templates, not block templates.
  */
-function gabochie_value_force_classic_wc_templates($can_use, $type) {
-    if ($type === 'single-product' || $type === 'productCatalog' || $type === 'page') {
-        return false;
-    }
-    return $can_use;
+function gabochie_value_force_classic_wc_templates($has_block_template, $template_name) {
+    return false;
 }
-add_filter('wc_is_block_template_request', 'gabochie_value_force_classic_wc_templates', 10, 2);
+add_filter('woocommerce_has_block_template', 'gabochie_value_force_classic_wc_templates', 10, 2);
