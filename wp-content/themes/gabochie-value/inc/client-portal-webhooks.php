@@ -255,6 +255,75 @@ add_action('rest_api_init', function () {
         },
         'permission_callback' => '__return_true',
     ));
+
+    register_rest_route('gabochie/v1', '/consultation-request', array(
+        'methods'             => 'POST',
+        'callback'            => function ($request) {
+            $params = $request->get_json_params();
+            $name    = sanitize_text_field($params['name'] ?? '');
+            $email   = sanitize_email($params['email'] ?? '');
+            $phone   = sanitize_text_field($params['phone'] ?? '');
+            $journey = sanitize_text_field($params['journey'] ?? '');
+            $blocker = sanitize_text_field($params['blocker'] ?? '');
+            $location = sanitize_text_field($params['location'] ?? '');
+            $type    = sanitize_text_field($params['type'] ?? '');
+            $timeline = sanitize_text_field($params['timeline'] ?? '');
+
+            if (!$name && !$email) {
+                return new WP_Error('missing', 'Name or email required.', array('status' => 400));
+            }
+
+            $uid = gabochie_value_ensure_user($email ?: (sanitize_title($name) . '@placeholder.local'), $name);
+            if (is_wp_error($uid)) {
+                return new WP_Error('user', $uid->get_error_message(), array('status' => 500));
+            }
+
+            if ($phone) update_user_meta($uid, 'gabochie_phone', $phone);
+            if ($location) update_user_meta($uid, 'gabochie_location', $location);
+
+            $title = ($name ?: $email) . ' — Consultation Request';
+            $body  = "Journey: {$journey}\nBlocker: {$blocker}\n";
+            if ($location) $body .= "Location: {$location}\n";
+            if ($type) $body .= "Project Type: {$type}\n";
+            if ($timeline) $body .= "Timeline: {$timeline}\n";
+            if ($phone) $body .= "Phone: {$phone}\n";
+
+            $pid = wp_insert_post(array(
+                'post_type'    => 'client_project',
+                'post_title'   => $title,
+                'post_content' => $body,
+                'post_author'  => $uid,
+                'post_status'  => 'publish',
+                'meta_input'   => array(
+                    'project_status' => 'inquiry',
+                    'project_stage'  => 'Discovery',
+                    'service_type'   => 'Consultation Request',
+                    'client_phone'   => $phone,
+                    'wizard_journey' => $journey,
+                    'wizard_blocker' => $blocker,
+                    'wizard_location' => $location,
+                    'wizard_type'    => $type,
+                    'wizard_timeline' => $timeline,
+                ),
+            ));
+
+            gabochie_value_log_agent_action('consultation_request', array(
+                'user_id'  => $uid,
+                'email'    => $email,
+                'name'     => $name,
+                'phone'    => $phone,
+                'journey'  => $journey,
+                'blocker'  => $blocker,
+                'location' => $location,
+                'type'     => $type,
+                'timeline' => $timeline,
+                'project'  => $pid ?: 0,
+            ));
+
+            return array('success' => true, 'project_id' => $pid);
+        },
+        'permission_callback' => '__return_true',
+    ));
 });
 
 add_action('wp_enqueue_scripts', function () {

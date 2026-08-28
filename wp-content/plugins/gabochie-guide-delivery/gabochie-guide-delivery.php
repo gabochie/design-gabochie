@@ -96,7 +96,7 @@ final class Gabochie_Guide_Delivery {
 
 		$sent = $this->send_email( $email, $source, $journey, $blocker );
 		if ( ! $sent ) {
-			return new WP_Error( 'gd_send_failed', __( 'The guide could not be sent right now. Please try again, or message us on WhatsApp.', 'gabochie-guide-delivery' ), array( 'status' => 502 ) );
+			return new WP_Error( 'gd_send_failed', __( 'The guide could not be sent right now. Please try again or contact us at +233 26 824 8970.', 'gabochie-guide-delivery' ), array( 'status' => 502 ) );
 		}
 
 		return rest_ensure_response(
@@ -227,7 +227,6 @@ final class Gabochie_Guide_Delivery {
 	}
 
 	private function email_html( $email, $source ) {
-		$whatsapp = apply_filters( 'gd_guide_whatsapp', '233268248970' );
 		$site     = home_url( '/' );
 		return '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f4efe6;font-family:Jost,Helvetica,Arial,sans-serif;">
 <div style="max-width:600px;margin:0 auto;background:#ffffff;">
@@ -242,7 +241,7 @@ final class Gabochie_Guide_Delivery {
     <div style="background:#f6f1e7;border-left:4px solid #C9A96E;padding:16px 20px;margin:0 0 20px;">
       <p style="font-size:14px;color:#3a4a44;margin:0;line-height:1.6;">Not sure where your project stands? We take projects from the first question to the final snagging pass. Bring us your checklist — we will show you exactly what is ready and what is not.</p>
     </div>
-    <a href="https://wa.me/' . $whatsapp . '" style="display:inline-block;background:#C9A96E;color:#072E28;text-decoration:none;font-weight:600;padding:12px 24px;border-radius:6px;margin:0 0 8px;">Chat with us on WhatsApp</a>
+    <a href="' . esc_url( home_url( '/contact/' ) ) . '" style="display:inline-block;background:#C9A96E;color:#072E28;text-decoration:none;font-weight:600;padding:12px 24px;border-radius:6px;margin:0 0 8px;">Talk to Us</a>
     <p style="font-size:12px;color:#7c8a84;margin:8px 0 0;">' . esc_html( $site ) . ' &middot; Sakumono &middot; Tema &middot; Ghana</p>
   </div>
   <div style="background:#0A4840;padding:16px 32px;font-size:11px;color:#d8d2c4;letter-spacing:1px;text-align:center;">GABOCHIE DESIGN &middot; DESIGN . VALUE . TRANSFORMATION</div>

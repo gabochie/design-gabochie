@@ -156,7 +156,7 @@ if (!defined('ABSPATH')) exit;
             <div class="rec-col"><h4>What you'll leave with</h4><p id="recLeave"></p></div>
           </div>
           <div class="rec-ctas">
-            <a class="btn-gold" id="recBook" href="#" target="_blank" rel="noopener">Request Your Consultation</a>
+            <button class="btn-gold" id="recBook" type="button">Request Your Consultation</button>
             <button class="btn-ghost" id="restart" type="button">Start over</button>
           </div>
           <div class="rec-guide">
@@ -177,14 +177,12 @@ if (!defined('ABSPATH')) exit;
           <div class="success-panel">
             <div class="success-mark">&#10003;</div>
             <h3>You're set.</h3>
-            <p>We've saved your details and prepared your consultation request. Send it on WhatsApp &mdash; one of our team will respond within one working day.</p>
+            <p>We've received your consultation request. Our team will review your project details and reach out within one working day.</p>
             <div class="rec-ctas" style="justify-content:center;flex-wrap:wrap;gap:0.75rem">
-              <a class="btn-gold" id="waDone" href="#" target="_blank" rel="noopener">Open WhatsApp</a>
-              <a class="btn-solid" id="callDone" href="tel:<?php echo esc_attr(gabochie_value_phone_tel()); ?>" style="background:var(--teal);color:#FAF7F2">Call Us</a>
               <a class="btn-solid" href="<?php echo esc_url(home_url('/client-login/')); ?>" style="background:var(--teal);color:#FAF7F2">Create Free Account</a>
               <a class="btn-ghost-w" href="<?php echo esc_url(gabochie_value_section_url('top')); ?>" style="margin-top:0.5rem">Back to top</a>
             </div>
-            <p style="font-size:0.8rem;color:var(--mist);margin-top:1rem;text-align:center">Create your free portal account to track your project, message your team, and review designs &mdash; no card needed.</p>
+            <p style="font-size:0.8rem;color:var(--mist);margin-top:1rem;text-align:center">Create your free portal account to track your project, message your team, and review designs — no card needed.</p>
           </div>
         </div>
 

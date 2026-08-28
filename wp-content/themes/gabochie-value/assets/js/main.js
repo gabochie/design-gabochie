@@ -184,18 +184,6 @@
     if (el('#recWhy')) el('#recWhy').textContent = rec.why;
     if (el('#recWhat')) el('#recWhat').textContent = rec.what;
     if (el('#recLeave')) el('#recLeave').textContent = rec.leave;
-    var msg = 'Hello Gabochie Design \u2014 from your website.\n\n';
-    msg += 'Where I am: ' + ((JOURNEY[state.journey] || {}).label || '') + '\n';
-    msg += 'What\'s stopping me: ' + ((BLOCKERS[state.blocker] || {}).label || '') + '\n';
-    msg += 'Name: ' + state.profile.name + '\n';
-    if (state.profile.phone) msg += 'Phone: ' + state.profile.phone + '\n';
-    if (state.profile.location) msg += 'Based: ' + state.profile.location + '\n';
-    if (state.profile.type) msg += 'Project: ' + state.profile.type + '\n';
-    if (state.profile.timeline) msg += 'Timeline: ' + state.profile.timeline + '\n';
-    msg += '\nI\'d like to book a consultation.';
-    var waUrl = 'https://wa.me/' + WA + '?text=' + encodeURIComponent(msg);
-    if (el('#recBook')) el('#recBook').href = waUrl;
-    if (el('#waDone')) el('#waDone').href = waUrl;
   }
 
   function saveLead() {
@@ -204,17 +192,19 @@
       leads.push({ ts: Date.now(), journey: state.journey, journeyLabel: (JOURNEY[state.journey] || {}).label, blocker: state.blocker, blockerLabel: (BLOCKERS[state.blocker] || {}).label, profile: state.profile });
       localStorage.setItem('gd_leads', JSON.stringify(leads));
     } catch (e) {}
-    /* server-side lead capture */
-    fetch('/wp-json/gabochie/v1/guide-request', {
+    /* server-side: store full wizard profile as consultation request in dashboard */
+    fetch('/wp-json/gabochie/v1/consultation-request', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        email: state.profile.email,
-        source: 'wizard',
         name: state.profile.name,
+        email: state.profile.email,
         phone: state.profile.phone || '',
         journey: (JOURNEY[state.journey] || {}).label || '',
-        blocker: (BLOCKERS[state.blocker] || {}).label || ''
+        blocker: (BLOCKERS[state.blocker] || {}).label || '',
+        location: state.profile.location || '',
+        type: state.profile.type || '',
+        timeline: state.profile.timeline || ''
       })
     }).catch(function () {});
   }
@@ -277,7 +267,7 @@
     if (btn) { btn.disabled = true; btn.textContent = 'Sending\u2026'; }
     var fail = function () {
       if (btn) { btn.disabled = false; btn.textContent = btnText; }
-      if (err) { err.textContent = 'Something went wrong \u2014 please try again, or message us on WhatsApp at +' + WA + '.'; err.classList.add('show'); }
+      if (err) { err.textContent = 'Something went wrong — please try again or contact us at +233 26 824 8970.'; err.classList.add('show'); }
     };
     fetch('/wp-json/gabochie/v1/guide-request', {
       method: 'POST',
