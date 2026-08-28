@@ -47,13 +47,10 @@ class PMProGateway_moolre extends PMProGateway {
      * return true so PMPro completes checkout.
      */
     public function process( &$order ) {
-        error_log( 'GMG: process() called for order #' . $order->id );
-
         // If returning from Moolre (callback already verified or pending),
         // the _moolre_ref is set. Let PMPro finish checkout.
         $moolre_ref = ! empty( $order->_moolre_ref ) ? $order->_moolre_ref : '';
         if ( ! empty( $moolre_ref ) ) {
-            error_log( 'GMG: returning from Moolre, ref=' . $moolre_ref );
             $order->payment_type = 'Moolre';
             return true;
         }
@@ -81,7 +78,6 @@ class PMProGateway_moolre extends PMProGateway {
         if ( empty( $amount ) ) {
             $amount = (float) $order->initial_payment;
         }
-        error_log( 'GMG: order_id=' . $order->id . ' amount=' . $amount );
 
         $reference = $order->id . '_' . time();
         $callback  = rest_url( 'gmg/v1/callback' );
@@ -99,8 +95,6 @@ class PMProGateway_moolre extends PMProGateway {
             'tx_source'     => 'pmpro-plugin',
         );
 
-        error_log( 'GMG: calling Moolre API, ref=' . $reference . ' amount=' . $amount );
-
         $response = wp_remote_post( self::API_URL, array(
             'headers' => array( 'X-Api-Pubkey' => $api_key ),
             'body'    => wp_json_encode( $payload ),
@@ -108,7 +102,6 @@ class PMProGateway_moolre extends PMProGateway {
         ) );
 
         if ( is_wp_error( $response ) ) {
-            error_log( 'GMG: API error: ' . $response->get_error_message() );
             $order->error      = 'Could not connect to payment gateway: ' . $response->get_error_message();
             $order->error_type = 'pmpro_error';
             return false;
@@ -117,7 +110,6 @@ class PMProGateway_moolre extends PMProGateway {
         $code = wp_remote_retrieve_response_code( $response );
         $raw_body = wp_remote_retrieve_body( $response );
         $body = json_decode( $raw_body, true );
-        error_log( 'GMG: API response code=' . $code . ' body=' . substr( $raw_body, 0, 500 ) );
 
         if ( $code !== 200 ) {
             $msg = $body['message'] ?? 'Payment gateway error.';
@@ -138,7 +130,6 @@ class PMProGateway_moolre extends PMProGateway {
         $order->_moolre_ref = $reference;
         $order->saveOrder();
 
-        error_log( 'GMG: redirecting to ' . $body['data']['authorization_url'] );
         wp_redirect( $body['data']['authorization_url'] );
         exit;
     }
