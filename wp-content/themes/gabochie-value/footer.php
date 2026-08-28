@@ -57,10 +57,14 @@ $social_svgs = array(
         <li><a href="<?php echo esc_url(home_url('/about/')); ?>">About Us</a></li>
         <li><a href="<?php echo esc_url(home_url('/development-quiz/')); ?>">Development Readiness Quiz</a></li>
         <li><a href="<?php echo esc_url(home_url('/building-cost-calculator/')); ?>">Build Cost Calculator</a></li>
+        <li><a href="<?php echo esc_url(home_url('/thesis/')); ?>">Thesis</a></li>
         <li><a href="<?php echo esc_url(home_url('/blog/')); ?>">Blog</a></li>
         <li><a href="<?php echo esc_url(home_url('/community/')); ?>">Community</a></li>
         <li><a href="<?php echo esc_url(home_url('/client-login/')); ?>">Client Portal</a></li>
         <li><a href="<?php echo esc_url(gabochie_value_section_url('projects')); ?>">Projects</a></li>
+        <li><a href="<?php echo esc_url(gabochie_value_section_url('journey')); ?>">Building Journey</a></li>
+        <li><a href="<?php echo esc_url(gabochie_value_section_url('diaspora')); ?>">For Diaspora</a></li>
+        <li><a href="<?php echo esc_url(gabochie_value_section_url('resources')); ?>">Resources</a></li>
       </ul>
     </div>
 

@@ -37,7 +37,7 @@
       document.body.style.overflow = open ? '' : 'hidden';
     });
     $$('a', mm).forEach(function (a) { a.addEventListener('click', closeMenu); });
-    window.addEventListener('resize', function () { if (window.innerWidth > 900) closeMenu(); });
+    window.addEventListener('resize', function () { if (window.innerWidth > 768) closeMenu(); });
   }
 
   /* ---------- dark mode ---------- */

@@ -78,6 +78,7 @@ $og_type = is_singular('post') ? 'article' : 'website';
   <ul class="nav-links" id="navLinks">
     <li><a href="<?php echo esc_url(gabochie_value_section_url('services')); ?>">Services</a></li>
     <li><a href="<?php echo esc_url(home_url('/about/')); ?>">About</a></li>
+    <li><a href="<?php echo esc_url(home_url('/thesis/')); ?>">Thesis</a></li>
     <li><a href="<?php echo esc_url(home_url('/blog/')); ?>">Blog</a></li>
   </ul>
   <?php endif; ?>
@@ -99,13 +100,8 @@ $og_type = is_singular('post') ? 'article' : 'website';
   <a class="mobile-cta" href="<?php echo esc_url(home_url('/onboarding/')); ?>">Start Here</a>
   <a href="<?php echo esc_url(gabochie_value_section_url('services')); ?>">Services</a>
   <a href="<?php echo esc_url(home_url('/about/')); ?>">About</a>
+  <a href="<?php echo esc_url(home_url('/thesis/')); ?>">Thesis</a>
   <a href="<?php echo esc_url(home_url('/blog/')); ?>">Blog</a>
-  <div class="mobile-divider"></div>
-  <a href="<?php echo esc_url(gabochie_value_section_url('journey')); ?>">Building Journey</a>
-  <a href="<?php echo esc_url(gabochie_value_section_url('diaspora')); ?>">For Diaspora</a>
-  <a href="<?php echo esc_url(home_url('/community/')); ?>">Community</a>
-  <a href="<?php echo esc_url(gabochie_value_section_url('resources')); ?>">Resources</a>
-  <a href="<?php echo esc_url(gabochie_value_section_url('projects')); ?>">Projects</a>
   <div class="mobile-divider"></div>
   <?php if (is_user_logged_in()) : ?>
     <a href="<?php echo esc_url(home_url('/dashboard/')); ?>">My Dashboard</a>
