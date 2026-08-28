@@ -19,6 +19,10 @@ class PMProGateway_expresspay extends PMProGateway {
     public function __construct( $gateway = null ) {
         $this->id   = 'expresspay';
         $this->name = 'ExpressPay — Card, MoMo & GhanaPay';
+
+        // Hide credit card fields on checkout for this offsite gateway.
+        add_filter( 'pmpro_include_billing_address_fields', '__return_false' );
+        add_filter( 'pmpro_hide_payment_information_fields', '__return_true' );
     }
 
     /**
