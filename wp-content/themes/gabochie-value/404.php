@@ -23,7 +23,7 @@ $phone   = gabochie_value_phone();
       <a class="btn-gold" href="<?php echo esc_url(home_url('/')); ?>"><?php esc_html_e('Back to home', 'gabochie-value'); ?></a>
       <a class="btn-ghost-w" href="<?php echo esc_url($clarity); ?>">Start Here</a>
     </div>
-    <div class="hero-note">Prefer to talk? Call or WhatsApp <?php echo esc_html($phone); ?></div>
+    <div class="hero-note">Prefer to talk? Call <?php echo esc_html($phone); ?></div>
   </div>
 </section>
 

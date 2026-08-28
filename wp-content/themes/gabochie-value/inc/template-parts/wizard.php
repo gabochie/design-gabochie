@@ -108,7 +108,7 @@ if (!defined('ABSPATH')) exit;
               <input type="email" id="pfEmail" name="email" autocomplete="email" required>
             </div>
             <div class="wiz-field">
-              <label for="pfPhone">WhatsApp / phone</label>
+              <label for="pfPhone">Phone</label>
               <input type="tel" id="pfPhone" name="phone" autocomplete="tel">
             </div>
             <div class="wiz-field">

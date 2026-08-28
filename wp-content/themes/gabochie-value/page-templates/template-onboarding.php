@@ -239,7 +239,7 @@ $wa_base  = 'https://wa.me/' . $whatsapp . '?text=';
               <input type="email" id="onbEmail" name="email" autocomplete="email" required placeholder="you@example.com">
             </div>
             <div class="onb-field">
-              <label for="onbPhone">WhatsApp / phone</label>
+              <label for="onbPhone">Phone</label>
               <input type="tel" id="onbPhone" name="phone" autocomplete="tel" placeholder="+233 ...">
             </div>
             <div class="onb-field">

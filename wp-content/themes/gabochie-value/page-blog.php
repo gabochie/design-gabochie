@@ -41,7 +41,7 @@ $cats = get_categories( array( 'hide_empty' => true ) );
     <div class="hero-actions">
       <a class="btn-gold" href="<?php echo esc_url( $clarity ); ?>">Start Here</a>
     </div>
-    <div class="hero-note">Prefer to talk? Call or WhatsApp <?php echo esc_html( $phone ); ?></div>
+    <div class="hero-note">Prefer to talk? Call <?php echo esc_html( $phone ); ?></div>
   </div>
 </section>
 

@@ -9,8 +9,6 @@ get_header();
 $clarity   = gabochie_value_clarity_url();
 $phone     = gabochie_value_phone();
 $phone_tel = gabochie_value_phone_tel();
-$whatsapp  = gabochie_value_whatsapp();
-$wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
 ?>
 
 <main id="main">
@@ -27,7 +25,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
       <a class="btn-gold" href="<?php echo esc_url($clarity); ?>">Start Here</a>
       <a class="btn-ghost-w" href="<?php echo esc_url(gabochie_value_section_url('services')); ?>">See what we do</a>
     </div>
-    <div class="hero-note">Prefer to talk? Call or WhatsApp <?php echo esc_html($phone); ?></div>
+    <div class="hero-note">Prefer to talk? Call <?php echo esc_html($phone); ?></div>
   </div>
 </section>
 
@@ -88,7 +86,6 @@ get_template_part('inc/template-parts/cta-band', null, array(
     'sub'     => 'Bring us your idea, your stalled project or your questions. You\'ll leave with a direction &mdash; and real information, whether or not you work with us.',
     'actions' => array(
         array('class' => 'btn-gold', 'href' => $clarity, 'text' => 'Start Here'),
-        array('class' => 'whatsapp-btn', 'href' => $wa_base . 'Hello%20Gabochie%20Design%20%E2%80%94%20from%20your%20website.', 'text' => 'WhatsApp Us', 'icon' => 'whatsapp'),
         array('class' => 'btn-ghost-w', 'href' => 'tel:' . $phone_tel, 'text' => 'Call ' . $phone),
     ),
 ));

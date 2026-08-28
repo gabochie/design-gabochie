@@ -24,7 +24,7 @@ $phone     = gabochie_value_phone();
       <a class="btn-gold" href="<?php echo esc_url($clarity); ?>">Get Started</a>
       <a class="btn-ghost-w" href="#pricing-plans">View Plans</a>
     </div>
-    <div class="hero-note">Prefer to talk? Call or WhatsApp <?php echo esc_html($phone); ?></div>
+    <div class="hero-note">Prefer to talk? Call <?php echo esc_html($phone); ?></div>
   </div>
 </section>
 

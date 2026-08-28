@@ -9,8 +9,6 @@ get_header();
 $clarity   = gabochie_value_clarity_url();
 $phone     = gabochie_value_phone();
 $phone_tel = gabochie_value_phone_tel();
-$whatsapp  = gabochie_value_whatsapp();
-$wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
 ?>
 
 <main id="main">
@@ -27,7 +25,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
       <a class="btn-gold" href="<?php echo esc_url(home_url('/onboarding/')); ?>">Start a Development</a>
       <a class="btn-ghost-w" href="<?php echo esc_url(home_url('/building-cost-calculator/')); ?>">Explore Development Intelligence</a>
     </div>
-    <div class="hero-note">Prefer to talk? Call or WhatsApp <?php echo esc_html($phone); ?></div>
+    <div class="hero-note">Prefer to talk? Call <?php echo esc_html($phone); ?></div>
     <?php if (!is_user_logged_in()) : ?>
     <div class="hero-note" style="margin-top:0.5rem;font-size:0.78rem"><a href="<?php echo esc_url(home_url('/login/')); ?>" style="color:var(--gold);text-decoration:underline">Already a client? Sign in to your dashboard</a></div>
     <?php else : ?>
@@ -502,7 +500,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
     <div class="faq-list">
       <div class="faq-item">
         <button class="faq-q" aria-expanded="false">I don't know what service I need. <span class="fq-ico">+</span></button>
-        <div class="faq-a"><p>You don't need to know &mdash; that's part of our job. The wizard above asks you five questions and recommends the smallest useful next step. If you prefer, call or WhatsApp us directly and we'll guide you from there.</p></div>
+        <div class="faq-a"><p>You don't need to know &mdash; that's part of our job. The wizard above asks you five questions and recommends the smallest useful next step. If you prefer, call us directly and we'll guide you from there.</p></div>
       </div>
       <div class="faq-item">
         <button class="faq-q" aria-expanded="false">I'm not in Ghana. Can you still help me? <span class="fq-ico">+</span></button>
@@ -528,7 +526,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
     <div class="faq-cta reveal">
       <p>Still have questions?</p>
       <div class="faq-cta-btns">
-        <a class="btn-gold" href="<?php echo esc_url($wa_base . 'Hello%20Gabochie%20Design%20%E2%80%94%20I%20have%20a%20question.'); ?>" target="_blank" rel="noopener">WhatsApp Us</a>
+        <a class="btn-gold" href="<?php echo esc_url(home_url('/contact/')); ?>">Contact Us</a>
         <a class="btn-ghost" href="tel:<?php echo esc_attr($phone_tel); ?>">Call <?php echo esc_html($phone); ?></a>
       </div>
     </div>
@@ -555,7 +553,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
             <input type="email" id="pfEmail2" name="email" autocomplete="email" required>
           </div>
           <div class="wiz-field">
-            <label for="pfPhone2">Phone / WhatsApp</label>
+            <label for="pfPhone2">Phone</label>
             <input type="tel" id="pfPhone2" name="phone" autocomplete="tel">
           </div>
           <div class="wiz-field">
@@ -581,7 +579,6 @@ get_template_part('inc/template-parts/cta-band', null, array(
     'sub'     => 'Answer five questions in the wizard and leave with a direction &mdash; or talk to us directly. Either way, no pressure and no jargon.',
     'actions' => array(
         array('class' => 'btn-gold', 'href' => $clarity, 'text' => 'Start Here'),
-        array('class' => 'whatsapp-btn', 'href' => $wa_base . 'Hello%20Gabochie%20Design%20%E2%80%94%20from%20your%20website.', 'text' => 'WhatsApp Us', 'icon' => 'whatsapp'),
         array('class' => 'btn-ghost-w', 'href' => 'tel:' . $phone_tel, 'text' => 'Call ' . $phone),
     ),
 ));
