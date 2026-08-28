@@ -51,7 +51,7 @@ class PMProGateway_moolre extends PMProGateway {
 
         // If returning from Moolre (callback already verified or pending),
         // the _moolre_ref is set. Let PMPro finish checkout.
-        $moolre_ref = get_post_meta( $order->id, '_moolre_ref', true );
+        $moolre_ref = $order->getMeta( '_moolre_ref' );
         if ( ! empty( $moolre_ref ) ) {
             error_log( 'GMG: returning from Moolre, ref=' . $moolre_ref );
             $order->payment_type = 'Moolre';
@@ -129,7 +129,7 @@ class PMProGateway_moolre extends PMProGateway {
             return false;
         }
 
-        $order->updateMetaData( '_moolre_ref', $reference );
+        $order->updateMeta( '_moolre_ref', $reference );
         $order->save();
 
         error_log( 'GMG: redirecting to ' . $body['data']['authorization_url'] );
