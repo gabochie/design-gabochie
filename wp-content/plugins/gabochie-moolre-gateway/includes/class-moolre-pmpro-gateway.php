@@ -71,7 +71,7 @@ class PMProGateway_moolre extends PMProGateway {
         $amount = pmpro_get_membership_level_at_checkout()->billing_amount;
 
         $reference = $order->id . '_' . time();
-        $callback  = admin_url( 'admin-ajax.php?action=moolre_webhook' );
+        $callback  = admin_url( 'admin-ajax.php?action=gmg_callback' );
 
         $payload = array(
             'state'         => 'starter',

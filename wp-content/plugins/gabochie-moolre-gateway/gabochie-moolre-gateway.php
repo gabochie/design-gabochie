@@ -39,10 +39,10 @@ function gmg_register_gateway( $gateways ) {
 
 /**
  * Webhook endpoint — receives Moolre callback after payment.
- * Registered as wp_ajax_nopriv_moolre_webhook (same pattern as PMPro's ipnhandler, stripe_webhook).
+ * Registered as wp_ajax_nopriv_gmg_callback (avoids Cloudflare "webhook" keyword block).
  */
-add_action( 'wp_ajax_nopriv_moolre_webhook', 'gmg_webhook_handler' );
-add_action( 'wp_ajax_moolre_webhook', 'gmg_webhook_handler' );
+add_action( 'wp_ajax_nopriv_gmg_callback', 'gmg_webhook_handler' );
+add_action( 'wp_ajax_gmg_callback', 'gmg_webhook_handler' );
 function gmg_webhook_handler() {
     // Moolre sends reference as GET or POST param.
     $reference = isset( $_REQUEST['reference'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['reference'] ) ) : '';
@@ -104,6 +104,6 @@ function gmg_admin_notices() {
         echo '<div class="notice notice-warning"><p><strong>Gabochie Moolre Gateway:</strong> Enter your Moolre API key and account number in the Payment Gateway settings below.</p></div>';
     }
 
-    $webhook_url = admin_url( 'admin-ajax.php?action=moolre_webhook' );
+    $webhook_url = admin_url( 'admin-ajax.php?action=gmg_callback' );
     echo '<div class="notice notice-info"><p><strong>Moolre webhook URL:</strong> <code>' . esc_html( $webhook_url ) . '</code> — set this in your <a href="https://dashboard.moolre.com" target="_blank" rel="noopener">Moolre dashboard</a>.</p></div>';
 }
