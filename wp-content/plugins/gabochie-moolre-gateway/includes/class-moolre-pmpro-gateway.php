@@ -71,11 +71,17 @@ class PMProGateway_moolre extends PMProGateway {
         $order->payment_type = 'Moolre';
         $order->gateway      = 'moolre';
 
-        $amount = isset( $order->initial_payment ) ? (float) $order->initial_payment : 0;
-        if ( empty( $amount ) && isset( $order->billing_amount ) ) {
-            $amount = (float) $order->billing_amount;
+        // Save order first to get an ID (PMPro may not have persisted it yet).
+        if ( empty( $order->id ) ) {
+            $order->saveOrder();
         }
-        error_log( 'GMG: amount=' . $amount );
+
+        // Use billing_amount (monthly charge). Fall back to initial_payment for one-time levels.
+        $amount = (float) $order->billing_amount;
+        if ( empty( $amount ) ) {
+            $amount = (float) $order->initial_payment;
+        }
+        error_log( 'GMG: order_id=' . $order->id . ' amount=' . $amount );
 
         $reference = $order->id . '_' . time();
         $callback  = rest_url( 'gmg/v1/callback' );
