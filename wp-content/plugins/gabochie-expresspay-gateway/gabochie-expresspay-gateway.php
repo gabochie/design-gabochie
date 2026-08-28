@@ -46,7 +46,7 @@ function geg_hide_cc_fields() {
     $current_gateway = get_option( 'pmpro_gateway', '' );
     if ( 'expresspay' === $current_gateway ) {
         add_filter( 'pmpro_include_billing_address_fields', '__return_false' );
-        add_filter( 'pmpro_hide_payment_information_fields', '__return_true' );
+        add_filter( 'pmpro_include_payment_information_fields', '__return_false' );
     }
 }
 
