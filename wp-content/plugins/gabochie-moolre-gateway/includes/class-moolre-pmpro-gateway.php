@@ -1,0 +1,306 @@
+<?php
+/**
+ * PMPro Gateway for Moolre (MTN MoMo).
+ *
+ * Sends users to Moolre's hosted checkout for mobile money payment,
+ * then verifies via the webhook callback.
+ *
+ * Follows the same pattern as PayPal Express: wp_redirect() inside process().
+ *
+ * @package Gabochie_Moolre_Gateway
+ */
+
+defined( 'ABSPATH' ) || exit;
+
+class PMProGateway_moolre extends PMProGateway {
+
+    const API_URL     = 'https://api.moolre.com/embed/src/start';
+    const OPTIONS_KEY = 'gmg_settings';
+
+    public function __construct( $gateway = null ) {
+        $this->gateway = $gateway;
+        $this->id      = 'moolre';
+        $this->name    = 'Moolre (MTN MoMo)';
+        parent::__construct( $this->gateway );
+    }
+
+    /**
+     * Describe gateway features.
+     */
+    public static function supports( $feature ) {
+        switch ( $feature ) {
+            case 'gateway_scheduled_membership_payments':
+                return false;
+            default:
+                return false;
+        }
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  Payment initiation (offsite redirect)                             */
+    /* ------------------------------------------------------------------ */
+
+    /**
+     * Process checkout: call Moolre API, redirect to hosted checkout.
+     *
+     * On the FIRST call (_moolre_ref not set): initiate payment + redirect.
+     * On the SECOND call (user returns from Moolre, _moolre_ref already set):
+     * return true so PMPro completes checkout.
+     */
+    public function process( &$order ) {
+        // If returning from Moolre (callback already verified or pending),
+        // the _moolre_ref is set. Let PMPro finish checkout.
+        if ( ! empty( $order->get_meta( '_moolre_ref' ) ) ) {
+            $order->payment_type = 'Moolre';
+            return true;
+        }
+
+        $api_key     = $this->get_option( 'api_key', '' );
+        $account_num = $this->get_option( 'account_number', '' );
+        $currency    = $this->get_option( 'currency', 'GHS' );
+
+        if ( empty( $api_key ) || empty( $account_num ) ) {
+            $order->error      = 'Payment gateway not configured. Please contact the site administrator.';
+            $order->error_type = 'pmpro_error';
+            return false;
+        }
+
+        $order->payment_type = 'Moolre';
+        $order->gateway      = 'moolre';
+
+        $amount = pmpro_get_membership_level_at_checkout()->billing_amount;
+
+        $reference = $order->id . '_' . time();
+        $callback  = admin_url( 'admin-ajax.php?action=moolre_webhook' );
+
+        $payload = array(
+            'state'         => 'starter',
+            'accountnumber' => $account_num,
+            'reference'     => $reference,
+            'nonce_value'   => wp_create_nonce( 'gmg_nonce_' . $order->id ),
+            'email'         => $order->Email,
+            'amount'        => (float) $amount,
+            'currency'      => $currency,
+            'callback'      => $callback,
+            'tx_source'     => 'pmpro-plugin',
+        );
+
+        $response = wp_remote_post( self::API_URL, array(
+            'headers' => array( 'X-Api-Pubkey' => $api_key ),
+            'body'    => wp_json_encode( $payload ),
+            'timeout' => 60,
+        ) );
+
+        if ( is_wp_error( $response ) ) {
+            $order->error      = 'Could not connect to payment gateway: ' . $response->get_error_message();
+            $order->error_type = 'pmpro_error';
+            return false;
+        }
+
+        $code = wp_remote_retrieve_response_code( $response );
+        $body = json_decode( wp_remote_retrieve_body( $response ), true );
+
+        if ( $code !== 200 ) {
+            $msg = $body['message'] ?? 'Payment gateway error.';
+            if ( is_array( $msg ) ) {
+                $msg = implode( ', ', $msg );
+            }
+            $order->error      = $msg;
+            $order->error_type = 'pmpro_error';
+            return false;
+        }
+
+        if ( empty( $body['status'] ) || empty( $body['data']['authorization_url'] ) ) {
+            $order->error      = 'Payment initiation failed. Please try again.';
+            $order->error_type = 'pmpro_error';
+            return false;
+        }
+
+        $order->updateMetaData( '_moolre_ref', $reference );
+        $order->save();
+
+        wp_redirect( $body['data']['authorization_url'] );
+        exit;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  Webhook / callback handling                                       */
+    /* ------------------------------------------------------------------ */
+
+    /**
+     * Handle the callback from Moolre after payment.
+     *
+     * Called via: admin-ajax.php?action=moolre_webhook
+     */
+    public function webhook() {
+        pmpro_doing_webhook( 'moolre', true );
+
+        $reference = isset( $_REQUEST['reference'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['reference'] ) ) : '';
+        $order_id  = $reference ? (int) explode( '_', $reference )[0] : 0;
+
+        if ( ! $order_id ) {
+            pmpro_unhandled_webhook( 'moolre' );
+            status_header( 400 );
+            echo 'Missing or invalid reference.';
+            exit;
+        }
+
+        $order = new MemberOrder( $order_id );
+        if ( ! $order->id ) {
+            pmpro_unhandled_webhook( 'moolre' );
+            status_header( 404 );
+            echo 'Order not found.';
+            exit;
+        }
+
+        // Already processed.
+        if ( in_array( $order->status, array( 'success', 'cancelled' ), true ) ) {
+            status_header( 200 );
+            echo 'Order already ' . $order->status . '.';
+            exit;
+        }
+
+        // Verify with Moolre.
+        $verified = $this->verify_payment( $reference );
+
+        if ( ! $verified ) {
+            $order->error  = 'Moolre verification failed.';
+            $order->notes .= 'Verification failed for reference: ' . $reference . "\n";
+            $order->updateStatus( 'error' );
+            pmpro_unhandled_webhook( 'moolre' );
+            status_header( 400 );
+            echo 'Verification failed.';
+            exit;
+        }
+
+        // Payment confirmed — complete the order.
+        $order->payment_transaction_id = $reference;
+        $order->status                 = 'success';
+        $order->save();
+
+        // Grant membership.
+        if ( function_exists( 'pmpro_enableMembershipLevel' ) ) {
+            pmpro_enableMembershipLevel( $order->membership_id, $order->user_id );
+        }
+
+        // Send the checkout confirmation email via PMPro's email system.
+        if ( function_exists( 'pmpro_email_send' ) ) {
+            do_action( 'pmpro_email_checkout_confirmed', $order );
+        }
+
+        status_header( 200 );
+        echo 'Payment completed. Order #' . $order_id;
+        exit;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  Moolre API verification                                           */
+    /* ------------------------------------------------------------------ */
+
+    private function verify_payment( $reference ) {
+        $api_key     = $this->get_option( 'api_key', '' );
+        $account_num = $this->get_option( 'account_number', '' );
+
+        $payload = array(
+            'state'         => 'confirm',
+            'accountnumber' => $account_num,
+            'reference'     => $reference,
+        );
+
+        $response = wp_remote_post( self::API_URL, array(
+            'headers' => array( 'X-Api-Pubkey' => $api_key ),
+            'body'    => wp_json_encode( $payload ),
+            'timeout' => 60,
+        ) );
+
+        if ( is_wp_error( $response ) ) {
+            return false;
+        }
+
+        $code = wp_remote_retrieve_response_code( $response );
+        $body = json_decode( wp_remote_retrieve_body( $response ), true );
+
+        return $code === 200 && ! empty( $body['status'] ) && ! empty( $body['data']['status'] );
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  Settings                                                          */
+    /* ------------------------------------------------------------------ */
+
+    /**
+     * Retrieve a setting value.
+     */
+    public function getOption( $key = '', $default = null ) {
+        $options = get_option( self::OPTIONS_KEY, array() );
+        if ( '' === $key ) {
+            return $options;
+        }
+        return isset( $options[ $key ] ) ? $options[ $key ] : $default;
+    }
+
+    /**
+     * Show the settings fields inside PMPro Settings → Payment Gateway.
+     *
+     * PMPro calls this via: call_user_func( array( $gateway_class, 'show_settings_fields' ) );
+     */
+    public static function show_settings_fields() {
+        $options = get_option( self::OPTIONS_KEY, array() );
+        ?>
+        <tr class="gateway gateway_moolre">
+            <th scope="row"><label for="gmg_environment">Environment</label></th>
+            <td>
+                <select id="gmg_environment" name="gmg_environment">
+                    <option value="sandbox" <?php selected( $options['environment'] ?? '', 'sandbox' ); ?>>Sandbox (Test Mode)</option>
+                    <option value="live" <?php selected( $options['environment'] ?? '', 'live' ); ?>>Live (Production)</option>
+                </select>
+                <p class="description">Switch to Sandbox for testing, Live for real MoMo payments.</p>
+            </td>
+        </tr>
+        <tr class="gateway gateway_moolre">
+            <th scope="row"><label for="gmg_api_key">Moolre API Key</label></th>
+            <td>
+                <input type="text" id="gmg_api_key" name="gmg_api_key" value="<?php echo esc_attr( $options['api_key'] ?? '' ); ?>" class="regular-text">
+                <p class="description">Public key from your <a href="https://dashboard.moolre.com" target="_blank" rel="noopener">Moolre dashboard</a>.</p>
+            </td>
+        </tr>
+        <tr class="gateway gateway_moolre">
+            <th scope="row"><label for="gmg_account_number">Moolre Account Number</label></th>
+            <td>
+                <input type="text" id="gmg_account_number" name="gmg_account_number" value="<?php echo esc_attr( $options['account_number'] ?? '' ); ?>" class="regular-text">
+                <p class="description">Account number from your Moolre wallet.</p>
+            </td>
+        </tr>
+        <tr class="gateway gateway_moolre">
+            <th scope="row"><label for="gmg_currency">Currency</label></th>
+            <td>
+                <select id="gmg_currency" name="gmg_currency">
+                    <option value="GHS" <?php selected( $options['currency'] ?? '', 'GHS' ); ?>>Ghana Cedi (GHS)</option>
+                </select>
+            </td>
+        </tr>
+        <?php
+    }
+
+    /**
+     * Save the settings fields.
+     *
+     * PMPro calls this via: call_user_func( array( $gateway_class, 'save_settings_fields' ) );
+     */
+    public static function save_settings_fields() {
+        $settings = array(
+            'environment'    => sanitize_text_field( wp_unslash( $_REQUEST['gmg_environment'] ?? 'sandbox' ) ),
+            'api_key'        => sanitize_text_field( wp_unslash( $_REQUEST['gmg_api_key'] ?? '' ) ),
+            'account_number' => sanitize_text_field( wp_unslash( $_REQUEST['gmg_account_number'] ?? '' ) ),
+            'currency'       => sanitize_text_field( wp_unslash( $_REQUEST['gmg_currency'] ?? 'GHS' ) ),
+        );
+        update_option( self::OPTIONS_KEY, $settings );
+    }
+
+    /**
+     * Description for the gateway listing.
+     */
+    public static function get_description_for_gateway_settings() {
+        return esc_html__( 'Pay with MTN Mobile Money via Moolre.', 'gabochie-moolre' );
+    }
+
+}
