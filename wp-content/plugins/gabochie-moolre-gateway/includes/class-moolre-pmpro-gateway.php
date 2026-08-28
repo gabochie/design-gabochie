@@ -18,10 +18,9 @@ class PMProGateway_moolre extends PMProGateway {
     const OPTIONS_KEY = 'gmg_settings';
 
     public function __construct( $gateway = null ) {
-        $this->gateway = $gateway;
         $this->id      = 'moolre';
         $this->name    = 'Moolre (MTN MoMo)';
-        parent::__construct( $this->gateway );
+        $this->gateway = $gateway;
     }
 
     /**
