@@ -47,6 +47,8 @@ function geg_hide_cc_fields() {
     if ( 'expresspay' === $current_gateway ) {
         add_filter( 'pmpro_include_billing_address_fields', '__return_false' );
         add_filter( 'pmpro_include_payment_information_fields', '__return_false' );
+        // Tell PMPro this is an offsite redirect — no billing validation needed.
+        add_filter( 'pmpro_require_billing', '__return_false' );
     }
 }
 
