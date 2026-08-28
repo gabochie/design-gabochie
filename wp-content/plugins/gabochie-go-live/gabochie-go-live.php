@@ -1246,14 +1246,15 @@ class Gabochie_Go_Live {
         }
 
         // Secret scan
-        $scan_file = self::deploy_dir() . '/secret-scan-results.txt';
+        $scan_file = self::deploy_dir() . '/secret-scan-results.json';
         if (is_readable($scan_file)) {
-            $scan = file_get_contents($scan_file);
-            $hits = substr_count($scan, "\n") - 1;
-            $data['secret_scan'] = array(
-                'status' => (strpos($scan, 'PASS') !== false) ? 'pass' : (($hits > 0) ? 'fail' : 'pass'),
-                'hits'   => max(0, $hits),
-            );
+            $scan = json_decode(file_get_contents($scan_file), true);
+            if (is_array($scan)) {
+                $data['secret_scan'] = array(
+                    'status' => $scan['status'] ?? 'unknown',
+                    'hits'   => (int)($scan['hits'] ?? 0),
+                );
+            }
         }
 
         return $data;
