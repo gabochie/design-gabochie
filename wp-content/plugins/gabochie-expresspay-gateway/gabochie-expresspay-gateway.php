@@ -38,6 +38,19 @@ function geg_register_gateway( $gateways ) {
 }
 
 /**
+ * Hide credit card fields on checkout for ExpressPay (offsite redirect gateway).
+ * Must run on every page load, not just in the constructor.
+ */
+add_action( 'init', 'geg_hide_cc_fields' );
+function geg_hide_cc_fields() {
+    $current_gateway = get_option( 'pmpro_gateway', '' );
+    if ( 'expresspay' === $current_gateway ) {
+        add_filter( 'pmpro_include_billing_address_fields', '__return_false' );
+        add_filter( 'pmpro_hide_payment_information_fields', '__return_true' );
+    }
+}
+
+/**
  * Register REST API callback route (bypasses Cloudflare).
  */
 add_action( 'rest_api_init', 'geg_register_rest_routes' );
