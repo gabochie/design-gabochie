@@ -24,7 +24,11 @@ final class Gabochie_Antispam_DB {
     }
 
     private function __construct() {
-        if ( current_user_can( 'manage_options' ) || ( defined( 'WP_CLI' ) && WP_CLI ) ) {
+        add_action( 'init', array( $this, 'maybe_upgrade' ), 1 );
+    }
+
+    public function maybe_upgrade() {
+        if ( is_admin() || ( defined( 'WP_CLI' ) && WP_CLI ) ) {
             $this->maybe_install();
         }
     }
@@ -92,6 +96,9 @@ final class Gabochie_Antispam_DB {
      */
     public function log( $entry = array() ) {
         global $wpdb;
+        if ( ! $this->table_exists() ) {
+            self::install();
+        }
         $wpdb->insert(
             self::table(),
             array(
