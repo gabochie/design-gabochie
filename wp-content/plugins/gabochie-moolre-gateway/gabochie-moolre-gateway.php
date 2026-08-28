@@ -38,8 +38,42 @@ function gmg_register_gateway( $gateways ) {
 }
 
 /**
- * Webhook endpoint — receives Moolre callback after payment.
- * Registered as wp_ajax_nopriv_gmg_callback (avoids Cloudflare "webhook" keyword block).
+ * Register REST API callback route for Moolre webhook.
+ * REST API bypasses Cloudflare JS challenge (unlike admin-ajax.php on staging).
+ */
+add_action( 'rest_api_init', 'gmg_register_rest_routes' );
+function gmg_register_rest_routes() {
+    register_rest_route( 'gmg/v1', '/callback', array(
+        'methods'             => 'POST,GET',
+        'callback'            => 'gmg_rest_callback',
+        'permission_callback' => '__return_true',
+    ) );
+}
+
+function gmg_rest_callback( $request ) {
+    if ( ! function_exists( 'pmpro_doing_webhook' ) ) {
+        return new WP_Error( 'pmpro_missing', 'PMPro not loaded.', array( 'status' => 500 ) );
+    }
+
+    if ( ! class_exists( 'PMProGateway_moolre' ) ) {
+        require_once GMG_PATH . 'includes/class-moolre-pmpro-gateway.php';
+    }
+
+    $reference = $request->get_param( 'reference' );
+    if ( empty( $reference ) ) {
+        return new WP_Error( 'missing_reference', 'Missing reference.', array( 'status' => 400 ) );
+    }
+
+    // Make reference available via $_REQUEST for the webhook handler.
+    $_REQUEST['reference'] = $reference;
+
+    $gateway = new PMProGateway_moolre( 'moolre' );
+    $gateway->webhook();
+    exit;
+}
+
+/**
+ * Webhook endpoint (legacy AJAX fallback — also registered for completeness).
  */
 add_action( 'wp_ajax_nopriv_gmg_callback', 'gmg_webhook_handler' );
 add_action( 'wp_ajax_gmg_callback', 'gmg_webhook_handler' );
@@ -104,6 +138,6 @@ function gmg_admin_notices() {
         echo '<div class="notice notice-warning"><p><strong>Gabochie Moolre Gateway:</strong> Enter your Moolre API key and account number in the Payment Gateway settings below.</p></div>';
     }
 
-    $webhook_url = admin_url( 'admin-ajax.php?action=gmg_callback' );
+    $webhook_url = rest_url( 'gmg/v1/callback' );
     echo '<div class="notice notice-info"><p><strong>Moolre webhook URL:</strong> <code>' . esc_html( $webhook_url ) . '</code> — set this in your <a href="https://dashboard.moolre.com" target="_blank" rel="noopener">Moolre dashboard</a>.</p></div>';
 }

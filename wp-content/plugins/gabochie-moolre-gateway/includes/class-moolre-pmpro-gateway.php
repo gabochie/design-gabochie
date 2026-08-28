@@ -71,7 +71,7 @@ class PMProGateway_moolre extends PMProGateway {
         $amount = pmpro_get_membership_level_at_checkout()->billing_amount;
 
         $reference = $order->id . '_' . time();
-        $callback  = admin_url( 'admin-ajax.php?action=gmg_callback' );
+        $callback  = rest_url( 'gmg/v1/callback' );
 
         $payload = array(
             'state'         => 'starter',
@@ -136,6 +136,9 @@ class PMProGateway_moolre extends PMProGateway {
         pmpro_doing_webhook( 'moolre', true );
 
         $reference = isset( $_REQUEST['reference'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['reference'] ) ) : '';
+        if ( empty( $reference ) && isset( $GLOBALS['wp_rest_request'] ) ) {
+            $reference = sanitize_text_field( $GLOBALS['wp_rest_request']->get_param( 'reference' ) );
+        }
         $order_id  = $reference ? (int) explode( '_', $reference )[0] : 0;
 
         if ( ! $order_id ) {
