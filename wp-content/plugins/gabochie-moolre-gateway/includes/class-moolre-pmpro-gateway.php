@@ -51,7 +51,7 @@ class PMProGateway_moolre extends PMProGateway {
 
         // If returning from Moolre (callback already verified or pending),
         // the _moolre_ref is set. Let PMPro finish checkout.
-        $moolre_ref = $order->getMeta( '_moolre_ref' );
+        $moolre_ref = ! empty( $order->_moolre_ref ) ? $order->_moolre_ref : '';
         if ( ! empty( $moolre_ref ) ) {
             error_log( 'GMG: returning from Moolre, ref=' . $moolre_ref );
             $order->payment_type = 'Moolre';
@@ -129,8 +129,8 @@ class PMProGateway_moolre extends PMProGateway {
             return false;
         }
 
-        $order->updateMeta( '_moolre_ref', $reference );
-        $order->save();
+        $order->_moolre_ref = $reference;
+        $order->saveOrder();
 
         error_log( 'GMG: redirecting to ' . $body['data']['authorization_url'] );
         wp_redirect( $body['data']['authorization_url'] );
@@ -182,7 +182,7 @@ class PMProGateway_moolre extends PMProGateway {
 
         if ( ! $verified ) {
             $order->error  = 'Moolre verification failed.';
-            $order->notes .= 'Verification failed for reference: ' . $reference . "\n";
+            $order->add_order_note( 'Verification failed for reference: ' . $reference );
             $order->updateStatus( 'error' );
             pmpro_unhandled_webhook( 'moolre' );
             status_header( 400 );
@@ -193,7 +193,7 @@ class PMProGateway_moolre extends PMProGateway {
         // Payment confirmed — complete the order.
         $order->payment_transaction_id = $reference;
         $order->status                 = 'success';
-        $order->save();
+        $order->saveOrder();
 
         // Grant membership.
         if ( function_exists( 'pmpro_enableMembershipLevel' ) ) {
