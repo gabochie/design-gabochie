@@ -17,7 +17,16 @@ define( 'GMG_VERSION', '1.0.0' );
 define( 'GMG_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GMG_URL', plugin_dir_url( __FILE__ ) );
 
-require_once GMG_PATH . 'includes/class-moolre-pmpro-gateway.php';
+/**
+ * Load gateway class only after PMPro is available.
+ */
+add_action( 'plugins_loaded', 'gmg_load_gateway', 5 );
+function gmg_load_gateway() {
+    if ( ! class_exists( 'PMProGateway' ) ) {
+        return;
+    }
+    require_once GMG_PATH . 'includes/class-moolre-pmpro-gateway.php';
+}
 
 /**
  * Register the Moolre gateway with PMPro.
@@ -48,6 +57,11 @@ function gmg_webhook_handler() {
         status_header( 500 );
         echo 'PMPro not loaded.';
         exit;
+    }
+
+    // Load gateway class if not already loaded.
+    if ( ! class_exists( 'PMProGateway_moolre' ) ) {
+        require_once GMG_PATH . 'includes/class-moolre-pmpro-gateway.php';
     }
 
     $gateway = new PMProGateway_moolre( 'moolre' );
