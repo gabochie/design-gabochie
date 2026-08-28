@@ -71,16 +71,11 @@ class PMProGateway_moolre extends PMProGateway {
         $order->payment_type = 'Moolre';
         $order->gateway      = 'moolre';
 
-        $level = pmpro_get_membership_level_at_checkout();
-        if ( ! $level ) {
-            error_log( 'GMG: no level at checkout' );
-            $order->error      = 'No membership level selected.';
-            $order->error_type = 'pmpro_error';
-            return false;
+        $amount = isset( $order->initial_payment ) ? (float) $order->initial_payment : 0;
+        if ( empty( $amount ) && isset( $order->billing_amount ) ) {
+            $amount = (float) $order->billing_amount;
         }
-
-        $amount = $level->billing_amount;
-        error_log( 'GMG: level=' . $level->name . ' amount=' . $amount );
+        error_log( 'GMG: amount=' . $amount );
 
         $reference = $order->id . '_' . time();
         $callback  = rest_url( 'gmg/v1/callback' );
