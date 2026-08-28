@@ -47,9 +47,13 @@ class PMProGateway_moolre extends PMProGateway {
      * return true so PMPro completes checkout.
      */
     public function process( &$order ) {
+        error_log( 'GMG: process() called for order #' . $order->id );
+
         // If returning from Moolre (callback already verified or pending),
         // the _moolre_ref is set. Let PMPro finish checkout.
-        if ( ! empty( $order->get_meta( '_moolre_ref' ) ) ) {
+        $moolre_ref = get_post_meta( $order->id, '_moolre_ref', true );
+        if ( ! empty( $moolre_ref ) ) {
+            error_log( 'GMG: returning from Moolre, ref=' . $moolre_ref );
             $order->payment_type = 'Moolre';
             return true;
         }
@@ -67,22 +71,34 @@ class PMProGateway_moolre extends PMProGateway {
         $order->payment_type = 'Moolre';
         $order->gateway      = 'moolre';
 
-        $amount = pmpro_get_membership_level_at_checkout()->billing_amount;
+        $level = pmpro_get_membership_level_at_checkout();
+        if ( ! $level ) {
+            error_log( 'GMG: no level at checkout' );
+            $order->error      = 'No membership level selected.';
+            $order->error_type = 'pmpro_error';
+            return false;
+        }
+
+        $amount = $level->billing_amount;
+        error_log( 'GMG: level=' . $level->name . ' amount=' . $amount );
 
         $reference = $order->id . '_' . time();
         $callback  = rest_url( 'gmg/v1/callback' );
 
+        $email = isset( $order->Email ) ? $order->Email : ( isset( $order->user_email ) ? $order->user_email : '' );
         $payload = array(
             'state'         => 'starter',
             'accountnumber' => $account_num,
             'reference'     => $reference,
             'nonce_value'   => wp_create_nonce( 'gmg_nonce_' . $order->id ),
-            'email'         => $order->Email,
+            'email'         => $email,
             'amount'        => (float) $amount,
             'currency'      => $currency,
             'callback'      => $callback,
             'tx_source'     => 'pmpro-plugin',
         );
+
+        error_log( 'GMG: calling Moolre API, ref=' . $reference . ' amount=' . $amount );
 
         $response = wp_remote_post( self::API_URL, array(
             'headers' => array( 'X-Api-Pubkey' => $api_key ),
@@ -91,13 +107,16 @@ class PMProGateway_moolre extends PMProGateway {
         ) );
 
         if ( is_wp_error( $response ) ) {
+            error_log( 'GMG: API error: ' . $response->get_error_message() );
             $order->error      = 'Could not connect to payment gateway: ' . $response->get_error_message();
             $order->error_type = 'pmpro_error';
             return false;
         }
 
         $code = wp_remote_retrieve_response_code( $response );
-        $body = json_decode( wp_remote_retrieve_body( $response ), true );
+        $raw_body = wp_remote_retrieve_body( $response );
+        $body = json_decode( $raw_body, true );
+        error_log( 'GMG: API response code=' . $code . ' body=' . substr( $raw_body, 0, 500 ) );
 
         if ( $code !== 200 ) {
             $msg = $body['message'] ?? 'Payment gateway error.';
@@ -118,6 +137,7 @@ class PMProGateway_moolre extends PMProGateway {
         $order->updateMetaData( '_moolre_ref', $reference );
         $order->save();
 
+        error_log( 'GMG: redirecting to ' . $body['data']['authorization_url'] );
         wp_redirect( $body['data']['authorization_url'] );
         exit;
     }
@@ -232,7 +252,7 @@ class PMProGateway_moolre extends PMProGateway {
     /**
      * Retrieve a setting value.
      */
-    public function getOption( $key = '', $default = null ) {
+    public function get_option( $key = '', $default = null ) {
         $options = get_option( self::OPTIONS_KEY, array() );
         if ( '' === $key ) {
             return $options;
