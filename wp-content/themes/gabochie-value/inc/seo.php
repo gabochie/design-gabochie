@@ -251,15 +251,15 @@ function gabochie_value_toc_content( $content ) {
 add_filter( 'the_content', 'gabochie_value_toc_content', 20 );
 
 /* ============================================
-   AdSense: restrict to blog posts + community pages only
+   AdSense: restrict to blog posts only
    ============================================ */
 
 /**
  * Remove Site Kit's AdSense script on pages where ads shouldn't appear.
- * Ads are allowed only on: single blog posts, /community/ page, single community questions.
+ * Ads are allowed only on single blog posts.
  */
 function gabochie_value_restrict_adsense() {
-	$ads_allowed = is_singular( 'post' ) || is_page( 'community' ) || is_singular( 'gabochie_question' );
+	$ads_allowed = is_singular( 'post' );
 
 	if ( ! $ads_allowed ) {
 		ob_start(
