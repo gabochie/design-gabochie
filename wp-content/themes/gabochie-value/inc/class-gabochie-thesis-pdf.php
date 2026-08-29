@@ -261,14 +261,17 @@ class Gabochie_Thesis_Pdf {
 	 * @var array
 	 */
 	private $palette = array(
-		'teal'  => '#0D5C52',
-		'teal2' => '#0A4840',
-		'gold'  => '#C9A96E',
-		'ink'   => '#1C2B28',
-		'mist'  => '#6B7C78',
-		'line'  => '#D8E2DF',
-		'cream' => '#FAF7F2',
-		'white' => '#FFFFFF',
+		'teal'      => '#0D5C52',
+		'teal2'     => '#0A4840',
+		'teal_deep' => '#063B35',
+		'gold'      => '#C9A96E',
+		'gold_lite' => '#D8BE8E',
+		'ink'       => '#1C2B28',
+		'mist'      => '#6B7C78',
+		'line'      => '#D8E2DF',
+		'cream'     => '#FAF7F2',
+		'white'     => '#FFFFFF',
+		'paper'     => '#FEFCF8',
 	);
 
 	/**
@@ -938,62 +941,164 @@ function gabochie_value_thesis_pdf( $reader_number = 0 ) {
 	$m      = Gabochie_Thesis_Pdf::MARGIN;
 	$cw     = $page_w - 2 * $m;
 
-	/* ---------- Page 0: Cover (branded) ---------- */
+	/* ---------- Page 0: Cover (premium design + direct-response copy) ---------- */
 	$pdf->new_page();
 
-	// — Full-bleed brand band: teal field with a gold underline strip.
-	$pdf->rect( 0, 0, $page_w, 140, 'teal' );
-	$pdf->rect( 0, 140, $page_w, 6, 'gold' );
+	// Full-bleed paper wash, then the dark hero band + gold hairline strip.
+	$pdf->rect( 0, 0, $page_w, $page_h, 'paper' );
+	$pdf->rect( 0, 0, $page_w, 112, 'teal_deep' );
+	$pdf->rect( 0, 112, $page_w, 4, 'gold' );
 
-	// Hexagon logo mark (brand motif), gold outline.
-	$cx  = 84;
-	$cy  = 74;
-	$r   = 15;
+	// Double hexagon logo mark (brand motif), gold + gold_lite.
+	$cx = 84;
+	$cy = 56;
 	$hex = array();
 	for ( $k = 0; $k < 6; $k++ ) {
 		$a     = deg2rad( 30 + 60 * $k );
-		$hex[] = array( $cx + $r * cos( $a ), $cy + $r * sin( $a ) );
+		$hex[] = array( $cx + 13.5 * cos( $a ), $cy + 13.5 * sin( $a ) );
 	}
 	$pdf->polygon( $hex, 'gold', 1.2, false );
+	$hex_i = array();
+	for ( $k = 0; $k < 6; $k++ ) {
+		$a       = deg2rad( 30 + 60 * $k );
+		$hex_i[] = array( $cx + 7.4 * cos( $a ), $cy + 7.4 * sin( $a ) );
+	}
+	$pdf->polygon( $hex_i, 'gold_lite', 0.8, false );
 
+	// Wordmark lockup (left).
 	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
-	$pdf->set_size( 15 );
+	$pdf->set_size( 14.5 );
 	$pdf->set_color( 'white' );
-	$pdf->text( 112, 60, strtoupper( $data['brand'][0] ) );
-	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
-	$pdf->set_size( 7 );
-	$pdf->set_color( 'cream' );
-	$pdf->text( 112, 80, strtoupper( $data['brand'][1] ) );
-
-	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
-	$pdf->set_size( 8 );
-	$pdf->set_color( 'gold' );
-	$tag_w = $pdf->measure( 'THESIS · 2026' );
-	$pdf->text( $page_w - $m - $tag_w, 60, 'THESIS · 2026' );
+	$pdf->text( 110, 48, strtoupper( $data['brand'][0] ) );
 	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
 	$pdf->set_size( 6.4 );
 	$pdf->set_color( 'cream' );
-	$sub_w = $pdf->measure( 'FREE BRIEFING FOR PROSPECTIVE CLIENTS' );
-	$pdf->text( $page_w - $m - $sub_w, 80, 'FREE BRIEFING FOR PROSPECTIVE CLIENTS' );
+	$pdf->text( 110, 68, strtoupper( $data['brand'][1] ) );
 
-	// — Title block with gold accent bar.
-	$y = 178;
-	$pdf->rect( $m, $y - 12, 46, 4, 'gold' );
+	// Edition block (right).
 	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
-	$pdf->set_size( 30 );
-	$pdf->set_color( 'ink' );
-	$pdf->text( $m, $y, $data['title'] );
-	$y += 48;
-	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_ITALIC );
-	$pdf->set_size( 13.5 );
-	$pdf->set_color( 'teal' );
-	$pdf->text( $m, $y, $data['subtitle'] );
-	$y += 34;
+	$pdf->set_size( 8 );
+	$pdf->set_color( 'gold_lite' );
+	$tag_a = 'THE DEVELOPMENT INTELLIGENCE PLATFORM';
+	$pdf->text( $page_w - $m - $pdf->measure( $tag_a ), 48, $tag_a );
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
+	$pdf->set_size( 6.6 );
+	$pdf->set_color( 'cream' );
+	$tag_b = 'FREE BRIEFING · EDITION 2026';
+	$pdf->text( $page_w - $m - $pdf->measure( $tag_b ), 68, $tag_b );
 
-	// — Founding badge (gold when personalised, teal otherwise).
+	// Kicker row.
+	$y0 = 146;
+	$pdf->rect( $m, $y0, 5, 5, 'gold' );
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
+	$pdf->set_size( 8 );
+	$pdf->set_color( 'teal' );
+	$pdf->text( $m + 14, $y0, 'A FREE 5-MINUTE BRIEFING ON THE DEVELOPMENT EXECUTION GAP' );
+	$y0 += 28;
+
+	// Headline: two-tone, uppercase, curiosity + specificity.
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
+	$pdf->set_size( 25 );
+	$pdf->set_color( 'ink' );
+	$pdf->text( $m, $y0, 'WHY 60% OF GHANAIAN' );
+	$y0 += 30;
+	$pdf->set_color( 'teal' );
+	$pdf->text( $m, $y0, 'PROJECTS NEVER BREAK GROUND.' );
+	$y0 += 16;
+	$pdf->rect( $m, $y0, 46, 3, 'gold' );
+	$y0 += 24;
+
+	// Subhead: mechanism + benefit.
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_ITALIC );
+	$pdf->set_size( 12.4 );
+	$pdf->set_color( 'teal2' );
+	$y0 = $pdf->paragraph(
+		$m,
+		$y0,
+		'The three invisible barriers every stalled project shares — and the 14-stage system professional firms use to finish on time and on budget.',
+		$cw,
+		15.6
+	);
+	$y0 += 12;
+
+	// Proof band: giant stat + mechanism + credential.
+	$band_y = $y0;
+	$pdf->rect( $m, $band_y, $cw, 100, 'teal_deep' );
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
+	$pdf->set_size( 44 );
+	$pdf->set_color( 'gold' );
+	$pdf->text( $m + 20, $band_y + 34, '60%' );
+	$mid_w = $cw - 128 - 108;
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
+	$pdf->set_size( 10.2 );
+	$pdf->set_color( 'white' );
+	$pdf->paragraph( $m + 128, $band_y + 22, 'of development projects in Ghana stall before ground is ever broken.', $mid_w, 13.4 );
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
+	$pdf->set_size( 8.6 );
+	$pdf->set_color( 'cream' );
+	$pdf->paragraph( $m + 128, $band_y + 52, 'Not for lack of money — for lack of a clear delivery system.', $mid_w, 11.2 );
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
+	$pdf->set_size( 6.8 );
+	$pdf->set_color( 'gold_lite' );
+	$pdf->paragraph( $m + 128, $band_y + 76, 'CLOSED ONE WAY: MAKING THE PROFESSIONAL SYSTEM VISIBLE TO YOU.', $mid_w, 9 );
+	// Right credential chip.
+	$rx = $page_w - $m - 104;
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
+	$pdf->set_size( 16 );
+	$pdf->set_color( 'gold' );
+	$pdf->text( $rx, $band_y + 36, '#1' );
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
+	$pdf->set_size( 6.6 );
+	$pdf->set_color( 'white' );
+	$pdf->paragraph( $rx + 24, $band_y + 26, "West Africa's fastest-growing construction market.", 80, 8.6 );
+	$y0 = $band_y + 118;
+
+	// Inside-this-briefing header + benefit list.
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
+	$pdf->set_size( 8 );
+	$pdf->set_color( 'gold' );
+	$pdf->text( $m, $y0, 'INSIDE THIS BRIEFING' );
+	$hdr_w = $pdf->measure( 'INSIDE THIS BRIEFING' );
+	$pdf->hline( $m + $hdr_w + 8, $y0 + 2.5, $page_w - $m, 0.8, 'line' );
+	$y0 += 17;
+
+	$cover_bullets = array(
+		array(
+			'lead' => 'The paradox.',
+			'rest' => 'Ghana is building and stalling at the same time — where the growth leaks, in numbers you can act on.',
+		),
+		array(
+			'lead' => 'The real barrier.',
+			'rest' => 'Not capital. Information, coordination and visibility — the three failures behind every stalled project.',
+		),
+		array(
+			'lead' => 'The 14-stage system.',
+			'rest' => 'The delivery pipeline professional firms already use, drawn as a map you can follow.',
+		),
+		array(
+			'lead' => 'Your next move.',
+			'rest' => 'A five-minute Readiness Score that names exactly what your project needs next — free.',
+		),
+	);
+	foreach ( $cover_bullets as $item ) {
+		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
+		$pdf->set_size( 8.8 );
+		$pdf->set_color( 'gold' );
+		$pdf->text( $m, $y0 + 1, '›' );
+		$pdf->set_color( 'ink' );
+		$lead_w = $pdf->measure( $item['lead'] );
+		$pdf->text( $m + 16, $y0, $item['lead'] );
+		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
+		$pdf->set_color( 'mist' );
+		$pdf->paragraph( $m + 16 + $lead_w + 4, $y0, $item['rest'], $cw - 16 - $lead_w - 4, 11.6 );
+		$y0 += 22;
+	}
+	$y0 += 6;
+
+	// Personalised founding chip.
 	$has_slot = $founding['remaining'] > 0;
 	if ( $reader_number > 0 ) {
-		$chip   = 'FOUNDING READER #' . $reader_number . ' OF ' . $founding['total'];
+		$chip   = 'FOUNDING READER #' . $reader_number . ' OF ' . $founding['total'] . '  ·  LOCK THE FOUNDING RATE';
 		$chip_c = 'ink';
 		$chip_f = 'gold';
 	} elseif ( $has_slot ) {
@@ -1005,80 +1110,61 @@ function gabochie_value_thesis_pdf( $reader_number = 0 ) {
 		$chip_c = 'white';
 		$chip_f = 'mist';
 	}
-	$chip_w = $pdf->measure( $chip ) + 24;
-	$pdf->rect( $m, $y - 2, $chip_w, 24, $chip_f );
+	$notch  = ( 'gold' === $chip_f ) ? 'teal_deep' : 'gold';
+	$chip_w = $pdf->measure( $chip ) + 30;
+	$pdf->rect( $m, $y0, $chip_w, 22, $chip_f );
+	$pdf->rect( $m, $y0, 4, 22, $notch );
 	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
-	$pdf->set_size( 9 );
+	$pdf->set_size( 8.4 );
 	$pdf->set_color( $chip_c );
-	$pdf->text( $m + 12, $y + 6, $chip );
-	$y += 32;
+	$pdf->text( $m + 14, $y0 + 6, $chip );
+	$y0 += 32;
 
-	// Founding-offer urgency band.
-	$pdf->rect( $m, $y, $cw, 54, 'teal' );
-	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
-	$pdf->set_size( 11 );
-	$pdf->set_color( 'white' );
+	// Direct-response P.S. line.
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_ITALIC );
+	$pdf->set_size( 9 );
+	$pdf->set_color( 'mist' );
 	if ( $has_slot ) {
-		$pdf->text( $m + 16, $y + 13, $offer['headline'] );
-		if ( $reader_number > 0 ) {
-			$offer_text = $offer['line'] . ' ' . $offer['who'] . '#' . $reader_number . ' — move before the general wave and lock the founding rate.';
-		} else {
-			$offer_text = $offer['line'] . ' The founding wave is open right now.';
-		}
-		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
-		$pdf->set_size( 8.8 );
-		$pdf->set_color( 'cream' );
-		$pdf->paragraph( $m + 16, $y + 28, $offer_text, $cw - 32, 11.6 );
+		$ps_line = ( $reader_number > 0 )
+			? 'P.S. Founding places are capped at ' . $founding['total'] . '. Yours is held until the general wave opens — then the founding rate closes.'
+			: 'P.S. Founding places are capped at ' . $founding['total'] . ' — ' . $founding['remaining'] . ' remain before the general wave opens.';
 	} else {
-		$pdf->text( $m + 16, $y + 13, 'The founding wave is full.' );
-		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
-		$pdf->set_size( 8.8 );
-		$pdf->set_color( 'cream' );
-		$pdf->text( $m + 16, $y + 30, 'Standard access is free — and stays free.' );
+		$ps_line = 'P.S. The founding wave is full — standard access stays free, always.';
 	}
-	$y += 62;
+	$y0 = $pdf->paragraph( $m, $y0, $ps_line, $cw, 12 );
+	$y0 += 16;
 
-	// — Three promise stat cards (cream cards, gold top rule).
-	foreach ( $data['stats'] as $i => $stat ) {
-		$card_w = ( $cw - 2 * 10 ) / 3;
-		$card_x = $m + $i * ( $card_w + 10 );
-		$pdf->rect( $card_x, $y, $card_w, 96, 'cream' );
-		$pdf->rect( $card_x, $y, $card_w, 4, 'gold' );
-		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
-		$pdf->set_size( 23 );
-		$pdf->set_color( 'teal' );
-		$pdf->text( $card_x + 12, $y + 18, $stat['value'] );
-		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
-		$pdf->set_size( 7.4 );
-		$pdf->set_color( 'mist' );
-		$pdf->paragraph( $card_x + 12, $y + 46, $stat['label'], $card_w - 24, 9.4 );
-	}
-	$y += 110;
-
-	// — "What's inside" list.
+	// CTA band.
+	$pdf->rect( $m, $y0, $cw, 46, 'teal' );
+	$pdf->rect( $m, $y0, $cw, 3, 'gold' );
 	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
-	$pdf->set_size( 12 );
-	$pdf->set_color( 'ink' );
-	$pdf->text( $m, $y, 'What is inside this briefing' );
-	$y += 15;
-	foreach ( $data['learn'] as $item ) {
-		$pdf->set_color( 'gold' );
-		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
-		$pdf->text( $m, $y + 1, '›' );
-		$pdf->set_color( 'ink' );
-		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
-		$pdf->text( $m + 16, $y, $item );
-		$y += 15;
-	}
-	$y += 12;
+	$pdf->set_size( 10.6 );
+	$pdf->set_color( 'white' );
+	$pdf->text( $m + 16, $y0 + 11, 'YOUR NEXT MOVE — FREE' );
+	$pdf->set_size( 11.4 );
+	$pdf->set_color( 'gold_lite' );
+	$pdf->text( $m + 16, $y0 + 25, 'Development Readiness Score' );
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
+	$pdf->set_size( 7.4 );
+	$pdf->set_color( 'cream' );
+	$pdf->text( $m + 16, $y0 + 39, 'gabochiedesign.com/development-quiz' );
+	$chip2 = '5 MIN · 8 DIMENSIONS';
+	$w2    = $pdf->measure( $chip2 ) + 22;
+	$pdf->rect( $page_w - $m - $w2 - 14, $y0 + 9, $w2, 28, 'teal_deep' );
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
+	$pdf->set_size( 8.4 );
+	$pdf->set_color( 'gold_lite' );
+	$pdf->text( $page_w - $m - $w2 - 14 + 11, $y0 + 19, $chip2 );
+	$y0 += 62;
 
 	// Cover footer.
-	$pdf->hline( $m, $y, $page_w - $m, 0.8, 'line' );
-	$y += 12;
-	$pdf->set_size( 8.4 );
+	$pdf->hline( $m, $y0, $page_w - $m, 0.8, 'line' );
+	$y0 += 12;
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
+	$pdf->set_size( 8 );
 	$pdf->set_color( 'mist' );
-	$pdf->text( $m, $y, 'Gabochie Design Thesis · 2026 · Free report for prospective clients' );
-	$pdf->text( $m, $y + 14, 'Prepared by ' . $data['brand'][0] . ' — ' . home_url( '/' ) );
+	$pdf->text( $m, $y0, 'Gabochie Design · Development Intelligence Platform for Ghana' );
+	$pdf->text( $m, $y0 + 12, 'Free briefing · Edition 2026 · Prepared for prospective clients — ' . home_url( '/' ) );
 
 	/* ---------- Page 1: Evidence + visualisations ---------- */
 	$pdf->new_page();
