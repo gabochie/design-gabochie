@@ -704,34 +704,20 @@ class YoastSmartAutoFixer {
     }
 
     private function template_content_fix($text, $context, $fix_type) {
+        // No AI provider configured: never rewrite content with templates.
+        // Returning the text unchanged (or empty, where the caller requires
+        // a suggestion) makes the fix a no-op instead of baking junk like
+        // "{keyword} essentials" headings into post_content.
         switch ($fix_type) {
-            case 'kw_intro':
-                $sentences = preg_split('/(?<=[.!?])\s+/', $text, -1, PREG_SPLIT_NO_EMPTY);
-                if (!empty($sentences)) {
-                    $sentences[0] = rtrim($sentences[0]) . ' When it comes to ' . $context . ', this guide covers everything you need to know.';
-                    return implode(" ", $sentences);
-                }
-                return $text;
-            case 'kw_subheadings':
-                return $context . ' essentials';
             case 'add_subheadings':
-                $words = explode(' ', strtolower(wp_strip_all_tags($text)));
-                $topics = array();
-                $chunk = array_slice($words, 0, 5);
-                if (!empty($chunk)) $topics[] = ucwords(implode(' ', $chunk));
-                $chunk = array_slice($words, max(0, intdiv(count($words), 3)), 5);
-                if (!empty($chunk)) $topics[] = ucwords(implode(' ', $chunk));
-                $chunk = array_slice($words, max(0, intdiv(count($words), 3) * 2), 5);
-                if (!empty($chunk)) $topics[] = ucwords(implode(' ', $chunk));
-                return implode("\n", array_slice($topics, 0, 3));
+            case 'internal_links':
+            case 'external_links':
+                return '';
+            case 'kw_intro':
+            case 'kw_subheadings':
             case 'transitions':
             case 'passive_to_active':
             case 'split_sentences':
-                return $text;
-            case 'internal_links':
-                return "[/services/] Our Services\n[/portfolio/] View Our Work";
-            case 'external_links':
-                return $text;
             default:
                 return $text;
         }
@@ -837,7 +823,22 @@ class YoastSmartAutoFixer {
             $result = $this->cascade_ai($title, $focuskw, $tone, $active);
             if ($result) return $result;
         }
-        return $this->template_generate($title, $focuskw, $tone, $type);
+        // No AI provider: extract a factual description from the content
+        // instead of baking a marketing template into Yoast fields.
+        return $this->extractive_meta($content, $title);
+    }
+
+    private function extractive_meta($content, $fallback = '') {
+        $text = preg_replace('/\[[^\]]+\]/', '', (string) $content);
+        $text = wp_strip_all_tags($text);
+        $text = trim(preg_replace('/\s+/', ' ', $text));
+        if ($text === '') $text = trim((string) $fallback);
+        if ($text === '') return '';
+        if (strlen($text) <= 155) return $text;
+        $cut = substr($text, 0, 155);
+        $space = strrpos($cut, ' ');
+        if ($space > 80) return substr($cut, 0, $space);
+        return substr($text, 0, 152) . '...';
     }
 
     private function cascade_ai($title, $kw, $tone, $providers) {
@@ -989,40 +990,6 @@ class YoastSmartAutoFixer {
             $full = $base . $sep . $site_name;
         }
         return $full;
-    }
-
-    private function template_generate($title, $kw, $tone, $type) {
-        $title = sanitize_text_field($title);
-        $kw = sanitize_text_field($kw);
-
-        $templates = array(
-            'engaging' => array(
-                "Discover how $title unlocks expert strategies and actionable insights on $kw. Start building smarter today.",
-                "$title — your complete guide to $kw. Expert strategies, real examples, and step-by-step plans inside.",
-                "Everything you need to know about $kw in $title. Proven strategies, cost breakdowns, and expert tips.",
-                "Planning around $kw? $title reveals the strategies experts use — with real costs, timelines, and checklists.",
-                "$title breaks down $kw into clear, actionable steps. Save time, avoid costly mistakes, and build with confidence.",
-            ),
-            'professional' => array(
-                "$title provides comprehensive guidance on $kw for professionals and decision-makers.",
-                "A detailed analysis of $kw presented in $title — covering regulations, best practices, and industry standards.",
-                "$title offers a structured approach to $kw, backed by industry expertise and project data.",
-                "Professional insights on $kw delivered through $title — with benchmarks, compliance notes, and strategic frameworks.",
-                "$title: an authoritative resource on $kw for firms, developers, and project stakeholders.",
-            ),
-            'high-converting' => array(
-                "Ready to master $kw? $title gives you the exact playbook — with pricing, timelines, and zero fluff.",
-                "$title shows you how to get $kw right the first time. Cut costs, skip the guesswork, and start today.",
-                "Stop wasting time on $kw. $title delivers the shortcuts, pricing breakdowns, and expert hacks you need.",
-                "Your $kw action plan is here. $title covers everything from budget to build — so you can move fast.",
-                "$title is the $kw guide that saves you weeks of research. Quick wins, real costs, and expert advice.",
-            ),
-        );
-
-        $tone_templates = $templates[$tone] ?? $templates['engaging'];
-        $snippet = $tone_templates[array_rand($tone_templates)];
-        if (strlen($snippet) > 155) $snippet = substr($snippet, 0, 152) . '...';
-        return $snippet;
     }
 
     /* ─── History ─── */

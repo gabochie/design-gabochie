@@ -3,12 +3,12 @@
  * Gabochie Value Theme Functions
  *
  * @package Gabochie_Value
- * @version 1.5.0
+ * @version 1.6.0
  */
 
 if (!defined('ABSPATH')) exit;
 
-define('GABOCHIE_VALUE_VERSION', '1.5.0');
+define('GABOCHIE_VALUE_VERSION', '1.6.0');
 define('GABOCHIE_VALUE_DIR', get_template_directory());
 define('GABOCHIE_VALUE_URI', get_template_directory_uri());
 
@@ -18,6 +18,7 @@ define('GABOCHIE_VALUE_URI', get_template_directory_uri());
 require_once GABOCHIE_VALUE_DIR . '/inc/setup.php';
 require_once GABOCHIE_VALUE_DIR . '/inc/scripts.php';
 require_once GABOCHIE_VALUE_DIR . '/inc/helpers.php';
+require_once GABOCHIE_VALUE_DIR . '/inc/seo.php';
 
 /* ============================================
    CLIENT PORTAL

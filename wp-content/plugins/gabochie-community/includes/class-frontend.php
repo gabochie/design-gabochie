@@ -25,6 +25,83 @@ final class Gabochie_Community_Frontend {
 		add_action( 'wp_ajax_gabochie_ask', array( $this, 'ajax_ask' ) );
 		add_action( 'wp_ajax_nopriv_gabochie_ask', array( $this, 'ajax_ask' ) );
 		add_filter( 'template_include', array( $this, 'question_template' ) );
+		add_action( 'wp_head', array( $this, 'output_qa_schema' ), 2 );
+	}
+
+	/* ---------------------------------------------------------------------
+	 * AEO: QAPage structured data on single questions
+	 * ------------------------------------------------------------------- */
+
+	/**
+	 * Emit QAPage + Question + Answers JSON-LD so answer engines can cite
+	 * community Q&A. Approved comments become answers (first = accepted).
+	 */
+	public function output_qa_schema() {
+		if ( ! is_singular( Gabochie_Community_Post_Types::CPT ) ) {
+			return;
+		}
+		$post = get_queried_object();
+		if ( ! $post || 'publish' !== $post->post_status ) {
+			return;
+		}
+
+		$answers = get_comments(
+			array(
+				'post_id' => $post->ID,
+				'status'  => 'approve',
+				'number'  => 10,
+			)
+		);
+
+		$asker = get_post_meta( $post->ID, '_gabochie_asker_name', true );
+		$name  = $asker ? $asker : 'A community member';
+
+		$question = array(
+			'@type'         => 'Question',
+			'name'          => wp_strip_all_tags( $post->post_title ),
+			'text'          => wp_strip_all_tags( $post->post_content ),
+			'answerCount'   => count( $answers ),
+			'datePublished' => get_the_date( 'c', $post ),
+			'author'        => array(
+				'@type' => 'Person',
+				'name'  => $name,
+			),
+		);
+
+		if ( ! empty( $answers ) ) {
+			$accepted = array_shift( $answers );
+			$question['acceptedAnswer'] = array(
+				'@type'       => 'Answer',
+				'text'        => wp_strip_all_tags( get_comment_text( $accepted ) ),
+				'datePublished' => get_comment_date( 'c', $accepted ),
+				'author'      => array(
+					'@type' => 'Person',
+					'name'  => get_comment_author( $accepted ),
+				),
+			);
+			if ( ! empty( $answers ) ) {
+				$question['suggestedAnswer'] = array();
+				foreach ( $answers as $answer ) {
+					$question['suggestedAnswer'][] = array(
+						'@type'       => 'Answer',
+						'text'        => wp_strip_all_tags( get_comment_text( $answer ) ),
+						'datePublished' => get_comment_date( 'c', $answer ),
+						'author'      => array(
+							'@type' => 'Person',
+							'name'  => get_comment_author( $answer ),
+						),
+					);
+				}
+			}
+		}
+
+		$data = array(
+			'@context'   => 'https://schema.org',
+			'@type'      => 'QAPage',
+			'mainEntity' => $question,
+		);
+
+		echo '<script type="application/ld+json">' . wp_json_encode( $data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . '</script>' . "\n";
 	}
 
 	/* ---------------------------------------------------------------------
