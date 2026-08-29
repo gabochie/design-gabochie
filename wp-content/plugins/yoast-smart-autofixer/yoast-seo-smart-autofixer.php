@@ -115,7 +115,7 @@ class YoastSmartAutoFixer {
             'name' => 'OmniRoute (AI Gateway)',
             'icon' => 'dashicons-admin-links',
             'format' => 'openai',
-            'endpoint' => 'https://future-delaware-shape-charleston.trycloudflare.com/v1/chat/completions',
+            'endpoint' => 'https://ai.gabochiedesign.com/v1/chat/completions',
             'models' => array(
                 'auto/best-free'    => 'Best Free (auto-routes, free)',
                 'auto/best-fast'    => 'Best Fast (auto-routes)',
