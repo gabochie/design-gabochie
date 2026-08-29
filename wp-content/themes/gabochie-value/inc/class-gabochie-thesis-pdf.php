@@ -173,8 +173,8 @@ function gabochie_value_thesis_bold_html( $text ) {
  * @return string HTML.
  */
 function gabochie_value_thesis_content() {
-	$data   = gabochie_value_thesis_dataset();
-	$html   = '';
+	$data     = gabochie_value_thesis_dataset();
+	$html     = '';
 	$sections = $data['sections'];
 
 	foreach ( $sections as $section ) {
@@ -218,13 +218,13 @@ function gabochie_value_thesis_content() {
  */
 class Gabochie_Thesis_Pdf {
 
-	const PAGE_W = 595.28;
-	const PAGE_H = 841.89;
-	const MARGIN = 48;
-	const FOOTER_H = 34;
-	const FONT_REGULAR = 'F1';
-	const FONT_BOLD = 'F2';
-	const FONT_ITALIC = 'F3';
+	const PAGE_W           = 595.28;
+	const PAGE_H           = 841.89;
+	const MARGIN           = 48;
+	const FOOTER_H         = 34;
+	const FONT_REGULAR     = 'F1';
+	const FONT_BOLD        = 'F2';
+	const FONT_ITALIC      = 'F3';
 	const FONT_BOLD_ITALIC = 'F4';
 
 	/**
@@ -293,8 +293,8 @@ class Gabochie_Thesis_Pdf {
 	 * @param string $ops PDF operators.
 	 */
 	public function emit( $ops ) {
-		$index                        = count( $this->pages ) - 1;
-		$this->pages[ $index ]       .= $ops;
+		$index                  = count( $this->pages ) - 1;
+		$this->pages[ $index ] .= $ops;
 	}
 
 	/**
@@ -303,7 +303,7 @@ class Gabochie_Thesis_Pdf {
 	 * @param string $name Palette key or '#rrggbb'.
 	 */
 	public function set_color( $name ) {
-		$hex = isset( $this->palette[ $name ] ) ? $this->palette[ $name ] : $name;
+		$hex         = isset( $this->palette[ $name ] ) ? $this->palette[ $name ] : $name;
 		$this->color = $this->hex_to_rgb( $hex );
 	}
 
@@ -350,11 +350,11 @@ class Gabochie_Thesis_Pdf {
 	 * @param string $text Text.
 	 */
 	public function text( $x, $y, $text ) {
-		$pdf_y  = self::PAGE_H - $y;
-		$color  = $this->color;
-		$font   = $this->font;
-		$size   = number_format( $this->size, 2 );
-		$text   = $this->pdf_encode( $text );
+		$pdf_y = self::PAGE_H - $y;
+		$color = $this->color;
+		$font  = $this->font;
+		$size  = number_format( $this->size, 2 );
+		$text  = $this->pdf_encode( $text );
 		$this->emit( "BT /{$font} {$size} Tf {$color} rg {$x} {$pdf_y} Td ({$text}) Tj ET\n" );
 	}
 
@@ -399,6 +399,26 @@ class Gabochie_Thesis_Pdf {
 	}
 
 	/**
+	 * Draw a filled or stroked polygon path.
+	 *
+	 * @param array<int, array{0:float,1:float}> $points Array of [x, y] pairs (top-left origin).
+	 * @param string $color Palette key or hex.
+	 * @param float  $weight Stroke width (stroke mode only).
+	 * @param bool   $fill True to fill, false to stroke.
+	 */
+	public function polygon( $points, $color, $weight = 1.0, $fill = false ) {
+		$rgb = $this->hex_to_rgb( $this->has_color( $color ) ? $this->palette[ $color ] : $color );
+		$ops = 'q ' . ( $fill ? "{$rgb} rg" : "{$rgb} RG {$weight} w" ) . "\n";
+		foreach ( $points as $i => $pt ) {
+			$pdf_y = self::PAGE_H - (float) $pt[1];
+			$op    = ( 0 === $i ) ? 'm' : 'l';
+			$ops  .= number_format( (float) $pt[0], 2 ) . ' ' . number_format( $pdf_y, 2 ) . " {$op}\n";
+		}
+		$ops .= ( $fill ? "h f\n" : "h S\n" ) . "Q\n";
+		$this->emit( $ops );
+	}
+
+	/**
 	 * Estimate the on-page width of text in the active font/size.
 	 * Uses a 600-unit-per-em Helvetica approximation (0.6 × size per char).
 	 *
@@ -408,22 +428,57 @@ class Gabochie_Thesis_Pdf {
 	public function measure( $text ) {
 		$size = $this->size;
 		$w    = 0.0;
-		$len  = function_exists( 'mb_strlen' ) ? mb_strlen( $text ) : strlen( $text );
-		for ( $i = 0; $i < $len; $i++ ) {
-			$ch = function_exists( 'mb_substr' ) ? mb_substr( $text, $i, 1 ) : substr( $text, $i, 1 );
-			if ( $ch === ' ' ) {
-				$w += 0.27;
-			} elseif ( $ch === 'M' || $ch === 'W' ) {
-				$w += 0.85;
-			} elseif ( $ch === 'i' || $ch === 'l' || $ch === 'j' || $ch === '.' || $ch === ',' || $ch === ':' ) {
-				$w += 0.28;
-			} elseif ( $ch === 'I' || $ch === 't' || $ch === 'f' ) {
-				$w += 0.35;
+		$len  = strlen( $text );
+		for ( $i = 0; $i < $len; ) {
+			$b = ord( $text[ $i ] );
+			if ( $b < 0x80 ) {
+				$ch = $text[ $i ];
+				++$i;
 			} else {
-				$w += 0.58;
+				$nb = 0;
+				if ( ( $b & 0xE0 ) === 0xC0 ) {
+					$nb = 1;
+				} elseif ( ( $b & 0xF0 ) === 0xE0 ) {
+					$nb = 2;
+				} elseif ( ( $b & 0xF8 ) === 0xF0 ) {
+					$nb = 3;
+				}
+				if ( $nb > 0 && $i + $nb < $len ) {
+					$ch = substr( $text, $i, $nb + 1 );
+					$i += $nb + 1;
+				} else {
+					$ch = $text[ $i ];
+					++$i;
+				}
 			}
+			$w += $this->char_width( $ch );
 		}
 		return $w * $size;
+	}
+
+	/**
+	 * Approximate Helvetica width factor for a single character (codepoint).
+	 *
+	 * @param string $ch Single UTF-8 character.
+	 * @return float Width factor.
+	 */
+	private function char_width( $ch ) {
+		if ( ' ' === $ch ) {
+			return 0.27;
+		}
+		if ( 'M' === $ch || 'W' === $ch ) {
+			return 0.85;
+		}
+		if ( false !== strpos( 'iljI:.1,|-–—/\'', $ch ) ) {
+			return 0.28;
+		}
+		if ( false !== strpos( 'tf›•“‘”’()', $ch ) ) {
+			return 0.35;
+		}
+		if ( ord( $ch ) >= 0x80 ) {
+			return 0.5; // Other non-ASCII (cedi, arrows, etc.).
+		}
+		return 0.58;
 	}
 
 	/**
@@ -434,8 +489,8 @@ class Gabochie_Thesis_Pdf {
 	 * @return string[] Lines.
 	 */
 	public function wrap( $text, $max_width ) {
-		$text = trim( $text );
-		$text = (string) preg_replace( '/\s+/', ' ', $text );
+		$text  = trim( $text );
+		$text  = (string) preg_replace( '/\s+/', ' ', $text );
 		$words = explode( ' ', $text );
 		$lines = array();
 		$line  = '';
@@ -554,7 +609,7 @@ class Gabochie_Thesis_Pdf {
 		}
 		$start = -M_PI_2;
 		foreach ( $data as $item ) {
-			$sweep     = ( 2 * M_PI * ( (float) $item['share'] ) ) / $total;
+			$sweep = ( 2 * M_PI * ( (float) $item['share'] ) ) / $total;
 			$this->donut_segment( $cx, $cy, $r_out, $r_in, $start, $start + $sweep, $item['color'] );
 			$start += $sweep;
 		}
@@ -577,23 +632,23 @@ class Gabochie_Thesis_Pdf {
 		$pts   = array();
 
 		for ( $i = 0; $i <= $steps; $i++ ) {
-			$ang = $a0 + ( $a1 - $a0 ) * $i / $steps;
-			$x_t = $cx + cos( $ang ) * $r_out;
-			$y_t = $cy + sin( $ang ) * $r_out;
+			$ang   = $a0 + ( $a1 - $a0 ) * $i / $steps;
+			$x_t   = $cx + cos( $ang ) * $r_out;
+			$y_t   = $cy + sin( $ang ) * $r_out;
 			$pts[] = array( $x_t, $y_t );
 		}
 		for ( $i = $steps; $i >= 0; $i-- ) {
-			$ang = $a0 + ( $a1 - $a0 ) * $i / $steps;
-			$pt  = array( $cx + cos( $ang ) * $r_in, $cy + sin( $ang ) * $r_in );
+			$ang   = $a0 + ( $a1 - $a0 ) * $i / $steps;
+			$pt    = array( $cx + cos( $ang ) * $r_in, $cy + sin( $ang ) * $r_in );
 			$pts[] = $pt;
 		}
 
 		$rgb = $this->hex_to_rgb( $color );
 		$ops = "{$rgb} rg\n";
 		foreach ( $pts as $idx => $pt ) {
-			$op  = 0 === $idx ? 'm' : 'l';
+			$op    = 0 === $idx ? 'm' : 'l';
 			$pdf_y = self::PAGE_H - $pt[1];
-			$ops .= number_format( $pt[0], 2 ) . ' ' . number_format( $pdf_y, 2 ) . " {$op}\n";
+			$ops  .= number_format( $pt[0], 2 ) . ' ' . number_format( $pdf_y, 2 ) . " {$op}\n";
 		}
 		$ops .= "h f\n";
 		$this->emit( $ops );
@@ -611,9 +666,9 @@ class Gabochie_Thesis_Pdf {
 	 * @return float Below the bar (rows of labels).
 	 */
 	public function pipeline( $x, $y, $width, $height, $phases, $color ) {
-		$rgb  = $this->hex_to_rgb( $color );
-		$seg  = $width / count( $phases );
-		$ops  = '';
+		$rgb = $this->hex_to_rgb( $color );
+		$seg = $width / count( $phases );
+		$ops = '';
 		foreach ( $phases as $i => $phase ) {
 			$seg_x = $x + $i * $seg;
 			$pdf_y = self::PAGE_H - $y - $height;
@@ -649,16 +704,146 @@ class Gabochie_Thesis_Pdf {
 	/**
 	 * Encode text for the PDF content stream (WinAnsi) and escape it.
 	 *
+	 * Uses a deterministic pure-PHP UTF-8 → Windows-1252 encoder (no mbstring
+	 * dependency), so output is identical on every host. Characters with no
+	 * cp1252 equivalent are transliterated (₵ → "GHS", → → "->", …) rather than
+	 * left as raw UTF-8 bytes, which is what produced the mojibake.
+	 *
 	 * @param string $text UTF-8 text.
 	 * @return string Escaped WinAnsi bytes.
 	 */
 	public function pdf_encode( $text ) {
 		$text = $this->strip_bold( $text );
-		if ( function_exists( 'mb_convert_encoding' ) ) {
-			$text = (string) mb_convert_encoding( $text, 'Windows-1252', 'UTF-8' );
-		}
+		$text = $this->utf8_to_winansi( $text );
 		$text = str_replace( array( '\\', '(', ')' ), array( '\\\\', '\\(', '\\)' ), $text );
 		return $text;
+	}
+
+	/**
+	 * Map a Unicode code point to a Windows-1252 byte.
+	 *
+	 * @param int $cp Code point.
+	 * @return int Byte value, or -1 when not representable in cp1252.
+	 */
+	private function cp1252_byte( $cp ) {
+		if ( $cp < 0x80 ) {
+			return $cp;
+		}
+		if ( $cp >= 0xA0 && $cp <= 0xFF ) {
+			return $cp; // Latin-1 block is identical in cp1252.
+		}
+		$map = array(
+			0x20AC => 0x80,
+			0x201A => 0x82,
+			0x0192 => 0x83,
+			0x201E => 0x84,
+			0x2026 => 0x85,
+			0x2020 => 0x86,
+			0x2021 => 0x87,
+			0x02C6 => 0x88,
+			0x2030 => 0x89,
+			0x0160 => 0x8A,
+			0x2039 => 0x8B,
+			0x0152 => 0x8C,
+			0x017D => 0x8E,
+			0x2018 => 0x91,
+			0x2019 => 0x92,
+			0x201C => 0x93,
+			0x201D => 0x94,
+			0x2022 => 0x95,
+			0x2013 => 0x96,
+			0x2014 => 0x97,
+			0x02DC => 0x98,
+			0x2122 => 0x99,
+			0x0161 => 0x9A,
+			0x203A => 0x9B,
+			0x0153 => 0x9C,
+			0x017E => 0x9E,
+			0x0178 => 0x9F,
+		);
+		return isset( $map[ $cp ] ) ? $map[ $cp ] : -1;
+	}
+
+	/**
+	 * Deterministic pure-PHP UTF-8 → Windows-1252 encoder.
+	 *
+	 * @param string $text UTF-8 text.
+	 * @return string WinAnsi bytes.
+	 */
+	private function utf8_to_winansi( $text ) {
+		$translit = array(
+			0x20B5 => 'GHS ', // ₵ cedi sign.
+			0x20A6 => 'GHS ', // ₦ (cedi variants).
+			0x2192 => '->',   // →
+			0x2190 => '<-',
+			0x2191 => '^',
+			0x2193 => 'v',
+			0x2264 => '<=',
+			0x2265 => '>=',
+			0x2212 => '-',    // − minus sign.
+			0x2713 => 'ok',   // ✓
+			0x2717 => 'x',    // ✗
+		);
+
+		$out = '';
+		$len = strlen( $text );
+		$i   = 0;
+		while ( $i < $len ) {
+			$b0 = ord( $text[ $i ] );
+			if ( $b0 < 0x80 ) {
+				$out .= $text[ $i ];
+				++$i;
+				continue;
+			}
+
+			$cp = 0;
+			$nb = 0;
+			if ( ( $b0 & 0xE0 ) === 0xC0 ) {
+				$cp = $b0 & 0x1F;
+				$nb = 1;
+			} elseif ( ( $b0 & 0xF0 ) === 0xE0 ) {
+				$cp = $b0 & 0x0F;
+				$nb = 2;
+			} elseif ( ( $b0 & 0xF8 ) === 0xF0 ) {
+				$cp = $b0 & 0x07;
+				$nb = 3;
+			} else {
+				$out .= '?';
+				++$i;
+				continue;
+			}
+			if ( $i + $nb >= $len ) {
+				$out .= '?';
+				++$i;
+				continue;
+			}
+
+			$valid = true;
+			for ( $k = 1; $k <= $nb; $k++ ) {
+				$byte = ord( $text[ $i + $k ] );
+				if ( ( $byte & 0xC0 ) !== 0x80 ) {
+					$valid = false;
+					break;
+				}
+				$cp = ( $cp << 6 ) | ( $byte & 0x3F );
+			}
+			if ( ! $valid ) {
+				$out .= '?';
+				++$i;
+				continue;
+			}
+			$i += $nb + 1;
+
+			$byte = $this->cp1252_byte( $cp );
+			if ( $byte >= 0 ) {
+				$out .= chr( $byte );
+			} elseif ( isset( $translit[ $cp ] ) ) {
+				$out .= $translit[ $cp ];
+			} else {
+				$out .= '?';
+			}
+		}
+		return $out;
 	}
 
 	/**
@@ -667,22 +852,22 @@ class Gabochie_Thesis_Pdf {
 	 * @return string
 	 */
 	public function output() {
-		$num_pages = count( $this->pages );
-		$objects   = array();
+		$num_pages    = count( $this->pages );
+		$objects      = array();
 		$content_objs = array();
 
 		// Object numbering: 1 catalog, 2 pages, then page objects, then fonts, then content streams.
-		$catalog_id = 1;
-		$pages_id   = 2;
-		$page_start = 3;
-		$font_start = $page_start + $num_pages;
+		$catalog_id   = 1;
+		$pages_id     = 2;
+		$page_start   = 3;
+		$font_start   = $page_start + $num_pages;
 		$stream_start = $font_start + 4;
 
-		$kids = array();
-		$page_ids = array();
+		$kids       = array();
+		$page_ids   = array();
 		$stream_ids = array();
 		for ( $p = 0; $p < $num_pages; $p++ ) {
-			$page_ids[] = $page_start + $p;
+			$page_ids[]   = $page_start + $p;
 			$stream_ids[] = $stream_start + $p;
 		}
 		foreach ( $page_ids as $pid ) {
@@ -693,7 +878,7 @@ class Gabochie_Thesis_Pdf {
 		$objects[ $pages_id ]   = '<< /Type /Pages /Kids [' . implode( ' ', $kids ) . "] /Count {$num_pages} >>";
 
 		for ( $p = 0; $p < $num_pages; $p++ ) {
-			$fonts_ref = '<< /F1 ' . ( $font_start + 0 ) . ' 0 R /F2 ' . ( $font_start + 1 ) . ' 0 R /F3 ' . ( $font_start + 2 ) . ' 0 R /F4 ' . ( $font_start + 3 ) . ' 0 R >>';
+			$fonts_ref                  = '<< /F1 ' . ( $font_start + 0 ) . ' 0 R /F2 ' . ( $font_start + 1 ) . ' 0 R /F3 ' . ( $font_start + 2 ) . ' 0 R /F4 ' . ( $font_start + 3 ) . ' 0 R >>';
 			$objects[ $page_ids[ $p ] ] = "<< /Type /Page /Parent {$pages_id} 0 R /MediaBox [0 0 " . self::PAGE_W . ' ' . self::PAGE_H . "] /Resources << /Font {$fonts_ref} >> /Contents " . $stream_ids[ $p ] . ' 0 R >>';
 		}
 
@@ -703,23 +888,23 @@ class Gabochie_Thesis_Pdf {
 		$objects[ $font_start + 3 ] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-BoldOblique /Encoding /WinAnsiEncoding >>';
 
 		for ( $p = 0; $p < $num_pages; $p++ ) {
-			$content = $this->pages[ $p ];
-			$length  = strlen( $content );
+			$content                       = $this->pages[ $p ];
+			$length                        = strlen( $content );
 			$objects[ $stream_start + $p ] = "<< /Length {$length} >>\nstream\n{$content}\nendstream";
 		}
 
-		$pdf  = "%PDF-1.4\n";
+		$pdf     = "%PDF-1.4\n";
 		$offsets = array();
 		ksort( $objects );
 		foreach ( $objects as $id => $body ) {
 			$offsets[ $id ] = strlen( $pdf );
-			$pdf .= "{$id} 0 obj\n{$body}\nendobj\n";
+			$pdf           .= "{$id} 0 obj\n{$body}\nendobj\n";
 		}
 
-		$xref_start = strlen( $pdf );
+		$xref_start   = strlen( $pdf );
 		$object_count = count( $objects );
-		$pdf .= "xref\n0 " . ( $object_count + 1 ) . "\n";
-		$pdf .= "0000000000 65535 f \n";
+		$pdf         .= "xref\n0 " . ( $object_count + 1 ) . "\n";
+		$pdf         .= "0000000000 65535 f \n";
 		for ( $i = 1; $i <= $object_count; $i++ ) {
 			$pdf .= sprintf( "%010d 00000 n \n", isset( $offsets[ $i ] ) ? $offsets[ $i ] : 0 );
 		}
@@ -741,68 +926,141 @@ class Gabochie_Thesis_Pdf {
  * @return string PDF bytes.
  */
 function gabochie_value_thesis_pdf( $reader_number = 0 ) {
-	$data    = gabochie_value_thesis_dataset();
-	$pdf     = new Gabochie_Thesis_Pdf();
+	$data = gabochie_value_thesis_dataset();
+	$pdf  = new Gabochie_Thesis_Pdf();
 
 	/** @var array<string,mixed> $founding */
 	$founding = gabochie_value_thesis_founding_status();
 	$offer    = gabochie_value_thesis_founding_offer();
 
-	$page_w  = Gabochie_Thesis_Pdf::PAGE_W;
-	$page_h  = Gabochie_Thesis_Pdf::PAGE_H;
-	$m       = Gabochie_Thesis_Pdf::MARGIN;
-	$cw      = $page_w - 2 * $m;
+	$page_w = Gabochie_Thesis_Pdf::PAGE_W;
+	$page_h = Gabochie_Thesis_Pdf::PAGE_H;
+	$m      = Gabochie_Thesis_Pdf::MARGIN;
+	$cw     = $page_w - 2 * $m;
 
-	/* ---------- Page 0: Cover ---------- */
+	/* ---------- Page 0: Cover (branded) ---------- */
 	$pdf->new_page();
-	$y = 40;
 
-	// Brand header.
+	// — Full-bleed brand band: teal field with a gold underline strip.
+	$pdf->rect( 0, 0, $page_w, 140, 'teal' );
+	$pdf->rect( 0, 140, $page_w, 6, 'gold' );
+
+	// Hexagon logo mark (brand motif), gold outline.
+	$cx  = 84;
+	$cy  = 74;
+	$r   = 15;
+	$hex = array();
+	for ( $k = 0; $k < 6; $k++ ) {
+		$a     = deg2rad( 30 + 60 * $k );
+		$hex[] = array( $cx + $r * cos( $a ), $cy + $r * sin( $a ) );
+	}
+	$pdf->polygon( $hex, 'gold', 1.2, false );
+
 	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
-	$pdf->set_size( 13 );
-	$pdf->set_color( 'teal' );
-	$pdf->text( $m, $y, strtoupper( $data['brand'][0] ) );
+	$pdf->set_size( 15 );
+	$pdf->set_color( 'white' );
+	$pdf->text( 112, 60, strtoupper( $data['brand'][0] ) );
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
+	$pdf->set_size( 7 );
+	$pdf->set_color( 'cream' );
+	$pdf->text( 112, 80, strtoupper( $data['brand'][1] ) );
+
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
 	$pdf->set_size( 8 );
-	$pdf->set_color( 'mist' );
-	$pdf->text( $m, $y + 16, $data['brand'][1] );
-	$pdf->hline( $m, $y + 28, $page_w - $m, 0.8, 'line' );
+	$pdf->set_color( 'gold' );
+	$tag_w = $pdf->measure( 'THESIS · 2026' );
+	$pdf->text( $page_w - $m - $tag_w, 60, 'THESIS · 2026' );
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
+	$pdf->set_size( 6.4 );
+	$pdf->set_color( 'cream' );
+	$sub_w = $pdf->measure( 'FREE BRIEFING FOR PROSPECTIVE CLIENTS' );
+	$pdf->text( $page_w - $m - $sub_w, 80, 'FREE BRIEFING FOR PROSPECTIVE CLIENTS' );
 
-	// Hero.
-	$y += 54;
+	// — Title block with gold accent bar.
+	$y = 178;
+	$pdf->rect( $m, $y - 12, 46, 4, 'gold' );
 	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
-	$pdf->set_size( 27 );
+	$pdf->set_size( 30 );
 	$pdf->set_color( 'ink' );
 	$pdf->text( $m, $y, $data['title'] );
-	$y += 34;
+	$y += 48;
 	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_ITALIC );
-	$pdf->set_size( 13 );
+	$pdf->set_size( 13.5 );
 	$pdf->set_color( 'teal' );
 	$pdf->text( $m, $y, $data['subtitle'] );
-	$y += 24;
+	$y += 34;
 
-	// Three promise stat cards.
+	// — Founding badge (gold when personalised, teal otherwise).
+	$has_slot = $founding['remaining'] > 0;
+	if ( $reader_number > 0 ) {
+		$chip   = 'FOUNDING READER #' . $reader_number . ' OF ' . $founding['total'];
+		$chip_c = 'ink';
+		$chip_f = 'gold';
+	} elseif ( $has_slot ) {
+		$chip   = 'FOUNDING WAVE OPEN — ' . $founding['remaining'] . ' OF ' . $founding['total'] . ' LEFT';
+		$chip_c = 'white';
+		$chip_f = 'teal';
+	} else {
+		$chip   = 'FOUNDING WAVE FULL — ACCESS STAYS FREE';
+		$chip_c = 'white';
+		$chip_f = 'mist';
+	}
+	$chip_w = $pdf->measure( $chip ) + 24;
+	$pdf->rect( $m, $y - 2, $chip_w, 24, $chip_f );
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
+	$pdf->set_size( 9 );
+	$pdf->set_color( $chip_c );
+	$pdf->text( $m + 12, $y + 6, $chip );
+	$y += 32;
+
+	// Founding-offer urgency band.
+	$pdf->rect( $m, $y, $cw, 54, 'teal' );
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
+	$pdf->set_size( 11 );
+	$pdf->set_color( 'white' );
+	if ( $has_slot ) {
+		$pdf->text( $m + 16, $y + 13, $offer['headline'] );
+		if ( $reader_number > 0 ) {
+			$offer_text = $offer['line'] . ' ' . $offer['who'] . '#' . $reader_number . ' — move before the general wave and lock the founding rate.';
+		} else {
+			$offer_text = $offer['line'] . ' The founding wave is open right now.';
+		}
+		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
+		$pdf->set_size( 8.8 );
+		$pdf->set_color( 'cream' );
+		$pdf->paragraph( $m + 16, $y + 28, $offer_text, $cw - 32, 11.6 );
+	} else {
+		$pdf->text( $m + 16, $y + 13, 'The founding wave is full.' );
+		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
+		$pdf->set_size( 8.8 );
+		$pdf->set_color( 'cream' );
+		$pdf->text( $m + 16, $y + 30, 'Standard access is free — and stays free.' );
+	}
+	$y += 62;
+
+	// — Three promise stat cards (cream cards, gold top rule).
 	foreach ( $data['stats'] as $i => $stat ) {
 		$card_w = ( $cw - 2 * 10 ) / 3;
 		$card_x = $m + $i * ( $card_w + 10 );
-		$pdf->rect( $card_x, $y, $card_w, 86, 'white' );
+		$pdf->rect( $card_x, $y, $card_w, 96, 'cream' );
 		$pdf->rect( $card_x, $y, $card_w, 4, 'gold' );
 		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
-		$pdf->set_size( 22 );
+		$pdf->set_size( 23 );
 		$pdf->set_color( 'teal' );
 		$pdf->text( $card_x + 12, $y + 18, $stat['value'] );
 		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
 		$pdf->set_size( 7.4 );
 		$pdf->set_color( 'mist' );
-		$pdf->paragraph( $card_x + 12, $y + 42, $stat['label'], $card_w - 24, 9.2 );
+		$pdf->paragraph( $card_x + 12, $y + 46, $stat['label'], $card_w - 24, 9.4 );
 	}
-	$y += 100;
+	$y += 110;
 
-	// "What's inside" list.
+	// — "What's inside" list.
 	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
 	$pdf->set_size( 12 );
 	$pdf->set_color( 'ink' );
 	$pdf->text( $m, $y, 'What is inside this briefing' );
-	$y += 14;
+	$y += 15;
 	foreach ( $data['learn'] as $item ) {
 		$pdf->set_color( 'gold' );
 		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
@@ -810,42 +1068,17 @@ function gabochie_value_thesis_pdf( $reader_number = 0 ) {
 		$pdf->set_color( 'ink' );
 		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
 		$pdf->text( $m + 16, $y, $item );
-		$y += 16;
+		$y += 15;
 	}
-	$y += 8;
+	$y += 12;
 
-	// Report meta.
+	// Cover footer.
 	$pdf->hline( $m, $y, $page_w - $m, 0.8, 'line' );
 	$y += 12;
 	$pdf->set_size( 8.4 );
 	$pdf->set_color( 'mist' );
 	$pdf->text( $m, $y, 'Gabochie Design Thesis · 2026 · Free report for prospective clients' );
 	$pdf->text( $m, $y + 14, 'Prepared by ' . $data['brand'][0] . ' — ' . home_url( '/' ) );
-	$y += 34;
-
-	// Founding-offer urgency band.
-	$pdf->rect( $m, $y, $cw, 52, 'teal' );
-	if ( $founding['remaining'] > 0 ) {
-		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
-		$pdf->set_size( 11 );
-		$pdf->set_color( 'white' );
-		$pdf->text( $m + 16, $y + 14, $offer['headline'] );
-		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
-		$pdf->set_size( 8.8 );
-		$pdf->set_color( 'cream' );
-		$offer_text = $offer['line'] . ' ';
-		$offer_text .= ( $reader_number > 0 ) ? $offer['who'] . '#' . $reader_number . '.' : 'The founding wave is open right now.';
-		$pdf->paragraph( $m + 16, $y + 30, $offer_text, $cw - 32, 12 );
-	} else {
-		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
-		$pdf->set_size( 11 );
-		$pdf->set_color( 'white' );
-		$pdf->text( $m + 16, $y + 14, 'Founding wave filled — read the full thesis now.' );
-		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
-		$pdf->set_size( 8.8 );
-		$pdf->set_color( 'cream' );
-		$pdf->text( $m + 16, $y + 30, 'Standard access is always free.' );
-	}
 
 	/* ---------- Page 1: Evidence + visualisations ---------- */
 	$pdf->new_page();
@@ -866,7 +1099,7 @@ function gabochie_value_thesis_pdf( $reader_number = 0 ) {
 	$pdf->set_color( 'teal' );
 	$pdf->text( $m, $y, 'Where projects stall' );
 	$y += 16;
-	$y = $pdf->gauge( $m, $y, $left_w, 12, $data['stall']['percent'], 'teal', '', $data['stall']['percent'] . '%' );
+	$y  = $pdf->gauge( $m, $y, $left_w, 12, $data['stall']['percent'], 'teal', '', $data['stall']['percent'] . '%' );
 	$y += 6;
 	$pdf->set_size( 7.6 );
 	$pdf->set_color( 'mist' );
@@ -942,7 +1175,7 @@ function gabochie_value_thesis_pdf( $reader_number = 0 ) {
 		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
 		$pdf->set_size( 15 );
 		$pdf->set_color( 'teal' );
-		$y = $pdf->paragraph( $m, $y, $pdf->strip_bold( $section['heading'] ), $cw, 19 );
+		$y  = $pdf->paragraph( $m, $y, $pdf->strip_bold( $section['heading'] ), $cw, 19 );
 		$y += 6;
 
 		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
@@ -951,14 +1184,14 @@ function gabochie_value_thesis_pdf( $reader_number = 0 ) {
 
 		if ( ! empty( $section['body'] ) ) {
 			foreach ( $section['body'] as $paragraph ) {
-				$y = gabochie_value_thesis_safe_paragraph( $pdf, $m, $y, $paragraph, $cw, 13.6, $page_h );
+				$y  = gabochie_value_thesis_safe_paragraph( $pdf, $m, $y, $paragraph, $cw, 13.6, $page_h );
 				$y += 4;
 			}
 		}
 
 		if ( ! empty( $section['list'] ) ) {
 			foreach ( $section['list'] as $item ) {
-				$y = gabochie_value_thesis_safe_list_item( $pdf, $m, $y, $item, $cw, $page_h );
+				$y  = gabochie_value_thesis_safe_list_item( $pdf, $m, $y, $item, $cw, $page_h );
 				$y += 2;
 			}
 		}
@@ -969,7 +1202,7 @@ function gabochie_value_thesis_pdf( $reader_number = 0 ) {
 
 		if ( ! empty( $section['after'] ) ) {
 			foreach ( $section['after'] as $paragraph ) {
-				$y = gabochie_value_thesis_safe_paragraph( $pdf, $m, $y, $paragraph, $cw, 13.6, $page_h );
+				$y  = gabochie_value_thesis_safe_paragraph( $pdf, $m, $y, $paragraph, $cw, 13.6, $page_h );
 				$y += 4;
 			}
 		}
@@ -1045,7 +1278,7 @@ function gabochie_value_thesis_pdf( $reader_number = 0 ) {
 		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
 		$pdf->set_size( 8.8 );
 		$pdf->set_color( 'cream' );
-		$final_line = ( $reader_number > 0 ) ? $offer['who'] . '#' . $reader_number . ' — ' : '';
+		$final_line  = ( $reader_number > 0 ) ? $offer['who'] . '#' . $reader_number . ' — ' : '';
 		$final_line .= $founding['remaining'] . ' of ' . $founding['total'] . ' founding places remain.';
 		$pdf->paragraph( $m + 16, $y + 30, $final_line, $cw - 32, 12 );
 	} else {
