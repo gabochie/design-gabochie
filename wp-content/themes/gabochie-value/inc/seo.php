@@ -249,3 +249,26 @@ function gabochie_value_toc_content( $content ) {
 	return $nav . "\n" . $content;
 }
 add_filter( 'the_content', 'gabochie_value_toc_content', 20 );
+
+/* ============================================
+   AdSense: restrict to blog posts + community pages only
+   ============================================ */
+
+/**
+ * Remove Site Kit's AdSense script on pages where ads shouldn't appear.
+ * Ads are allowed only on: single blog posts, /community/ page, single community questions.
+ */
+function gabochie_value_restrict_adsense() {
+	$ads_allowed = is_singular( 'post' ) || is_page( 'community' ) || is_singular( 'gabochie_question' );
+
+	if ( ! $ads_allowed ) {
+		ob_start(
+			function ( $buffer ) {
+				$buffer = preg_replace( '/<script[^>]*pagead2\.googlesyndication\.com[^>]*><\/script>/i', '', $buffer );
+				$buffer = preg_replace( '/<meta[^>]*google-adsense-platform[^>]*>/i', '', $buffer );
+				return $buffer;
+			}
+		);
+	}
+}
+add_action( 'template_redirect', 'gabochie_value_restrict_adsense', 1 );
