@@ -111,6 +111,23 @@ class YoastSmartAutoFixer {
             'key_placeholder' => 'AIza...',
             'key_pattern' => '/^AIza/',
         ),
+        'omniroute' => array(
+            'name' => 'OmniRoute (AI Gateway)',
+            'icon' => 'dashicons-admin-links',
+            'format' => 'openai',
+            'endpoint' => 'https://future-delaware-shape-charleston.trycloudflare.com/v1/chat/completions',
+            'models' => array(
+                'auto/best-free'    => 'Best Free (auto-routes, free)',
+                'auto/best-fast'    => 'Best Fast (auto-routes)',
+                'auto/cheap'        => 'Cheap (auto-routes)',
+                'auto/chat'         => 'Chat (auto-routes)',
+                'auto/coding'       => 'Coding (auto-routes)',
+                'auto/smart'        => 'Smart (auto-routes)',
+                'free-stack'        => 'Free Stack (free)',
+            ),
+            'key_placeholder' => 'sk-...',
+            'key_pattern' => '/^sk-/',
+        ),
     );
 
     public static function get_instance() {
