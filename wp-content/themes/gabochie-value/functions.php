@@ -3,12 +3,12 @@
  * Gabochie Value Theme Functions
  *
  * @package Gabochie_Value
- * @version 1.4.2
+ * @version 1.5.0
  */
 
 if (!defined('ABSPATH')) exit;
 
-define('GABOCHIE_VALUE_VERSION', '1.4.2');
+define('GABOCHIE_VALUE_VERSION', '1.5.0');
 define('GABOCHIE_VALUE_DIR', get_template_directory());
 define('GABOCHIE_VALUE_URI', get_template_directory_uri());
 
@@ -32,6 +32,7 @@ require_once GABOCHIE_VALUE_DIR . '/inc/client-portal-chat.php';
    THESIS LEAD MAGNET (email gate + delivery)
    ============================================ */
 require_once GABOCHIE_VALUE_DIR . '/inc/client-portal-thesis.php';
+require_once GABOCHIE_VALUE_DIR . '/inc/class-gabochie-thesis-pdf.php';
 
 /* ============================================
    DEVELOPMENT READINESS SCORE (Phase B)
