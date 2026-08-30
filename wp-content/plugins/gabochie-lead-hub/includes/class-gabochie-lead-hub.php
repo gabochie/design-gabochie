@@ -117,26 +117,23 @@ class Gabochie_Lead_Hub {
 			return;
 		}
 
-		$created = 0;
-		try {
-			foreach ( $this->lists() as $key => $label ) {
-				$service = \FluentCrmApi( 'lists' );
-				if ( is_object( $service ) && method_exists( $service, 'createOrUpdate' ) ) {
-					$service->createOrUpdate(
-						array(
-							'title' => $label,
-							'slug'  => 'leadhub-' . $key,
-						)
-					);
-					$created++;
-				}
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_error( 'seed_lists: ' . $e->getMessage() );
+		$rows = array();
+		foreach ( $this->lists() as $key => $label ) {
+			$rows[] = array(
+				'title'       => $label,
+				'slug'        => 'leadhub-' . $key,
+				'description' => 'Leads captured at ' . $label,
+			);
 		}
 
-		if ( $created >= 1 ) {
+		try {
+			if ( empty( $rows ) ) {
+				return;
+			}
+			\FluentCrmApi( 'lists' )->importBulk( $rows );
 			update_option( self::OPTION_SEEDED, GABOCHIE_LEAD_HUB_VERSION, false );
+		} catch ( \Throwable $e ) {
+			$this->log_error( 'seed_lists: ' . $e->getMessage() );
 		}
 	}
 
@@ -209,7 +206,7 @@ class Gabochie_Lead_Hub {
 
 		$lists = $this->lists();
 		if ( isset( $lists[ $list_key ] ) ) {
-			$payload['lists'] = array( $lists[ $list_key ] );
+			$payload['lists'] = array( 'leadhub-' . $list_key );
 			$found            = true;
 		}
 
