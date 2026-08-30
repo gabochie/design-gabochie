@@ -30,11 +30,11 @@ class Gabochie_CC_Funnel {
 	 */
 	public static function targets() {
 		return array(
-			'leads_per_month' => 900,
-			'paid_per_month'  => 18,
-			'mrr'             => 83333.0, // ₵1M ÷ 12.
+			'leads_per_month'       => 900,
+			'paid_per_month'        => 18,
+			'mrr'                   => 83333.0, // ₵1M ÷ 12.
 			'high_ticket_per_month' => 2,
-			'lead_to_paid'    => 0.02,    // 2 % baseline conversion.
+			'lead_to_paid'          => 0.02,    // 2 % baseline conversion.
 		);
 	}
 
@@ -72,27 +72,27 @@ class Gabochie_CC_Funnel {
 	public static function metrics( $fresh = false ) {
 		global $wpdb;
 
-		$snap   = get_option( self::OPT_KPI, array() );
-		$stale  = empty( $snap['time'] ) || ( time() - (int) self::val( $snap, 'time', 0 ) ) > self::SNAPSHOT_TTL;
+		$snap  = get_option( self::OPT_KPI, array() );
+		$stale = empty( $snap['time'] ) || ( time() - (int) self::val( $snap, 'time', 0 ) ) > self::SNAPSHOT_TTL;
 		if ( ! $fresh && ! $stale && is_array( $snap ) && ! empty( $snap['leads_total'] ) ) {
 			return $snap;
 		}
 
-		$p    = $wpdb->prefix;
-		$kpi  = array(
-			'time'            => time(),
-			'leads_total'     => 0,
-			'leads_30d'       => 0,
-			'qualified'       => 0,
-			'engaged_30d'     => 0,
-			'members_free'    => 0,
-			'members_paid'    => 0,
-			'mrr'             => 0.0,
-			'revenue_total'   => 0.0,
-			'paid_30d'        => 0,
-			'orders_30d'      => 0,
-			'retained_60d'    => 0,
-			'liquid_mrr_day'  => 0.0,
+		$p   = $wpdb->prefix;
+		$kpi = array(
+			'time'           => time(),
+			'leads_total'    => 0,
+			'leads_30d'      => 0,
+			'qualified'      => 0,
+			'engaged_30d'    => 0,
+			'members_free'   => 0,
+			'members_paid'   => 0,
+			'mrr'            => 0.0,
+			'revenue_total'  => 0.0,
+			'paid_30d'       => 0,
+			'orders_30d'     => 0,
+			'retained_60d'   => 0,
+			'liquid_mrr_day' => 0.0,
 		);
 
 		$list_table = $p . 'fc_lists';
@@ -129,8 +129,8 @@ class Gabochie_CC_Funnel {
 			}
 
 			if ( is_array( $lead_ids ) && count( $lead_ids ) ) {
-				$kpi['leads_total']          = count( $lead_ids );
-				$ids_30d = $wpdb->get_col(
+				$kpi['leads_total'] = count( $lead_ids );
+				$ids_30d            = $wpdb->get_col(
 					$wpdb->prepare(
 						'SELECT s.id FROM %1$s s INNER JOIN %2$s piv ON piv.subscriber_id = s.id INNER JOIN %3$s l ON l.id = piv.object_id WHERE piv.object_type LIKE %4$s AND l.slug LIKE %5$s AND s.status = %6$s AND s.created_at >= %7$s',
 						$sub,
@@ -142,7 +142,7 @@ class Gabochie_CC_Funnel {
 						gmdate( 'Y-m-d H:i:s', strtotime( '-30 days' ) )
 					)
 				);
-				$kpi['leads_30d']  = is_array( $ids_30d ) ? count( $ids_30d ) : 0;
+				$kpi['leads_30d']   = is_array( $ids_30d ) ? count( $ids_30d ) : 0;
 
 				$kpi['engaged_30d'] = $wpdb->get_var(
 					$wpdb->prepare(
@@ -154,7 +154,7 @@ class Gabochie_CC_Funnel {
 					)
 				);
 
-				$qualified = $wpdb->get_col(
+				$qualified        = $wpdb->get_col(
 					$wpdb->prepare(
 						'SELECT DISTINCT s.id FROM %1$s s INNER JOIN %2$s piv ON piv.subscriber_id = s.id INNER JOIN %3$s t ON t.id = piv.object_id WHERE piv.object_type LIKE %4$s AND (s.phone <> %5$s OR t.title LIKE %6$s)',
 						$sub,
@@ -187,16 +187,16 @@ class Gabochie_CC_Funnel {
 				foreach ( $rows as $row ) {
 					$level = (int) $row->membership_id;
 					if ( in_array( $level, $paid_levels, true ) ) {
-						$kpi['members_paid']++;
+						++$kpi['members_paid'];
 						$kpi['mrr'] += (float) $row->billing_amount;
 						if ( strtotime( $row->startdate ) > strtotime( $start_30d ) ) {
-							$kpi['paid_30d']++;
+							++$kpi['paid_30d'];
 						}
 						if ( strtotime( $row->startdate ) < strtotime( $start_60d ) ) {
-							$kpi['retained_60d']++;
+							++$kpi['retained_60d'];
 						}
 					} else {
-						$kpi['members_free']++;
+						++$kpi['members_free'];
 					}
 				}
 			}
@@ -205,7 +205,7 @@ class Gabochie_CC_Funnel {
 		// Revenue to date = PMPro completed orders (success) sum.
 		$mo = $p . 'pmpro_membership_orders';
 		if ( self::table_exists( $mo ) ) {
-			$total = $wpdb->get_var(
+			$total                = $wpdb->get_var(
 				$wpdb->prepare(
 					'SELECT SUM(total) FROM %1$s WHERE status = %2$s AND total > 0',
 					$mo,
@@ -214,7 +214,7 @@ class Gabochie_CC_Funnel {
 			);
 			$kpi['revenue_total'] = (float) $total;
 
-			$recent = $wpdb->get_var(
+			$recent            = $wpdb->get_var(
 				$wpdb->prepare(
 					'SELECT COUNT(*) FROM %1$s WHERE status = %2$s AND total > 0 AND timestamp >= %3$s',
 					$mo,
@@ -228,7 +228,7 @@ class Gabochie_CC_Funnel {
 		// WooCommerce completed orders (HPOS first, legacy fallback).
 		$woo = $p . 'wc_orders';
 		if ( self::table_exists( $woo ) ) {
-			$woo_total = $wpdb->get_var(
+			$woo_total             = $wpdb->get_var(
 				$wpdb->prepare(
 					'SELECT COALESCE(SUM(total_amount),0) FROM %1$s WHERE status IN (%2$s,%3$s)',
 					$woo,
@@ -266,51 +266,51 @@ class Gabochie_CC_Funnel {
 	 * @return array
 	 */
 	public static function funnel_rows( $kpi ) {
-		$t = self::targets();
+		$t            = self::targets();
 		$leads_annual = (int) $kpi['leads_30d'] * 12;
 		$paid_annual  = (int) $kpi['paid_30d'] * 12;
 		return array(
 			array(
-				'stage'  => 'Captured',
-				'value'  => (int) $kpi['leads_total'],
-				'note'   => (int) $kpi['leads_30d'] . ' in last 30d · target ~' . $t['leads_per_month'] . '/mo',
-				'pct'    => '',
+				'stage' => 'Captured',
+				'value' => (int) $kpi['leads_total'],
+				'note'  => (int) $kpi['leads_30d'] . ' in last 30d · target ~' . $t['leads_per_month'] . '/mo',
+				'pct'   => '',
 			),
 			array(
-				'stage'  => 'Qualified',
-				'value'  => (int) $kpi['qualified'],
-				'note'   => 'phone or voice source captured',
-				'pct'    => self::rate( (int) $kpi['leads_total'], (int) $kpi['qualified'] ) . '% of captured',
+				'stage' => 'Qualified',
+				'value' => (int) $kpi['qualified'],
+				'note'  => 'phone or voice source captured',
+				'pct'   => self::rate( (int) $kpi['leads_total'], (int) $kpi['qualified'] ) . '% of captured',
 			),
 			array(
-				'stage'  => 'Engaged',
-				'value'  => (int) $kpi['engaged_30d'],
-				'note'   => 'opened or clicked an email',
-				'pct'    => self::rate( (int) $kpi['leads_30d'], (int) $kpi['engaged_30d'] ) . '% of 30d',
+				'stage' => 'Engaged',
+				'value' => (int) $kpi['engaged_30d'],
+				'note'  => 'opened or clicked an email',
+				'pct'   => self::rate( (int) $kpi['leads_30d'], (int) $kpi['engaged_30d'] ) . '% of 30d',
 			),
 			array(
-				'stage'  => 'Enrolled (Free)',
-				'value'  => (int) $kpi['members_free'],
-				'note'   => 'Free Lead memberships',
-				'pct'    => '',
+				'stage' => 'Enrolled (Free)',
+				'value' => (int) $kpi['members_free'],
+				'note'  => 'Free Lead memberships',
+				'pct'   => '',
 			),
 			array(
-				'stage'  => 'Paid (Active+Premium)',
-				'value'  => (int) $kpi['members_paid'],
-				'note'   => (int) $kpi['paid_30d'] . ' new in last 30d · target ~' . $t['paid_per_month'] . '/mo',
-				'pct'    => self::rate( (int) $kpi['leads_30d'], (int) $kpi['paid_30d'] ) . '% of 30d leads',
+				'stage' => 'Paid (Active+Premium)',
+				'value' => (int) $kpi['members_paid'],
+				'note'  => (int) $kpi['paid_30d'] . ' new in last 30d · target ~' . $t['paid_per_month'] . '/mo',
+				'pct'   => self::rate( (int) $kpi['leads_30d'], (int) $kpi['paid_30d'] ) . '% of 30d leads',
 			),
 			array(
-				'stage'  => 'Retained 60d+',
-				'value'  => (int) $kpi['retained_60d'],
-				'note'   => 'paid memberships older than 60 days',
-				'pct'    => self::rate( (int) $kpi['members_paid'], (int) $kpi['retained_60d'] ) . '% of paid',
+				'stage' => 'Retained 60d+',
+				'value' => (int) $kpi['retained_60d'],
+				'note'  => 'paid memberships older than 60 days',
+				'pct'   => self::rate( (int) $kpi['members_paid'], (int) $kpi['retained_60d'] ) . '% of paid',
 			),
 			array(
-				'stage'  => 'Won (revenue)',
-				'value'  => '₵' . number_format( (float) $kpi['revenue_total'] ),
-				'note'   => 'MRR ₵' . number_format( (float) $kpi['mrr'] ) . ' · ' . (int) $kpi['orders_30d'] . ' paid orders/30d',
-				'pct'    => '',
+				'stage' => 'Won (revenue)',
+				'value' => '₵' . number_format( (float) $kpi['revenue_total'] ),
+				'note'  => 'MRR ₵' . number_format( (float) $kpi['mrr'] ) . ' · ' . (int) $kpi['orders_30d'] . ' paid orders/30d',
+				'pct'   => '',
 			),
 		);
 	}
@@ -322,9 +322,9 @@ class Gabochie_CC_Funnel {
 	 * @return string
 	 */
 	public static function kpi_cards_html( $kpi ) {
-		$t = self::targets();
+		$t       = self::targets();
 		$gap_mrr = (float) $t['mrr'] - (float) $kpi['mrr'];
-		$cards = array(
+		$cards   = array(
 			array(
 				't' => 'MRR',
 				'v' => '₵' . number_format( (float) $kpi['mrr'] ),
@@ -350,7 +350,7 @@ class Gabochie_CC_Funnel {
 				'c' => '#2271b1',
 			),
 		);
-		$out = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;">';
+		$out     = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;">';
 		foreach ( $cards as $c ) {
 			$out .= '<div style="border:1px solid #c3c4c7;border-top:4px solid ' . $c['c'] . ';background:#fff;border-radius:6px;padding:14px;">'
 				. '<div style="color:#8c8f94;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">' . esc_html( $c['t'] ) . '</div>'
@@ -438,9 +438,12 @@ class Gabochie_CC_Funnel {
 			);
 		}
 
-		usort( $items, static function ( $a, $b ) {
-			return (int) $b['ice'] <=> (int) $a['ice'];
-		} );
+		usort(
+			$items,
+			static function ( $a, $b ) {
+				return (int) $b['ice'] <=> (int) $a['ice'];
+			}
+		);
 
 		return $items;
 	}
@@ -452,14 +455,18 @@ class Gabochie_CC_Funnel {
 	 * @return string
 	 */
 	public static function actions_html( $kpi ) {
-		$sev  = array( 'error' => '#d63638', 'warning' => '#dba617', 'info' => '#2271b1' );
+		$sev  = array(
+			'error'   => '#d63638',
+			'warning' => '#dba617',
+			'info'    => '#2271b1',
+		);
 		$out  = '<div style="max-width:860px;">';
 		$list = self::actions( $kpi );
 		if ( empty( $list ) ) {
 			$out .= '<div class="notice notice-success"><p><strong>On target.</strong> No commanding actions right now.</p></div>';
 		}
 		foreach ( $list as $a ) {
-			$c = isset( $sev[ $a['severity'] ] ) ? $sev[ $a['severity'] ] : $sev['info'];
+			$c    = isset( $sev[ $a['severity'] ] ) ? $sev[ $a['severity'] ] : $sev['info'];
 			$out .= '<div style="display:flex;gap:10px;padding:10px 12px;border:1px solid #c3c4c7;border-left:4px solid ' . $c . ';background:#fff;margin-bottom:8px;border-radius:4px;align-items:flex-start;">'
 				. '<strong style="color:' . $c . ';white-space:nowrap;min-width:64px;">ICE ' . (int) $a['ice'] . '</strong>'
 				. '<div><strong>' . esc_html( $a['title'] ) . '</strong><div style="color:#50575e;margin-top:2px;">' . esc_html( $a['detail'] ) . '</div></div></div>';
