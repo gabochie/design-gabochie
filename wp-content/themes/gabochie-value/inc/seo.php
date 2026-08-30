@@ -255,20 +255,52 @@ add_filter( 'the_content', 'gabochie_value_toc_content', 20 );
    ============================================ */
 
 /**
- * Remove Site Kit's AdSense script on pages where ads shouldn't appear.
- * Ads are allowed only on single blog posts.
+ * Restrict AdSense to single blog posts only. On every other context (home,
+ * pages, archives, search, 404) the AdSense loader, auto-ads push scripts and
+ * platform meta tags are stripped from the rendered output — nothing can fire.
  */
 function gabochie_value_restrict_adsense() {
 	$ads_allowed = is_singular( 'post' );
 
 	if ( ! $ads_allowed ) {
-		ob_start(
-			function ( $buffer ) {
-				$buffer = preg_replace( '/<script[^>]*pagead2\.googlesyndication\.com[^>]*><\/script>/i', '', $buffer );
-				$buffer = preg_replace( '/<meta[^>]*google-adsense-platform[^>]*>/i', '', $buffer );
-				return $buffer;
-			}
-		);
+		ob_start( 'gabochie_value_strip_adsense' );
 	}
+}
+
+/**
+ * Remove every AdSense script/meta tag from an output buffer.
+ *
+ * Covers Site Kit / AdSense output paths: the pagead2 loader (external src),
+ * inline auto-ads and `adsbygoogle` push scripts, and the
+ * google-adsense-platform / google-adsense-account meta tags.
+ *
+ * @param string $buffer Rendered HTML.
+ * @return string Cleaned HTML.
+ */
+function gabochie_value_strip_adsense( $buffer ) {
+	// Any <script> whose attributes OR body mention AdSense markers
+	// (pagead2.googlesyndication.com, googlesyndication.com, adsbygoogle,
+	// googleadservices.com). The lookahead keeps matches inside one tag.
+	$buffer = (string) preg_replace(
+		'#<\s*script\b(?:(?!<\s*/\s*script\s*>).)*(?:adsbygoogle|googlesyndication\.com|pagead2\b|googleadservices\.com)(?:(?!<\s*/\s*script\s*>).)*<\s*/\s*script\s*>#is',
+		'',
+		$buffer
+	);
+
+	// AdSense platform / account verification metas.
+	$buffer = (string) preg_replace(
+		'#<\s*meta\b[^>]*(?:google-adsense-platform|google-adsense-account)[^>]*>#i',
+		'',
+		$buffer
+	);
+
+	// DNS hints that warm the AdSense connection (dns-prefetch/preconnect).
+	$buffer = (string) preg_replace(
+		'#<\s*link\b[^>]*\bhref\s*=\s*["\'][^"\']*(?:pagead2\.googlesyndication\.com|googlesyndication\.com|googleadservices\.com)[^"\']*["\'][^>]*>#i',
+		'',
+		$buffer
+	);
+
+	return $buffer;
 }
 add_action( 'template_redirect', 'gabochie_value_restrict_adsense', 1 );
