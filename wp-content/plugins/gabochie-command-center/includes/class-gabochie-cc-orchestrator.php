@@ -81,7 +81,7 @@ class Gabochie_CC_Orchestrator {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				'SELECT * FROM %1$s ORDER BY id DESC LIMIT %2$d',
+				'SELECT * FROM %1$i ORDER BY id DESC LIMIT %2$d',
 				$table,
 				( $limit > 0 && $limit <= 200 ) ? $limit : 20
 			),
@@ -308,7 +308,7 @@ class Gabochie_CC_Orchestrator {
 		self::maybe_create_table();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		return (int) $wpdb->get_var(
-			$wpdb->prepare( 'SELECT COUNT(*) FROM %1$s WHERE handled = 0', self::table_name() )
+			$wpdb->prepare( 'SELECT COUNT(*) FROM %1$i WHERE handled = 0', self::table_name() )
 		);
 	}
 

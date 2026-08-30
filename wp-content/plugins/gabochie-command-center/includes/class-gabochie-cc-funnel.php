@@ -103,7 +103,7 @@ class Gabochie_CC_Funnel {
 
 			$lead_ids = $wpdb->get_col(
 				$wpdb->prepare(
-					'SELECT DISTINCT s.id FROM %1$s s INNER JOIN %2$s piv ON piv.subscriber_id = s.id INNER JOIN %3$s l ON l.id = piv.object_id WHERE piv.object_type = %4$s AND l.slug LIKE %5$s AND s.status = %6$s',
+					'SELECT DISTINCT s.id FROM %1$i s INNER JOIN %2$i piv ON piv.subscriber_id = s.id INNER JOIN %3$i l ON l.id = piv.object_id WHERE piv.object_type = %4$s AND l.slug LIKE %5$s AND s.status = %6$s',
 					$sub,
 					$piv,
 					$list_table,
@@ -117,7 +117,7 @@ class Gabochie_CC_Funnel {
 			if ( empty( $lead_ids ) ) {
 				$lead_ids = $wpdb->get_col(
 					$wpdb->prepare(
-						'SELECT DISTINCT s.id FROM %1$s s INNER JOIN %2$s piv ON piv.subscriber_id = s.id INNER JOIN %3$s l ON l.id = piv.object_id WHERE piv.object_type LIKE %4$s AND l.slug LIKE %5$s AND s.status = %6$s',
+						'SELECT DISTINCT s.id FROM %1$i s INNER JOIN %2$i piv ON piv.subscriber_id = s.id INNER JOIN %3$i l ON l.id = piv.object_id WHERE piv.object_type LIKE %4$s AND l.slug LIKE %5$s AND s.status = %6$s',
 						$sub,
 						$piv,
 						$list_table,
@@ -132,7 +132,7 @@ class Gabochie_CC_Funnel {
 				$kpi['leads_total'] = count( $lead_ids );
 				$ids_30d            = $wpdb->get_col(
 					$wpdb->prepare(
-						'SELECT s.id FROM %1$s s INNER JOIN %2$s piv ON piv.subscriber_id = s.id INNER JOIN %3$s l ON l.id = piv.object_id WHERE piv.object_type LIKE %4$s AND l.slug LIKE %5$s AND s.status = %6$s AND s.created_at >= %7$s',
+						'SELECT s.id FROM %1$i s INNER JOIN %2$i piv ON piv.subscriber_id = s.id INNER JOIN %3$i l ON l.id = piv.object_id WHERE piv.object_type LIKE %4$s AND l.slug LIKE %5$s AND s.status = %6$s AND s.created_at >= %7$s',
 						$sub,
 						$piv,
 						$list_table,
@@ -146,7 +146,7 @@ class Gabochie_CC_Funnel {
 
 				$kpi['engaged_30d'] = $wpdb->get_var(
 					$wpdb->prepare(
-						'SELECT COUNT(DISTINCT s.id) FROM %1$s s INNER JOIN %2$s sn ON sn.subscriber_id = s.id INNER JOIN %3$s piv ON piv.subscriber_id = s.id INNER JOIN %4$s l ON l.id = piv.object_id WHERE sn.key IN (%5$s,%6$s) AND piv.object_type LIKE %7$s AND l.slug LIKE %8$s AND s.status = %9$s',
+						'SELECT COUNT(DISTINCT s.id) FROM %1$i s INNER JOIN %2$i sn ON sn.subscriber_id = s.id INNER JOIN %3$i piv ON piv.subscriber_id = s.id INNER JOIN %4$i l ON l.id = piv.object_id WHERE sn.key IN (%5$s,%6$s) AND piv.object_type LIKE %7$s AND l.slug LIKE %8$s AND s.status = %9$s',
 						$sub,
 						$p . 'fc_subscriber_meta',
 						$piv,
@@ -161,7 +161,7 @@ class Gabochie_CC_Funnel {
 
 				$qualified        = $wpdb->get_col(
 					$wpdb->prepare(
-						'SELECT DISTINCT s.id FROM %1$s s INNER JOIN %2$s piv ON piv.subscriber_id = s.id INNER JOIN %3$s t ON t.id = piv.object_id WHERE piv.object_type LIKE %4$s AND (s.phone <> %5$s OR t.title LIKE %6$s)',
+						'SELECT DISTINCT s.id FROM %1$i s INNER JOIN %2$i piv ON piv.subscriber_id = s.id INNER JOIN %3$i t ON t.id = piv.object_id WHERE piv.object_type LIKE %4$s AND (s.phone <> %5$s OR t.title LIKE %6$s)',
 						$sub,
 						$piv,
 						$tags,
@@ -179,7 +179,7 @@ class Gabochie_CC_Funnel {
 		if ( self::table_exists( $mu ) ) {
 			$rows = $wpdb->get_results(
 				$wpdb->prepare(
-					'SELECT membership_id, status, startdate, billing_amount FROM %1$s WHERE status = %2$s',
+					'SELECT membership_id, status, startdate, billing_amount FROM %1$i WHERE status = %2$s',
 					$mu,
 					'active'
 				)
@@ -212,7 +212,7 @@ class Gabochie_CC_Funnel {
 		if ( self::table_exists( $mo ) ) {
 			$total                = $wpdb->get_var(
 				$wpdb->prepare(
-					'SELECT SUM(total) FROM %1$s WHERE status = %2$s AND total > 0',
+					'SELECT SUM(total) FROM %1$i WHERE status = %2$s AND total > 0',
 					$mo,
 					'success'
 				)
@@ -221,7 +221,7 @@ class Gabochie_CC_Funnel {
 
 			$recent            = $wpdb->get_var(
 				$wpdb->prepare(
-					'SELECT COUNT(*) FROM %1$s WHERE status = %2$s AND total > 0 AND timestamp >= %3$s',
+					'SELECT COUNT(*) FROM %1$i WHERE status = %2$s AND total > 0 AND timestamp >= %3$s',
 					$mo,
 					'success',
 					gmdate( 'Y-m-d H:i:s', strtotime( '-30 days' ) )
@@ -235,7 +235,7 @@ class Gabochie_CC_Funnel {
 		if ( self::table_exists( $woo ) ) {
 			$woo_total             = $wpdb->get_var(
 				$wpdb->prepare(
-					'SELECT COALESCE(SUM(total_amount),0) FROM %1$s WHERE status IN (%2$s,%3$s)',
+					'SELECT COALESCE(SUM(total_amount),0) FROM %1$i WHERE status IN (%2$s,%3$s)',
 					$woo,
 					'wc-completed',
 					'wc-processing'

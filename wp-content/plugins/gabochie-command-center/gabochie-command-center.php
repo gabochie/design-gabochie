@@ -167,12 +167,12 @@ class Gabochie_Command_Center {
 		}
 		$state['pmpro_gateway'] = (string) get_option( 'pmpro_gateway', '' );
 		$state['pmpro_env']     = (string) get_option( 'pmpro_gateway_environment', 'sandbox' );
-		$woo_table              = $wpdb->prefix . 'wc_orders';
-		$woo_exists             = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $woo_table ) );
+		$woo_table = $wpdb->prefix . 'wc_orders';
+		$woo_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $woo_table ) );
 		if ( $woo_exists ) {
 			$state['orders'] = (int) $wpdb->get_var(
 				$wpdb->prepare(
-					'SELECT COUNT(*) FROM %1$s WHERE status NOT IN (%2$s,%3$s)',
+					'SELECT COUNT(*) FROM %1$i WHERE status NOT IN (%2$s,%3$s)',
 					$woo_table,
 					'auto-draft',
 					'checkout-draft'
