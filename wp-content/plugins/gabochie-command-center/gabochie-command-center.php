@@ -172,7 +172,7 @@ class Gabochie_Command_Center {
 		if ( $woo_exists ) {
 			$state['orders'] = (int) $wpdb->get_var(
 				$wpdb->prepare(
-					'SELECT COUNT(*) FROM %1$i WHERE status NOT IN (%2$s,%3$s)',
+					'SELECT COUNT(*) FROM %i WHERE status NOT IN (%s,%s)',
 					$woo_table,
 					'auto-draft',
 					'checkout-draft'

@@ -81,7 +81,7 @@ class Gabochie_CC_Orchestrator {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				'SELECT * FROM %1$i ORDER BY id DESC LIMIT %2$d',
+				'SELECT * FROM %i ORDER BY id DESC LIMIT %d',
 				$table,
 				( $limit > 0 && $limit <= 200 ) ? $limit : 20
 			),
@@ -177,13 +177,28 @@ class Gabochie_CC_Orchestrator {
 	/**
 	 * Lead captured → SDR qualify (soft, notify).
 	 *
-	 * @param string      $email     Email.
-	 * @param string      $list_slug List slug.
-	 * @param string      $source    Source label.
-	 * @param string      $name      Name.
-	 * @param string|null $phone     Phone.
+	 * The ecosystem fires `gabochie/lead/captured` with `($email, $data)`; an
+	 * older positional form `($email, $list_slug, $source, $name, $phone)` is
+	 * tolerated for compatibility.
+	 *
+	 * @param string $email Email.
+	 * @param mixed  $data  Lead context array (list, source, name, phone).
 	 */
-	public static function on_lead_captured( $email, $list_slug, $source, $name, $phone = null ) {
+	public static function on_lead_captured( $email, $data = array() ) {
+		if ( ! is_array( $data ) ) {
+			$args = func_get_args();
+			$data = array(
+				'list'   => isset( $args[1] ) ? $args[1] : '',
+				'source' => isset( $args[2] ) ? $args[2] : '',
+				'name'   => isset( $args[3] ) ? $args[3] : '',
+				'phone'  => isset( $args[4] ) ? $args[4] : '',
+			);
+		}
+		$list_slug = sanitize_text_field( $data['list'] ?? '' );
+		$source    = sanitize_text_field( $data['source'] ?? '' );
+		$name      = sanitize_text_field( $data['name'] ?? '' );
+		$phone     = sanitize_text_field( $data['phone'] ?? '' );
+
 		$user = get_user_by( 'email', $email );
 		self::add_task(
 			'sdr',
@@ -308,7 +323,7 @@ class Gabochie_CC_Orchestrator {
 		self::maybe_create_table();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		return (int) $wpdb->get_var(
-			$wpdb->prepare( 'SELECT COUNT(*) FROM %1$i WHERE handled = 0', self::table_name() )
+			$wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE handled = 0', self::table_name() )
 		);
 	}
 
@@ -322,7 +337,15 @@ class Gabochie_CC_Orchestrator {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- manual admin trigger.
 		if ( isset( $_GET['_gcc'], $_GET['_wpnonce'] ) && wp_verify_nonce( sanitize_key( $_GET['_wpnonce'] ), 'gabochie_cc_test_event' ) ) {
 			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			do_action( 'gabochie/lead/captured', 'ops-test@' . wp_parse_url( home_url(), PHP_URL_HOST ), 'test', 'admin-post', 'Ops Test' );
+			do_action(
+				'gabochie/lead/captured',
+				'ops-test@' . wp_parse_url( home_url(), PHP_URL_HOST ),
+				array(
+					'list'   => 'test',
+					'source' => 'admin-post',
+					'name'   => 'Ops Test',
+				)
+			);
 		}
 		wp_safe_redirect( admin_url( 'admin.php?page=gabochie-command-center&tab=tasks' ) );
 		exit;
