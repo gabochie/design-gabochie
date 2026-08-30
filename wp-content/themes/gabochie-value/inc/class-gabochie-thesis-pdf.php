@@ -549,6 +549,105 @@ class Gabochie_Thesis_Pdf {
 	}
 
 	/**
+	 * Split text into lines, preserving **bold** emphasis. Each returned line
+	 * is an array of [word, isBold] pairs for draw_rich_line().
+	 *
+	 * @param string $text Raw text (may contain **bold** markers).
+	 * @param float  $max_width Max line width.
+	 * @return array<int,array<int,array{0:string,1:bool}>> Lines.
+	 */
+	public function rich_lines( $text, $max_width ) {
+		$parts = preg_split( '/(\*\*.*?\*\*)/', $text, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY );
+		$words = array();
+		foreach ( (array) $parts as $part ) {
+			$bold  = ( '**' === substr( $part, 0, 2 ) && '**' === substr( $part, -2 ) );
+			$chunk = $bold ? substr( $part, 2, -2 ) : $part;
+			$chunk = (string) preg_replace( '/\s+/', ' ', trim( $chunk ) );
+			foreach ( explode( ' ', $chunk ) as $word ) {
+				if ( '' !== $word ) {
+					$words[] = array( $word, $bold );
+				}
+			}
+			if ( ! $bold && false !== strpos( $part, "\n" ) ) {
+				$words[] = array( "\n", false );
+			}
+		}
+
+		$lines = array();
+		$cur   = array();
+		$width = 0.0;
+		$space = $this->measure( ' ' );
+		foreach ( $words as $wd ) {
+			if ( "\n" === $wd[0] ) {
+				$lines[] = $cur;
+				$cur     = array();
+				$width   = 0.0;
+				continue;
+			}
+			$add = $this->measure( $wd[0] ) + ( count( $cur ) ? $space : 0 );
+			if ( count( $cur ) && $width + $add > $max_width ) {
+				$lines[] = $cur;
+				$cur     = array();
+				$width   = $add - $space;
+				$cur[]   = $wd;
+			} else {
+				$cur[] = $wd;
+				$width += $add;
+			}
+		}
+		if ( count( $cur ) ) {
+			$lines[] = $cur;
+		}
+		return $lines;
+	}
+
+	/**
+	 * Draw one rich line, switching to bold when a word is bold.
+	 *
+	 * @param float                            $x Left.
+	 * @param float                            $y Top.
+	 * @param array<int,array{0:string,1:bool}> $line Word runs.
+	 * @return float Width consumed.
+	 */
+	public function draw_rich_line( $x, $y, $line ) {
+		$cx    = $x;
+		$space = $this->measure( ' ' );
+		foreach ( $line as $wd ) {
+			$this->set_font( $wd[1] ? self::FONT_BOLD : self::FONT_REGULAR );
+			$this->text( $cx, $y, $wd[0] );
+			$cx += $this->measure( $wd[0] ) + $space;
+		}
+		return $cx - $x;
+	}
+
+	/**
+	 * Draw running header + footer furniture for an interior page.
+	 *
+	 * @param string $label Optional right-hand kicker label.
+	 */
+	public function furniture( $label = '' ) {
+		$this->set_font( self::FONT_BOLD );
+		$this->set_size( 6.3 );
+		$this->set_color( 'mist' );
+		$this->text( self::MARGIN, 34, 'GABOCHIE DESIGN · THESIS 2026' );
+		if ( '' !== $label ) {
+			$this->set_color( 'gold' );
+			$lw = $this->measure( $label );
+			$this->text( self::PAGE_W - self::MARGIN - $lw, 34, $label );
+		}
+		$this->hline( self::MARGIN, 42, self::PAGE_W - self::MARGIN, 0.6, 'line' );
+
+		$this->hline( self::MARGIN, self::PAGE_H - 34, self::PAGE_W - self::MARGIN, 0.6, 'line' );
+		$this->set_font( self::FONT_REGULAR );
+		$this->set_size( 6.2 );
+		$this->set_color( 'mist' );
+		$this->text( self::MARGIN, self::PAGE_H - 28, 'DEVELOPMENT INTELLIGENCE PLATFORM — GHANA' );
+		$rt = 'GABOCHIEDESIGN.COM';
+		$rw = $this->measure( $rt );
+		$this->text( self::PAGE_W - self::MARGIN - $rw, self::PAGE_H - 28, $rt );
+	}
+
+	/**
 	 * Draw a horizontal bar-gauge with label + percentage value.
 	 *
 	 * @param float  $x Left.
@@ -1168,127 +1267,207 @@ function gabochie_value_thesis_pdf( $reader_number = 0 ) {
 
 	/* ---------- Page 1: Evidence + visualisations ---------- */
 	$pdf->new_page();
-	$y = 56;
+	$pdf->furniture( '01 · THE EVIDENCE' );
+	$y = 58;
 
+	// Kicker + heading.
+	$pdf->rect( $m, $y, 5, 5, 'gold' );
 	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
-	$pdf->set_size( 16 );
-	$pdf->set_color( 'ink' );
-	$pdf->text( $m, $y, 'The evidence in one page' );
-	$y += 26;
-
-	// Row: stall gauge + donut side by side.
-	$left_w  = $cw * 0.52;
-	$right_w = $cw * 0.48 - 20;
-
-	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
-	$pdf->set_size( 10.5 );
-	$pdf->set_color( 'teal' );
-	$pdf->text( $m, $y, 'Where projects stall' );
-	$y += 16;
-	$y  = $pdf->gauge( $m, $y, $left_w, 12, $data['stall']['percent'], 'teal', '', $data['stall']['percent'] . '%' );
-	$y += 6;
 	$pdf->set_size( 7.6 );
-	$pdf->set_color( 'mist' );
-	$pdf->paragraph( $m, $y, $data['stall']['label'], $left_w - 50, 9 );
-	$pdf->set_size( 6.6 );
-	$pdf->paragraph( $m, $y + 24, $data['stall']['note'], $left_w, 8 );
-
-	// Donut: three barriers.
-	$cx = $m + $left_w + 30;
-	$cy = 118;
-	$pdf->donut( $cx, $cy, 40, 20, $data['barriers'] );
+	$pdf->set_color( 'gold' );
+	$pdf->text( $m + 13, $y, '01 · THE EVIDENCE' );
+	$y += 22;
 	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
-	$pdf->set_size( 15 );
-	$pdf->set_color( 'ink' );
-	$pdf->text( $cx - 8, $cy - 5, '3×' );
-	$pdf->set_size( 6.2 );
+	$pdf->set_size( 18 );
+	$pdf->set_color( 'teal_deep' );
+	$pdf->text( $m, $y, 'The numbers behind the stall' );
+	$y += 8;
+	$pdf->rect( $m, $y, 46, 3, 'gold' );
+	$y += 22;
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
+	$pdf->set_size( 9.6 );
 	$pdf->set_color( 'mist' );
-	$pdf->text( $cx - 17, $cy + 9, 'THE BARRIER' );
+	$y = $pdf->paragraph( $m, $y, 'Three numbers capture the argument. Everything after this page is the mechanism for closing them.', $cw, 13.6 );
+	$y += 12;
 
-	// Donut legend.
-	$ly = 168;
+	// Two cream analytics panels.
+	$panel_h = 146;
+	$panel_w = ( $cw - 16 ) / 2;
+
+	// Left panel: where projects stall.
+	$pdf->rect( $m, $y, $panel_w, $panel_h, 'cream' );
+	$pdf->rect( $m, $y, $panel_w, 3, 'gold' );
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
+	$pdf->set_size( 9 );
+	$pdf->set_color( 'teal' );
+	$pdf->text( $m + 14, $y + 14, 'WHERE PROJECTS STALL' );
+	$gx    = $m + 14;
+	$gy    = $y + 40;
+	$track = $panel_w - 28 - 46;
+	$pdf->rect( $gx, $gy, $track, 8, 'line' );
+	$pdf->rect( $gx, $gy, $track * 0.6, 8, 'teal' );
+	$pdf->set_color( 'teal' );
+	$pdf->text( $gx + $track + 8, $gy - 3, '60%' );
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
+	$pdf->set_size( 7.2 );
+	$pdf->set_color( 'mist' );
+	$pdf->paragraph( $gx, $gy + 16, $data['stall']['label'], $panel_w - 28, 9.2 );
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_ITALIC );
+	$pdf->set_size( 6.6 );
+	$pdf->paragraph( $gx, $gy + 50, $data['stall']['note'], $panel_w - 28, 8 );
+
+	// Right panel: the three barriers (donut + legend).
+	$rx = $m + $panel_w + 16;
+	$pdf->rect( $rx, $y, $panel_w, $panel_h, 'cream' );
+	$pdf->rect( $rx, $y, $panel_w, 3, 'gold' );
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
+	$pdf->set_size( 9 );
+	$pdf->set_color( 'teal' );
+	$pdf->text( $rx + 14, $y + 14, 'THE THREE REAL BARRIERS' );
+	$dcx = $rx + 60;
+	$dcy = $y + 88;
+	$pdf->donut( $dcx, $dcy, 30, 15, $data['barriers'] );
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
+	$pdf->set_size( 11 );
+	$pdf->set_color( 'ink' );
+	$lw = $pdf->measure( '3×' );
+	$pdf->text( $dcx - $lw / 2, $dcy - 5, '3×' );
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
+	$pdf->set_size( 5.6 );
+	$pdf->set_color( 'mist' );
+	$sw = $pdf->measure( 'THE BARRIER' );
+	$pdf->text( $dcx - $sw / 2, $dcy + 9, 'THE BARRIER' );
+	$ly = $y + 34;
 	foreach ( $data['barriers'] as $item ) {
-		$pdf->rect( $m + $left_w + 30, $ly, 7, 7, $item['color'] );
+		$pdf->rect( $dcx + 46, $ly, 6, 6, $item['color'] );
+		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
 		$pdf->set_size( 6.6 );
 		$pdf->set_color( 'ink' );
-		$pdf->text( $m + $left_w + 42, $ly, $item['label'] . '  ·  ' . $item['share'] . '%' );
-		$ly += 11;
+		$pdf->paragraph( $dcx + 56, $ly, $item['label'], $panel_w - 56 - 44, 8 );
+		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
+		$pdf->set_color( 'teal' );
+		$share_w = $pdf->measure( $item['share'] . '%' );
+		$pdf->text( $rx + $panel_w - 12 - $share_w, $ly, $item['share'] . '%' );
+		$ly += 24;
 	}
+	$y += $panel_h + 16;
 
-	// Row 2: housing deficit band.
-	$y = 172;
-	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
-	$pdf->set_size( 10.5 );
-	$pdf->set_color( 'teal' );
-	$pdf->text( $m, $y, 'The housing gap' );
-	$y += 16;
+	// Housing deficit band.
+	$pdf->rect( $m, $y, $cw, 78, 'teal_deep' );
+	$pdf->rect( $m, $y, $cw, 3, 'gold' );
 	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
 	$pdf->set_size( 26 );
-	$pdf->set_color( 'teal' );
-	$pdf->text( $m, $y, $data['deficit']['value'] );
-	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
-	$pdf->set_size( 7.8 );
-	$pdf->set_color( 'mist' );
-	$pdf->paragraph( $m + 62, $y + 10, $data['deficit']['label'], $cw - 62, 9.4 );
-	$pdf->set_size( 6.6 );
-	$pdf->set_color( 'mist' );
-	$pdf->paragraph( $m + 62, $y + 34, $data['deficit']['note'], $cw - 62, 8 );
-
-	// Row 3: 14-stage pipeline.
-	$y += 62;
+	$pdf->set_color( 'gold' );
+	$pdf->text( $m + 20, $y + 28, $data['deficit']['value'] );
+	$pdf->rect( $m + 168, $y + 12, 1.2, 54, 'gold_lite' );
 	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
-	$pdf->set_size( 10.5 );
-	$pdf->set_color( 'teal' );
-	$pdf->text( $m, $y, 'The 14-stage delivery pipeline' );
-	$y += 14;
-	if ( ! empty( $data['pipeline']['phases'] ) ) {
-		$pdf->pipeline( $m, $y, $cw, 16, $data['pipeline']['phases'], 'teal' );
-	}
+	$pdf->set_size( 9 );
+	$pdf->set_color( 'white' );
+	$pdf->paragraph( $m + 186, $y + 16, $data['deficit']['label'], $cw - 186 - 16, 11.4 );
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_ITALIC );
+	$pdf->set_size( 6.8 );
+	$pdf->set_color( 'cream' );
+	$pdf->paragraph( $m + 186, $y + 48, $data['deficit']['note'], $cw - 186 - 16, 8.6 );
+	$y += 78 + 14;
 
-	$y += 36;
-	$pdf->hline( $m, $y, $page_w - $m, 0.8, 'line' );
-	$y += 12;
-	$pdf->set_size( 8.4 );
-	$pdf->set_color( 'mist' );
-	$pdf->paragraph( $m, $y, 'Every stalled project is an information problem. None of the leaks above is solved by more money alone — each is closed by making the professional delivery system visible to the developer.', $cw, 11 );
+	// Delivery pipeline strip: dark track + 14 gold stage ticks.
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
+	$pdf->set_size( 11 );
+	$pdf->set_color( 'teal_deep' );
+	$pdf->text( $m, $y, 'The 14-stage delivery pipeline' );
+	$y += 6;
+	$pdf->rect( $m, $y, 30, 3, 'gold' );
+	$y += 18;
+	$pdf->rect( $m, $y, $cw, 18, 'teal_deep' );
+	$amp  = 14;
+	$tick = $cw / $amp;
+	for ( $i = 0; $i < $amp; $i++ ) {
+		$pdf->rect( $m + 4 + $i * $tick, $y + 3, 1.8, 12, 'gold' );
+	}
+	$pdf->rect( $m, $y + 18, $cw, 1, 'gold' );
+	$seg = $cw / count( $data['pipeline']['phases'] );
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
+	$pdf->set_size( 6.4 );
+	$pdf->set_color( 'ink' );
+	$ly = $y + 26;
+	foreach ( $data['pipeline']['phases'] as $i => $phase ) {
+		$phase_t = strtoupper( $phase );
+		$pw      = $pdf->measure( $phase_t );
+		$cx_t    = $m + $i * $seg + ( $seg - $pw ) / 2;
+		$pdf->text( $cx_t, $ly, $phase_t );
+	}
+	$y = $ly + 14;
+
+	// Key takeaway callout.
+	$pdf->rect( $m, $y, $cw, 40, 'cream' );
+	$pdf->rect( $m, $y, 4, 40, 'gold' );
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_ITALIC );
+	$pdf->set_size( 9.4 );
+	$pdf->set_color( 'teal2' );
+	$pdf->paragraph( $m + 18, $y + 12, 'Every stalled project is an information problem — and none of the leaks above is closed by money alone.', $cw - 40, 13 );
+	$y += 54;
 
 	/* ---------- Pages 2+: Thesis body ---------- */
+	$section_kickers = array(
+		1 => '01 · THE GROWTH PARADOX',
+		2 => '02 · THE TRUE BARRIER',
+		3 => '03 · THE DATA',
+		4 => '04 · THE SOLUTION',
+		5 => '05 · THE INVITATION',
+	);
+	$section_index   = 0;
 	foreach ( $data['sections'] as $section ) {
+		$section_index++;
+		$label = isset( $section_kickers[ $section_index ] ) ? $section_kickers[ $section_index ] : sprintf( '%02d · THESIS', $section_index );
 		$pdf->new_page();
-		$y = 56;
+		$pdf->furniture( $label );
+		$y = 58;
 
-		// Pre-compute the section height to decide if it needs two pages.
+		// Kicker + heading block.
+		$pdf->rect( $m, $y, 5, 5, 'gold' );
 		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
-		$pdf->set_size( 15 );
-		$pdf->set_color( 'teal' );
-		$y  = $pdf->paragraph( $m, $y, $pdf->strip_bold( $section['heading'] ), $cw, 19 );
+		$pdf->set_size( 7.6 );
+		$pdf->set_color( 'gold' );
+		$pdf->text( $m + 13, $y, $label );
+		$y += 22;
+		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
+		$pdf->set_size( 17 );
+		$pdf->set_color( 'teal_deep' );
+		$y  = $pdf->paragraph( $m, $y, $pdf->strip_bold( $section['heading'] ), $cw, 21 );
 		$y += 6;
-
-		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
-		$pdf->set_size( 9.6 );
-		$pdf->set_color( 'ink' );
+		$pdf->rect( $m, $y, 46, 3, 'gold' );
+		$y += 20;
 
 		if ( ! empty( $section['body'] ) ) {
+			$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
+			$pdf->set_size( 9.8 );
+			$pdf->set_color( 'ink' );
 			foreach ( $section['body'] as $paragraph ) {
-				$y  = gabochie_value_thesis_safe_paragraph( $pdf, $m, $y, $paragraph, $cw, 13.6, $page_h );
+				$y  = gabochie_value_thesis_safe_paragraph( $pdf, $m, $y, $paragraph, $cw, 14, $page_h );
 				$y += 4;
 			}
 		}
 
 		if ( ! empty( $section['list'] ) ) {
+			$pdf->set_color( 'ink' );
+			$pdf->set_size( 9.4 );
 			foreach ( $section['list'] as $item ) {
 				$y  = gabochie_value_thesis_safe_list_item( $pdf, $m, $y, $item, $cw, $page_h );
-				$y += 2;
+				$y += 3;
 			}
 		}
 
 		if ( ! empty( $section['quote'] ) ) {
-			$y = gabochie_value_thesis_safe_quote( $pdf, $m, $y, $section['quote'], $cw, $page_h );
+			$y  = gabochie_value_thesis_safe_quote( $pdf, $m, $y, $section['quote'], $cw, $page_h );
+			$y += 6;
 		}
 
 		if ( ! empty( $section['after'] ) ) {
+			$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
+			$pdf->set_size( 9.8 );
+			$pdf->set_color( 'ink' );
 			foreach ( $section['after'] as $paragraph ) {
-				$y  = gabochie_value_thesis_safe_paragraph( $pdf, $m, $y, $paragraph, $cw, 13.6, $page_h );
+				$y  = gabochie_value_thesis_safe_paragraph( $pdf, $m, $y, $paragraph, $cw, 14, $page_h );
 				$y += 4;
 			}
 		}
@@ -1296,96 +1475,127 @@ function gabochie_value_thesis_pdf( $reader_number = 0 ) {
 
 	/* ---------- Final page: conversion ---------- */
 	$pdf->new_page();
+	$pdf->furniture( 'FINAL STEP' );
 	$y = 64;
 
+	$pdf->rect( $m, $y, 5, 5, 'gold' );
 	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
-	$pdf->set_size( 18 );
-	$pdf->set_color( 'ink' );
+	$pdf->set_size( 7.6 );
+	$pdf->set_color( 'gold' );
+	$pdf->text( $m + 13, $y, 'YOUR FINAL STEP' );
+	$y += 24;
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
+	$pdf->set_size( 20 );
+	$pdf->set_color( 'teal_deep' );
 	$pdf->text( $m, $y, 'What you do next decides who moves.' );
+	$y += 16;
+	$pdf->rect( $m, $y, 46, 3, 'gold' );
 	$y += 26;
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
+	$pdf->set_size( 9.6 );
+	$pdf->set_color( 'mist' );
+	$y = $pdf->paragraph( $m, $y, 'Four free tools. One decision. Start where your project is — every path below is a step on the same delivery system.', $cw, 13.8 );
+	$y += 14;
 
 	/** @var array<int, array{n:string,t:string,d:string,u:string}> $steps */
 	$steps = array(
 		array(
 			'n' => '1',
 			't' => 'Get your free Development Readiness Score',
-			'd' => 'Eight dimensions, five minutes, straight answers. Know where your project stands before you spend a cedi.',
+			'd' => '8 dimensions, 5 minutes. Name your project\'s real gaps before you spend a single cedi.',
 			'u' => '/development-quiz/',
 		),
 		array(
 			'n' => '2',
-			't' => 'Estimate your build cost',
-			'd' => 'Market-based cost model for Ghana, adjusted for region, type and specification.',
+			't' => 'Estimate your build cost — Ghana rates',
+			'd' => 'Market-based cost model adjusted for region, type and specification. No offshore guesswork.',
 			'u' => '/building-cost-calculator/',
 		),
 		array(
 			'n' => '3',
-			't' => 'See the plans that fit your stage',
-			'd' => 'Free Lead, Active Client and Premium — the delivery system, not just a PDF.',
+			't' => 'Choose the plan that fits your stage',
+			'd' => 'From Free Lead to the full Delivery System — pay to finish, not to feel good.',
 			'u' => '/membership-levels/',
 		),
 		array(
 			'n' => '4',
-			't' => 'Ask the community',
-			'd' => 'Real answers from people actually building in Ghana, right now.',
+			't' => 'Ask a community that actually builds',
+			'd' => 'Developers building in Ghana right now. Real answers, zero theory.',
 			'u' => '/community/',
 		),
 	);
 
 	foreach ( $steps as $step ) {
-		$pdf->rect( $m, $y, $cw, 54, 'cream' );
-		$pdf->rect( $m, $y, 5, 54, 'teal' );
+		$card_h = 50;
+		$pdf->rect( $m, $y, $cw, $card_h, 'cream' );
+		$pdf->rect( $m, $y, 4, $card_h, 'teal' );
+		$pdf->rect( $m + 14, $y + 12, 24, 24, 'teal_deep' );
 		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
-		$pdf->set_size( 16 );
-		$pdf->set_color( 'gold' );
-		$pdf->text( $m + 18, $y + 16, $step['n'] );
+		$pdf->set_size( 13 );
+		$pdf->set_color( 'gold_lite' );
+		$nw = $pdf->measure( $step['n'] );
+		$pdf->text( $m + 14 + ( 24 - $nw ) / 2, $y + 17, $step['n'] );
 		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
-		$pdf->set_size( 10 );
+		$pdf->set_size( 10.2 );
 		$pdf->set_color( 'ink' );
-		$pdf->text( $m + 40, $y + 14, $step['t'] );
+		$pdf->text( $m + 50, $y + 12, $step['t'] );
 		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
 		$pdf->set_size( 8.2 );
 		$pdf->set_color( 'mist' );
-		$pdf->paragraph( $m + 40, $y + 26, $step['d'], $cw - 60, 9.8 );
+		$pdf->paragraph( $m + 50, $y + 24, $step['d'], $cw - 60, 10 );
 		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
-		$pdf->set_size( 7.6 );
+		$pdf->set_size( 7.4 );
 		$pdf->set_color( 'teal' );
-		$pdf->text( $m + 40, $y + 46, home_url( $step['u'] ) );
-		$y += 58;
+		$pdf->text( $m + 50, $y + 43, home_url( $step['u'] ) );
+		$y += $card_h + 8;
 	}
 
-	$y += 4;
-	$pdf->rect( $m, $y, $cw, 62, 'teal' );
-	if ( $founding['remaining'] > 0 ) {
-		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
-		$pdf->set_size( 12 );
-		$pdf->set_color( 'white' );
-		$pdf->text( $m + 16, $y + 14, $offer['headline'] );
-		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
-		$pdf->set_size( 8.8 );
-		$pdf->set_color( 'cream' );
-		$final_line  = ( $reader_number > 0 ) ? $offer['who'] . '#' . $reader_number . ' — ' : '';
-		$final_line .= $founding['remaining'] . ' of ' . $founding['total'] . ' founding places remain.';
-		$pdf->paragraph( $m + 16, $y + 30, $final_line, $cw - 32, 12 );
-	} else {
-		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
-		$pdf->set_size( 12 );
-		$pdf->set_color( 'white' );
-		$pdf->text( $m + 16, $y + 14, 'The founding wave is full.' );
-		$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
-		$pdf->set_size( 8.8 );
-		$pdf->set_color( 'cream' );
-		$pdf->text( $m + 16, $y + 30, 'Standard access is free — and stays free.' );
-	}
+	$y += 2;
+	$pdf->rect( $m, $y, $cw, 62, 'teal_deep' );
+	$pdf->rect( $m, $y, $cw, 3, 'gold' );
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
+	$pdf->set_size( 9.4 );
+	$pdf->set_color( 'white' );
+	$pdf->text( $m + 16, $y + 12, 'FIRST STEP — FREE · 5 MINUTES' );
+	$pdf->set_size( 13 );
+	$pdf->set_color( 'gold_lite' );
+	$pdf->text( $m + 16, $y + 27, 'Get your Development Readiness Score' );
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
+	$pdf->set_size( 7.6 );
+	$pdf->set_color( 'cream' );
+	$pdf->text( $m + 16, $y + 44, 'gabochiedesign.com/development-quiz' );
+	$pill = 'FREE · 5 MIN · 8 DIMENSIONS';
+	$pw   = $pdf->measure( $pill ) + 22;
+	$pdf->rect( $page_w - $m - $pw - 16, $y + 18, $pw, 26, 'teal' );
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
+	$pdf->set_size( 8 );
+	$pdf->set_color( 'white' );
+	$pdf->text( $page_w - $m - $pw - 16 + 11, $y + 28, $pill );
 	$y += 74;
 
+	// P.S. line.
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_ITALIC );
+	$pdf->set_size( 8.8 );
+	$pdf->set_color( 'mist' );
+	if ( $founding['remaining'] > 0 ) {
+		$ps_line = ( $reader_number > 0 )
+			? $offer['who'] . '#' . $reader_number . ' of ' . $founding['total'] . ' — your placeholder is reserved until the general wave opens.'
+			: 'P.S. ' . $founding['remaining'] . ' of ' . $founding['total'] . ' founding places remain — the rate closes when the general wave opens.';
+	} else {
+		$ps_line = 'P.S. The founding wave is full — standard access stays free, always.';
+	}
+	$y = $pdf->paragraph( $m, $y, $ps_line, $cw, 11.6 );
+	$y += 12;
+
 	$pdf->hline( $m, $y, $page_w - $m, 0.8, 'line' );
-	$y += 14;
+	$y += 12;
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
 	$pdf->set_size( 8 );
 	$pdf->set_color( 'mist' );
 	$pdf->text( $m, $y, $data['brand'][0] . ' — ' . home_url( '/' ) );
 	$pdf->set_size( 7.2 );
-	$pdf->paragraph( $m, $y + 12, 'This report is a summary prepared for prospective clients. Figures are estimates drawn from publicly reported ranges (GSS, Ministry of Works and Housing, market research) and are provided for orientation, not as professional advice.', $cw, 9 );
+	$y += 11;
+	$pdf->paragraph( $m, $y, 'This report is a summary prepared for prospective clients. Figures are estimates drawn from publicly reported ranges (GSS, Ministry of Works and Housing, market research) and are provided for orientation, not as professional advice.', $cw, 9 );
 
 	return $pdf->output();
 }
@@ -1425,21 +1635,21 @@ function gabochie_value_thesis_write_pdf( $reader_number = 0 ) {
  * @return float Y after the paragraph.
  */
 function gabochie_value_thesis_safe_paragraph( $pdf, $x, $y, $text, $max_width, $leading, $page_h ) {
-	$clean = $pdf->strip_bold( $text );
-	$lines = $pdf->wrap( $clean, $max_width );
+	$lines = $pdf->rich_lines( $text, $max_width );
 	foreach ( $lines as $line ) {
-		if ( $y > $page_h - 70 ) {
+		if ( $y > $page_h - 74 ) {
 			$pdf->new_page();
+			$pdf->furniture();
 			$y = 56;
 		}
-		$pdf->text( $x, $y, $line );
+		$pdf->draw_rich_line( $x, $y, $line );
 		$y += $leading;
 	}
 	return $y;
 }
 
 /**
- * Render a list item (with a leading bullet) across page boundaries.
+ * Render a list item (with a gold square bullet) across page boundaries.
  *
  * @param Gabochie_Thesis_Pdf $pdf PDF engine.
  * @param float               $x Left.
@@ -1450,34 +1660,28 @@ function gabochie_value_thesis_safe_paragraph( $pdf, $x, $y, $text, $max_width, 
  * @return float Y after the item.
  */
 function gabochie_value_thesis_safe_list_item( $pdf, $x, $y, $item, $max_width, $page_h ) {
-	$clean = $pdf->strip_bold( $item );
-	$pdf->set_color( 'gold' );
-	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
-	$pdf->text( $x, $y + 1, '•' );
-	$pdf->set_color( 'ink' );
-	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
-
-	$bullet_w = 12;
-	$lines    = $pdf->wrap( $clean, $max_width - $bullet_w );
-	foreach ( $lines as $i => $line ) {
-		$lx = ( 0 === $i ) ? $x + $bullet_w : $x + $bullet_w;
-		if ( $y > $page_h - 70 ) {
+	$lines = $pdf->rich_lines( $item, $max_width - 18 );
+	$pdf->rect( $x, $y + 4, 5, 5, 'gold' );
+	foreach ( $lines as $line ) {
+		if ( $y > $page_h - 74 ) {
 			$pdf->new_page();
+			$pdf->furniture();
 			$y = 56;
 		}
-		$pdf->text( $lx, $y, $line );
-		$y += 12.6;
+		$pdf->draw_rich_line( $x + 18, $y, $line );
+		$y += 13.4;
 	}
 	return $y;
 }
 
 /**
- * Render a pull-quote band across page boundaries.
+ * Render a pull-quote block (cream band + gold bar + opening quote) across
+ * page boundaries.
  *
  * @param Gabochie_Thesis_Pdf $pdf PDF engine.
  * @param float               $x Left.
  * @param float               $y Top.
- * @param string              $quote Quote text (may hold **bold** markers).
+ * @param string              $quote Quote text.
  * @param float               $max_width Width.
  * @param float               $page_h Page height.
  * @return float Y after the quote.
@@ -1485,20 +1689,28 @@ function gabochie_value_thesis_safe_list_item( $pdf, $x, $y, $item, $max_width, 
 function gabochie_value_thesis_safe_quote( $pdf, $x, $y, $quote, $max_width, $page_h ) {
 	$clean = $pdf->strip_bold( $quote );
 	$y    += 6;
-	if ( $y > $page_h - 70 ) {
+	if ( $y > $page_h - 74 ) {
 		$pdf->new_page();
+		$pdf->furniture();
 		$y = 56;
 	}
-	$pdf->rect( $x, $y, $max_width, 4, 'gold' );
-	$y += 10;
 	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_ITALIC );
-	$pdf->set_size( 10.4 );
+	$pdf->set_size( 9.8 );
+	$band_h = max( 54, $pdf->estimate_paragraph_height( $clean, $max_width - 58, 13.4 ) + 24 );
+	$pdf->rect( $x, $y, $max_width, $band_h, 'cream' );
+	$pdf->rect( $x, $y, 4, $band_h, 'gold' );
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
+	$pdf->set_size( 20 );
+	$pdf->set_color( 'gold' );
+	$pdf->text( $x + 16, $y + 6, '“' );
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_ITALIC );
+	$pdf->set_size( 9.8 );
 	$pdf->set_color( 'teal2' );
-	$y = $pdf->paragraph( $x + 14, $y, $clean, $max_width - 28, 14.4 );
+	$y = $pdf->paragraph( $x + 34, $y + 12, $clean, $max_width - 58, 13.4 );
 	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
 	$pdf->set_size( 9.6 );
 	$pdf->set_color( 'ink' );
-	return $y + 6;
+	return $y + 12;
 }
 
 /* ================================================================== */
