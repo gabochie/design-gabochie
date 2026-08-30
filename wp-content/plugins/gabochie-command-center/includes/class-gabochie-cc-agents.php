@@ -24,11 +24,11 @@ class Gabochie_CC_Agents {
 	 */
 	public static function crews() {
 		return array(
-			'marketing' => array(
+			'marketing'  => array(
 				'name' => 'Marketing Crew',
 				'goal' => 'Fill the top of the funnel (target ~900 leads/mo).',
 			),
-			'sales' => array(
+			'sales'      => array(
 				'name' => 'Sales Crew',
 				'goal' => 'Qualify fast and close ₵399/₵1,299 + high-ticket (target ~18 paid/mo, 2 engagements).',
 			),
@@ -36,7 +36,7 @@ class Gabochie_CC_Agents {
 				'name' => 'After-Sales Crew',
 				'goal' => 'Onboard, retain and uptick — the LTV engine behind MRR.',
 			),
-			'revops' => array(
+			'revops'     => array(
 				'name' => 'RevenueOps Crew',
 				'goal' => 'KPI truth, pipeline audits, payments rails and orchestration.',
 			),
@@ -266,7 +266,7 @@ class Gabochie_CC_Agents {
 					continue;
 				}
 				list( $color, $label, $note ) = self::state_for( $agent['id'] );
-				$out .= '<div style="border:1px solid #c3c4c7;border-top:4px solid ' . $color . ';background:#fff;border-radius:6px;padding:14px;">'
+				$out                         .= '<div style="border:1px solid #c3c4c7;border-top:4px solid ' . $color . ';background:#fff;border-radius:6px;padding:14px;">'
 					. '<div style="display:flex;align-items:center;gap:10px;"><div style="flex:1;"><strong style="font-size:15px;">' . esc_html( $agent['name'] ) . '</strong>'
 					. '<div style="color:#50575e;font-size:12px;">' . esc_html( $agent['role'] ) . '</div></div>'
 					. '<span style="background:' . $color . ';color:#fff;font-size:10px;font-weight:600;text-transform:uppercase;padding:2px 8px;border-radius:99px;white-space:nowrap;">' . esc_html( $label ) . '</span></div>'

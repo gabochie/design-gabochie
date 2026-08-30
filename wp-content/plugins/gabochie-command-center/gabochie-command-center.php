@@ -12,9 +12,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-require_once __DIR__ . '/includes/class-gcc-funnel.php';
-require_once __DIR__ . '/includes/class-gcc-agents.php';
-require_once __DIR__ . '/includes/class-gcc-orchestrator.php';
+require_once __DIR__ . '/includes/class-gabochie-cc-funnel.php';
+require_once __DIR__ . '/includes/class-gabochie-cc-agents.php';
+require_once __DIR__ . '/includes/class-gabochie-cc-orchestrator.php';
 
 /**
  * Gabochie Command Center core.
@@ -125,9 +125,13 @@ class Gabochie_Command_Center {
 		}
 		$res = wp_remote_get(
 			home_url( $path ),
-			array( 'timeout' => 8, 'sslverify' => false, 'redirection' => 2 )
+			array(
+				'timeout'     => 8,
+				'sslverify'   => false,
+				'redirection' => 2,
+			)
 		);
-		$ok = ! is_wp_error( $res ) && 200 === (int) wp_remote_retrieve_response_code( $res );
+		$ok  = ! is_wp_error( $res ) && 200 === (int) wp_remote_retrieve_response_code( $res );
 		set_transient( $key, $ok, 120 );
 		return $ok;
 	}
@@ -157,7 +161,7 @@ class Gabochie_Command_Center {
 			'pmpro_env'      => 'n/a',
 			'orders'         => 0,
 		);
-		$ep = get_option( 'woocommerce_expresspay_gateway_settings', array() );
+		$ep    = get_option( 'woocommerce_expresspay_gateway_settings', array() );
 		if ( is_array( $ep ) ) {
 			$state['expresspay_env'] = ! empty( $ep['environment'] ) ? $ep['environment'] : 'production';
 		}
@@ -246,18 +250,30 @@ class Gabochie_Command_Center {
 	public static function last_smoke() {
 		$f = self::deploy_dir() . '/deploy.log';
 		if ( ! is_readable( $f ) ) {
-			return array( 'found' => false, 'line' => 'deploy.log not readable from web' );
+			return array(
+				'found' => false,
+				'line'  => 'deploy.log not readable from web',
+			);
 		}
 		$lines = file( $f );
 		if ( ! $lines ) {
-			return array( 'found' => false, 'line' => 'deploy.log unreadable' );
+			return array(
+				'found' => false,
+				'line'  => 'deploy.log unreadable',
+			);
 		}
 		for ( $i = count( $lines ) - 1; $i >= 0; $i-- ) {
 			if ( false !== strpos( $lines[ $i ], 'SMOKE TEST' ) ) {
-				return array( 'found' => true, 'line' => trim( $lines[ $i ] ) );
+				return array(
+					'found' => true,
+					'line'  => trim( $lines[ $i ] ),
+				);
 			}
 		}
-		return array( 'found' => false, 'line' => 'no SMOKE TEST line yet' );
+		return array(
+			'found' => false,
+			'line'  => 'no SMOKE TEST line yet',
+		);
 	}
 
 	/**
@@ -299,8 +315,14 @@ class Gabochie_Command_Center {
 	 * @return array
 	 */
 	public static function qa_progress() {
-		$counts = array( 'gates' => array( 0, 0 ), 'roadmap' => array( 0, 0 ) );
-		foreach ( array( 'gates' => 'gabochie_qa_gates', 'roadmap' => 'gabochie_qa_roadmap' ) as $key => $opt ) {
+		$counts = array(
+			'gates'   => array( 0, 0 ),
+			'roadmap' => array( 0, 0 ),
+		);
+		foreach ( array(
+			'gates'   => 'gabochie_qa_gates',
+			'roadmap' => 'gabochie_qa_roadmap',
+		) as $key => $opt ) {
 			$items = get_option( $opt, array() );
 			if ( ! is_array( $items ) ) {
 				$items = array();
@@ -308,7 +330,7 @@ class Gabochie_Command_Center {
 			$done = 0;
 			foreach ( $items as $i ) {
 				if ( ! empty( $i['done'] ) ) {
-					$done++;
+					++$done;
 				}
 			}
 			$counts[ $key ] = array( $done, count( $items ) );
@@ -361,7 +383,7 @@ class Gabochie_Command_Center {
 			update_option( self::OPTION_APPROVALS, $items, false );
 			return $items;
 		}
-		$have  = array();
+		$have = array();
 		foreach ( $items as $i ) {
 			if ( isset( $i['id'] ) ) {
 				$have[ $i['id'] ] = true;
@@ -388,12 +410,36 @@ class Gabochie_Command_Center {
 	 */
 	public static function approvals_defaults() {
 		return array(
-			array( 'id' => 'ap-expresspay', 'text' => 'ExpressPay live merchant keys obtained (or explicitly confirmed sandbox for now).', 'done' => 0 ),
-			array( 'id' => 'ap-prices', 'text' => 'Price list confirmed: membership levels + digital product prices for launch.', 'done' => 0 ),
-			array( 'id' => 'ap-ghbc-key', 'text' => 'GhBC Claude API key added and Test Connection passes.', 'done' => 0 ),
-			array( 'id' => 'ap-brevo', 'text' => 'Brevo API key added so email/forms can send.', 'done' => 0 ),
-			array( 'id' => 'ap-content', 'text' => 'Content source of truth decided (live DB vs new build content).', 'done' => 0 ),
-			array( 'id' => 'ap-plugins', 'text' => 'Decision on the 7 missing old-live plugins (reinstall or confirm skip).', 'done' => 0 ),
+			array(
+				'id'   => 'ap-expresspay',
+				'text' => 'ExpressPay live merchant keys obtained (or explicitly confirmed sandbox for now).',
+				'done' => 0,
+			),
+			array(
+				'id'   => 'ap-prices',
+				'text' => 'Price list confirmed: membership levels + digital product prices for launch.',
+				'done' => 0,
+			),
+			array(
+				'id'   => 'ap-ghbc-key',
+				'text' => 'GhBC Claude API key added and Test Connection passes.',
+				'done' => 0,
+			),
+			array(
+				'id'   => 'ap-brevo',
+				'text' => 'Brevo API key added so email/forms can send.',
+				'done' => 0,
+			),
+			array(
+				'id'   => 'ap-content',
+				'text' => 'Content source of truth decided (live DB vs new build content).',
+				'done' => 0,
+			),
+			array(
+				'id'   => 'ap-plugins',
+				'text' => 'Decision on the 7 missing old-live plugins (reinstall or confirm skip).',
+				'done' => 0,
+			),
 		);
 	}
 
@@ -493,7 +539,7 @@ class Gabochie_Command_Center {
 				'd' => 'PMPro memberships',
 			),
 		);
-		$out  = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;">';
+		$out      = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;">';
 		foreach ( $cards as $c ) {
 			$out .= '<div style="border:1px solid #c3c4c7;border-top:4px solid ' . $c['c'] . ';background:#fff;border-radius:6px;padding:14px;">'
 				. '<div style="color:#8c8f94;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">' . esc_html( $c['t'] ) . '</div>'
@@ -524,12 +570,12 @@ class Gabochie_Command_Center {
 	 * @return string
 	 */
 	public static function qa_html() {
-		$qa    = self::qa_progress();
-		$bar   = static function ( $done, $total, $color ) {
+		$qa     = self::qa_progress();
+		$bar    = static function ( $done, $total, $color ) {
 			$pct = $total ? (int) round( 100 * $done / $total ) : 0;
 			return '<div style="background:#e5e5e5;border-radius:99px;height:10px;max-width:420px;margin-top:6px;"><div style="background:' . $color . ';height:10px;border-radius:99px;width:' . $pct . '%;"></div></div>';
 		};
-		$smoke = self::last_smoke();
+		$smoke  = self::last_smoke();
 		$commit = self::live_commit();
 		$out    = '<table class="widefat striped" style="max-width:760px;"><tbody>';
 		$out   .= '<tr><th style="width:34%;">Live deploy commit</th><td><code>' . esc_html( $commit ) . '</code></td></tr>';
@@ -546,9 +592,9 @@ class Gabochie_Command_Center {
 	 * @return string
 	 */
 	public static function logs_html() {
-		$out  = '<h3>Deploy log</h3>';
-		$tail = self::log_tail( 'deploy.log' );
-		$out .= $tail
+		$out   = '<h3>Deploy log</h3>';
+		$tail  = self::log_tail( 'deploy.log' );
+		$out  .= $tail
 			? '<pre style="background:#0d1117;color:#c9d1d9;padding:12px;border-radius:6px;max-height:260px;overflow:auto;font-size:12px;">' . esc_html( $tail ) . '</pre>'
 			: '<p class="description">deploy.log is not readable from the web server. Deploy details stay server-side at <code>~/deploy/deploy.log</code>.</p>';
 		$out  .= '<h3>Promote log</h3>';
@@ -584,7 +630,11 @@ class Gabochie_Command_Center {
 		if ( class_exists( 'Gabochie_Go_Live' ) && method_exists( 'Gabochie_Go_Live', 'recs_html' ) ) {
 			return Gabochie_Go_Live::recs_html( $recs );
 		}
-		$sev = array( 'error' => '#d63638', 'warning' => '#dba617', 'info' => '#2271b1' );
+		$sev = array(
+			'error'   => '#d63638',
+			'warning' => '#dba617',
+			'info'    => '#2271b1',
+		);
 		$out = '<div style="max-width:760px;">';
 		foreach ( $recs as $r ) {
 			$c    = isset( $sev[ $r['severity'] ] ) ? $sev[ $r['severity'] ] : $sev['info'];
@@ -611,20 +661,20 @@ class Gabochie_Command_Center {
 			}
 			$checks[] = array( $p, $ok );
 		}
-		$pay    = self::payments_state();
-		$pay_ok = 'sandbox' !== $pay['expresspay_env'] && 'sandbox' !== $pay['pmpro_env'] && ! empty( $pay['pmpro_gateway'] );
-		$score += $pay_ok ? 20 : 5;
-		$checks[] = array( 'Payments live', $pay_ok );
-		$ai = self::ai_state();
-		$score += $ai['valid'] ? 15 : 3;
-		$checks[]    = array( 'AI key valid', $ai['valid'] );
-		$has_sec = self::has_security_plugin();
-		$score  += $has_sec ? 10 : 2;
-		$checks[] = array( 'Security plugin', $has_sec );
-		$smoke    = self::last_smoke();
-		$smoke_ok = $smoke['found'] && false !== stripos( $smoke['line'], 'PASS' );
-		$score   += $smoke_ok ? 15 : 0;
-		$checks[] = array( 'Last smoke PASS', $smoke_ok );
+		$pay            = self::payments_state();
+		$pay_ok         = 'sandbox' !== $pay['expresspay_env'] && 'sandbox' !== $pay['pmpro_env'] && ! empty( $pay['pmpro_gateway'] );
+		$score         += $pay_ok ? 20 : 5;
+		$checks[]       = array( 'Payments live', $pay_ok );
+		$ai             = self::ai_state();
+		$score         += $ai['valid'] ? 15 : 3;
+		$checks[]       = array( 'AI key valid', $ai['valid'] );
+		$has_sec        = self::has_security_plugin();
+		$score         += $has_sec ? 10 : 2;
+		$checks[]       = array( 'Security plugin', $has_sec );
+		$smoke          = self::last_smoke();
+		$smoke_ok       = $smoke['found'] && false !== stripos( $smoke['line'], 'PASS' );
+		$score         += $smoke_ok ? 15 : 0;
+		$checks[]       = array( 'Last smoke PASS', $smoke_ok );
 		$orders_flowing = self::payments_state()['orders'] > 0;
 		$score         += $orders_flowing ? 10 : 2;
 		$checks[]       = array( 'Orders flowing', $orders_flowing );
@@ -637,7 +687,11 @@ class Gabochie_Command_Center {
 		} else {
 			$label = array( '#d63638', 'Critical' );
 		}
-		return array( 'score' => $score, 'label' => $label, 'checks' => $checks );
+		return array(
+			'score'  => $score,
+			'label'  => $label,
+			'checks' => $checks,
+		);
 	}
 
 	/**
@@ -646,16 +700,16 @@ class Gabochie_Command_Center {
 	 * @return string
 	 */
 	public static function agents_html() {
-		$pay      = self::payments_state();
-		$ai       = self::ai_state();
-		$smoke    = self::last_smoke();
-		$qa       = self::qa_progress();
-		$pay_ok   = 'sandbox' !== $pay['expresspay_env'] && 'sandbox' !== $pay['pmpro_env'] && ! empty( $pay['pmpro_gateway'] );
-		$ai_ok    = $ai['valid'];
-		$smoke_ok = $smoke['found'] && false !== stripos( $smoke['line'], 'PASS' );
+		$pay          = self::payments_state();
+		$ai           = self::ai_state();
+		$smoke        = self::last_smoke();
+		$qa           = self::qa_progress();
+		$pay_ok       = 'sandbox' !== $pay['expresspay_env'] && 'sandbox' !== $pay['pmpro_env'] && ! empty( $pay['pmpro_gateway'] );
+		$ai_ok        = $ai['valid'];
+		$smoke_ok     = $smoke['found'] && false !== stripos( $smoke['line'], 'PASS' );
 		$endpoints_ok = self::endpoint_ok( '/' ) && self::endpoint_ok( '/wp-login.php' ) && self::endpoint_ok( '/wp-json/' );
-		$members = self::members_count();
-		$light   = static function ( $ok ) {
+		$members      = self::members_count();
+		$light        = static function ( $ok ) {
 			if ( true === $ok ) {
 				return array( '#46b450', 'On mission' );
 			}
@@ -664,7 +718,7 @@ class Gabochie_Command_Center {
 			}
 			return array( '#8c8f94', 'Standby' );
 		};
-		$agents  = array(
+		$agents       = array(
 			array(
 				'icon'  => 'dashicons-megaphone',
 				'name'  => 'CMO',
@@ -730,9 +784,9 @@ class Gabochie_Command_Center {
 				'gate'  => 'Exceptions & money',
 			),
 		);
-		$out = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;">';
+		$out          = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;">';
 		foreach ( $agents as $a ) {
-			$c = $a['state'][0];
+			$c    = $a['state'][0];
 			$out .= '<div style="border:1px solid #c3c4c7;border-top:4px solid ' . $c . ';background:#fff;border-radius:6px;padding:14px;">'
 				. '<div style="display:flex;align-items:center;gap:10px;"><span class="dashicons ' . esc_attr( $a['icon'] ) . '" style="color:' . $c . ';font-size:28px;width:28px;height:28px;"></span>'
 				. '<div style="flex:1;"><strong style="font-size:15px;">' . esc_html( $a['name'] ) . '</strong>'
@@ -770,8 +824,8 @@ class Gabochie_Command_Center {
 		if ( isset( $_GET['recalc'] ) && '1' === $_GET['recalc'] ) {
 			Gabochie_CC_Funnel::metrics( true ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		}
-		$tab   = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'overview';
-		$tabs  = self::tabs();
+		$tab  = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'overview';
+		$tabs = self::tabs();
 		if ( ! isset( $tabs[ $tab ] ) ) {
 			$tab = 'overview';
 		}
@@ -787,8 +841,8 @@ class Gabochie_Command_Center {
 			<nav class="nav-tab-wrapper">
 				<?php
 				foreach ( $tabs as $key => $t ) {
-					$cls   = $tab === $key ? ' nav-tab-active' : '';
-					$url   = $active_url . '&tab=' . $key;
+					$cls = $tab === $key ? ' nav-tab-active' : '';
+					$url = $active_url . '&tab=' . $key;
 					echo '<a href="' . esc_url( $url ) . '" class="nav-tab' . esc_attr( $cls ) . '">' . $t[0] . '</a>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 				}
 				?>
@@ -875,7 +929,7 @@ class Gabochie_Command_Center {
 			return;
 		}
 		echo '<h2>Crews &amp; Agents</h2>';
-		echo '<p class="description">Four crews own the funnel end-to-end. Every agent has tools, a human gate, and a live state colour. ' 
+		echo '<p class="description">Four crews own the funnel end-to-end. Every agent has tools, a human gate, and a live state colour. '
 			. '<strong style="color:#d63638;">Red</strong> = blocked · <strong style="color:#dba617;">amber</strong> = needs setup · <strong style="color:#8c8f94;">grey</strong> = standby · <strong style="color:#46b450;">green</strong> = on mission.</p>';
 		echo Gabochie_CC_Agents::crews_html(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	}
@@ -908,8 +962,8 @@ class Gabochie_Command_Center {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( array( 'message' => 'Unauthorized' ), 403 );
 		}
-		$id   = isset( $_POST['id'] ) ? sanitize_text_field( wp_unslash( $_POST['id'] ) ) : '';
-		$done = ! empty( $_POST['done'] ) ? 1 : 0;
+		$id    = isset( $_POST['id'] ) ? sanitize_text_field( wp_unslash( $_POST['id'] ) ) : '';
+		$done  = ! empty( $_POST['done'] ) ? 1 : 0;
 		$items = self::approvals_persisted();
 		foreach ( $items as &$i ) {
 			if ( $i['id'] === $id ) {
