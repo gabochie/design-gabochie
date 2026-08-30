@@ -48,6 +48,18 @@ function gabochie_value_handle_lead_capture() {
         'project'  => $pid ?: 0,
     ));
 
+	// Route the lead into the lead hub (FluentCRM pipeline).
+	do_action(
+		'gabochie/lead/captured',
+		$email,
+		array(
+			'list'    => 'homepage_lead',
+			'source'  => ( '' !== $service ) ? $service : 'capture-form',
+			'name'    => $name,
+			'phone'   => $phone,
+		)
+	);
+
     wp_send_json_success(array(
         'user_id'    => $uid,
         'project_id' => $pid ?: 0,
@@ -116,6 +128,18 @@ function gabochie_value_onboarding_create() {
     if ($phone) {
         update_user_meta($uid, 'gabochie_phone', $phone);
     }
+
+	// Route the onboarding sign-up into the lead hub (FluentCRM pipeline).
+	do_action(
+		'gabochie/lead/captured',
+		$email,
+		array(
+			'list'   => 'onboarding',
+			'source' => 'onboarding',
+			'name'   => $name,
+			'phone'  => $phone,
+		)
+	);
 
     /* Sanitize all onboarding fields */
     $goal             = sanitize_text_field(wp_unslash($_POST['goal'] ?? ''));

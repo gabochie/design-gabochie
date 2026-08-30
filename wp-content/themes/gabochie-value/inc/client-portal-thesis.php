@@ -120,6 +120,17 @@ function gabochie_value_handle_thesis_download() {
 		)
 	);
 
+	/* Route the thesis reader into the lead hub (FluentCRM pipeline). */
+	do_action(
+		'gabochie/lead/captured',
+		$email,
+		array(
+			'list'   => 'thesis',
+			'source' => 'thesis-download',
+			'name'   => $name,
+		)
+	);
+
 	/* Deliver thesis PDF + funnel next step */
 	$thesis_url    = home_url( '/thesis/?dl=1' );
 	$quiz_url      = home_url( '/development-quiz/' );

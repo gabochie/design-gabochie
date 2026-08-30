@@ -52,6 +52,17 @@ add_action('init', function () {
         if ($free) pmpro_changeMembershipLevel((int) $free, $uid);
     }
 
+	// Route the new subscriber into the lead hub (FluentCRM pipeline).
+	do_action(
+		'gabochie/lead/captured',
+		$email,
+		array(
+			'list'   => 'register',
+			'source' => 'register-form',
+			'name'   => $name,
+		)
+	);
+
     $subject = 'Welcome to Gabochie Design';
     $message = "Hi {$name},\n\nYour account has been created.\n\nLogin: " . home_url('/client-login/') . "\nEmail: {$email}\n\nYou now have access to your project dashboard and construction tools.\n\n– Gabochie Design Team";
     wp_mail($email, $subject, $message);

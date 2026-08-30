@@ -337,6 +337,20 @@ final class Gabochie_Community_Frontend {
 		update_post_meta( $post_id, '_gabochie_lead_score', $classification['lead'] ? 1 : 0 );
 		update_post_meta( $post_id, '_gabochie_lead_reason', $classification['lead_reason'] );
 
+		// Route the asker into the lead hub so they reach FluentCRM too.
+		do_action(
+			'gabochie/lead/captured',
+			$email,
+			array(
+				'list'        => 'community',
+				'source'      => 'community-ask',
+				'name'        => $name,
+				'stage'       => $stage,
+				'lead'        => $classification['lead'] ? 1 : 0,
+				'lead_reason' => $classification['lead_reason'],
+			)
+		);
+
 		wp_send_json_success(
 			array(
 				'url'     => get_permalink( $post_id ),

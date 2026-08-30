@@ -94,6 +94,14 @@ final class Gabochie_Guide_Delivery {
 			return $lead_id;
 		}
 
+		// Route the lead into the lead hub so it reaches FluentCRM too.
+		do_action('gabochie/lead/captured', $email, array(
+			'list'    => 'readiness',
+			'source'  => ( '' !== $source ) ? $source : 'homepage',
+			'journey' => $journey,
+			'blocker' => $blocker,
+		));
+
 		$sent = $this->send_email( $email, $source, $journey, $blocker );
 		if ( ! $sent ) {
 			return new WP_Error( 'gd_send_failed', __( 'The guide could not be sent right now. Please try again or contact us at +233 26 824 8970.', 'gabochie-guide-delivery' ), array( 'status' => 502 ) );
