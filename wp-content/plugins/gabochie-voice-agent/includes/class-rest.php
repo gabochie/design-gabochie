@@ -264,6 +264,18 @@ final class Gabochie_Voice_Rest {
 			return $lead_id;
 		}
 
+		// Route the lead into the lead hub so it reaches FluentCRM too.
+		do_action(
+			'gabochie/lead/captured',
+			$lead['email'],
+			array(
+				'list'   => 'voice',
+				'source' => 'voice-agent',
+				'name'   => $lead['name'],
+				'phone'  => $lead['phone'],
+			)
+		);
+
 		$this->notify( $lead, $lead_id );
 
 		return rest_ensure_response(
