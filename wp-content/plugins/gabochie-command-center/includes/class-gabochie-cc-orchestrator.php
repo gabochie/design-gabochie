@@ -168,7 +168,7 @@ class Gabochie_CC_Orchestrator {
 	 * Sleep-or-fire idle tasks from the backlog (already-activated events).
 	 */
 	public static function run_idle() {
-		if ( defined( 'DOING_CRON' ) && DOING_CRON ) {
+		if ( wp_doing_cron() ) {
 			return;
 		}
 		self::maybe_create_table();
@@ -177,19 +177,19 @@ class Gabochie_CC_Orchestrator {
 	/**
 	 * Lead captured → SDR qualify (soft, notify).
 	 *
-	 * @param string      $email Email.
-	 * @param string      $list  List slug.
-	 * @param string      $source Source label.
-	 * @param string      $name  Name.
-	 * @param string|null $phone Phone.
+	 * @param string      $email     Email.
+	 * @param string      $list_slug List slug.
+	 * @param string      $source    Source label.
+	 * @param string      $name      Name.
+	 * @param string|null $phone     Phone.
 	 */
-	public static function on_lead_captured( $email, $list, $source, $name, $phone = null ) {
+	public static function on_lead_captured( $email, $list_slug, $source, $name, $phone = null ) {
 		$user = get_user_by( 'email', $email );
 		self::add_task(
 			'sdr',
 			'qualify',
 			'lead_captured',
-			'New ' . $list . ' lead' . ( $source ? ' via ' . $source : '' ) . ' — qualify within the hour',
+			'New ' . $list_slug . ' lead' . ( $source ? ' via ' . $source : '' ) . ' — qualify within the hour',
 			'Email: ' . $email . ( $name ? ' | Name: ' . $name : '' ) . ( $phone ? ' | Phone: ' . $phone : '' ),
 			$user ? (int) $user->ID : 0
 		);
@@ -384,7 +384,7 @@ class Gabochie_CC_Orchestrator {
 			. '<tr><th>membership change</th><td><code>pmpro_after_change_membership_level</code> → convert / retain tasks</td></tr>'
 			. '<tr><th>order completed</th><td><code>woocommerce_order_status_completed</code> / <code>woocommerce_payment_complete</code> → payments task</td></tr>'
 			. '<tr><th>digest</th><td><code>' . esc_html( self::CRON ) . '</code> → RevenueOps email'
-			. ( $next ? ' · next at ' . gmdate( 'Y-m-d H:i e', $next ) : ' · <strong style="color:#d63638;">not scheduled</strong>' ) . '</td></tr>'
+			. ( $next ? ' · next at ' . esc_html( gmdate( 'Y-m-d H:i e', $next ) ) : ' · <strong style="color:#d63638;">not scheduled</strong>' ) . '</td></tr>'
 			. '</tbody></table>';
 		echo '<p class="description">All events also call <code>maybe_create_table()</code> so the task log self-heals if the deploy ever wipes a table.</p>';
 		echo '<h2>Task log</h2>';

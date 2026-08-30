@@ -146,11 +146,16 @@ class Gabochie_CC_Funnel {
 
 				$kpi['engaged_30d'] = $wpdb->get_var(
 					$wpdb->prepare(
-						'SELECT COUNT(DISTINCT s.id) FROM %1$s s INNER JOIN %2$s sn ON sn.subscriber_id = s.id WHERE sn.subscriber_id IN (' . implode( ',', array_map( 'intval', $lead_ids ) ) . ') AND sn.key IN (%3$s,%4$s)',
+						'SELECT COUNT(DISTINCT s.id) FROM %1$s s INNER JOIN %2$s sn ON sn.subscriber_id = s.id INNER JOIN %3$s piv ON piv.subscriber_id = s.id INNER JOIN %4$s l ON l.id = piv.object_id WHERE sn.key IN (%5$s,%6$s) AND piv.object_type LIKE %7$s AND l.slug LIKE %8$s AND s.status = %9$s',
 						$sub,
 						$p . 'fc_subscriber_meta',
+						$piv,
+						$list_table,
 						'email_opened_count',
-						'last_clicked_at'
+						'last_clicked_at',
+						'FluentCrm\\App\\Models\\Lists',
+						'leadhub-%',
+						'subscribed'
 					)
 				);
 
