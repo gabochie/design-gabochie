@@ -52,10 +52,12 @@ class Gabochie_Co_Admin {
 
 		$mode = isset( $_POST['mode'] ) && 'live' === $_POST['mode'] ? 'live' : 'dry-run';
 		$wave = isset( $_POST['wave'] ) ? max( 1, (int) $_POST['wave'] ) : 10;
+		$chan = isset( $_POST['channel'] ) && in_array( $_POST['channel'], array( 'email', 'wa' ), true ) ? $_POST['channel'] : 'auto';
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing
 		update_option( 'gabochie_co_mode', $mode, false );
 		update_option( 'gabochie_co_wave', $wave, false );
+		update_option( 'gabochie_co_channel', $chan, false );
 		do_action( 'gabochie_co_wave_started', $wave, $mode );
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing
@@ -83,6 +85,7 @@ class Gabochie_Co_Admin {
 		}
 		$mode       = get_option( 'gabochie_co_mode', 'dry-run' );
 		$wave       = (int) get_option( 'gabochie_co_wave', 10 );
+		$channel    = (string) get_option( 'gabochie_co_channel', 'auto' );
 		$wa_cap     = Gabochie_Co_Sender::cap( 'wa' );
 		$email_cap  = Gabochie_Co_Sender::cap( 'email' );
 		$wa_used    = Gabochie_Co_Sender::used_today( 'wa' );
@@ -117,6 +120,14 @@ class Gabochie_Co_Admin {
 					<tr>
 						<th>Wave size (per pass)</th>
 						<td><input type="number" name="wave" value="<?php echo esc_attr( (string) $wave ); ?>" min="1" max="100" /></td>
+					</tr>
+					<tr>
+						<th>Channel</th>
+						<td>
+							<label><input type="radio" name="channel" value="auto" <?php checked( 'auto', $channel ); ?> /> Auto (WA then email)</label><br/>
+							<label><input type="radio" name="channel" value="email" <?php checked( 'email', $channel ); ?> /> Email only</label><br/>
+							<label><input type="radio" name="channel" value="wa" <?php checked( 'wa', $channel ); ?> /> WhatsApp only</label>
+						</td>
 					</tr>
 					<tr>
 						<th>Daily caps</th>

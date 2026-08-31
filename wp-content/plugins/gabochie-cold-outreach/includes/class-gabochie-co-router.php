@@ -54,6 +54,9 @@ class Gabochie_Co_Router {
 	/**
 	 * Pick the best channel given available identifiers.
 	 *
+	 * An optional operator override (option `gabochie_co_channel`) forces a
+	 * single channel (auto|email|wa) so a pilot can be gated to email-only.
+	 *
 	 * @param array $contact Contact row (email, phone).
 	 * @return string wa|email|skip
 	 */
@@ -63,7 +66,17 @@ class Gabochie_Co_Router {
 
 		$phone = self::normalize_phone( $phone );
 
-		// WhatsApp is the highest-performant channel for GH businesses.
+		$override = (string) get_option( 'gabochie_co_channel', 'auto' );
+
+		// Explicit single-channel mode (email-only / WhatsApp-only waves).
+		if ( 'email' === $override ) {
+			return ( '' !== $email && is_email( $email ) ) ? 'email' : 'skip';
+		}
+		if ( 'wa' === $override ) {
+			return ( '' !== $phone && strlen( $phone ) >= 11 ) ? 'wa' : 'skip';
+		}
+
+		// Auto: WhatsApp is the highest-performant channel for GH businesses.
 		if ( '' !== $phone && strlen( $phone ) >= 11 ) {
 			return 'wa';
 		}
