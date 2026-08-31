@@ -87,6 +87,18 @@ class Gabochie_Co_Router {
 	}
 
 	/**
+	 * Route a contact to the client pipeline or the affiliate program based
+	 * on segmentation rules (high-intent/development -> client; reach/audience
+	 * -> affiliate). Persists the decision via Gabochie_Co_Db::route_contact().
+	 *
+	 * @param array $row Contact row (segment, category).
+	 * @return array{route:string,reason:string} Routing decision.
+	 */
+	public static function route( array $row ) {
+		return \Gabochie_Co_Db::route_contact( $row );
+	}
+
+	/**
 	 * Normalize a Ghana phone to 233+9 digits (or '' if unreachable).
 	 *
 	 * @param string $phone Raw phone.
