@@ -3,7 +3,7 @@
  * Plugin Name: Gabochie Moolre Gateway for PMPro
  * Plugin URI:  https://gabochiedesign.com
  * Description: PMPro payment gateway for Moolre (MTN MoMo). Redirects to Moolre's hosted checkout for mobile money payments, verifies via callback.
- * Version:     1.0.0
+ * Version:     1.1.0
  * Author:      Gabochie Design
  * License:     GPL-2.0-or-later
  * Requires at least: 6.0
@@ -13,7 +13,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'GMG_VERSION', '1.0.0' );
+define( 'GMG_VERSION', '1.1.0' );
 define( 'GMG_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GMG_URL', plugin_dir_url( __FILE__ ) );
 
@@ -134,8 +134,8 @@ function gmg_admin_notices() {
     }
 
     $settings = get_option( 'gmg_settings', array() );
-    if ( empty( $settings['api_key'] ) || empty( $settings['account_number'] ) ) {
-        echo '<div class="notice notice-warning"><p><strong>Gabochie Moolre Gateway:</strong> Enter your Moolre API key and account number in the Payment Gateway settings below.</p></div>';
+    if ( empty( $settings['api_key'] ) || empty( $settings['account_number'] ) || empty( $settings['api_user'] ) ) {
+        echo '<div class="notice notice-warning"><p><strong>Gabochie Moolre Gateway:</strong> Enter your Moolre API key, username and account number in the Payment Gateway settings below.</p></div>';
     }
 
     $webhook_url = rest_url( 'gmg/v1/callback' );

@@ -14,8 +14,10 @@ defined( 'ABSPATH' ) || exit;
 
 class PMProGateway_moolre extends PMProGateway {
 
-    const API_URL     = 'https://api.moolre.com/embed/src/start';
-    const OPTIONS_KEY = 'gmg_settings';
+    const API_URL          = 'https://api.moolre.com/embed/link';
+    const VERIFY_URL       = 'https://api.moolre.com/open/transact/status';
+    const OPTIONS_KEY      = 'gmg_settings';
+    const TX_SUCCESS       = '1';
 
     public function __construct( $gateway = null ) {
         $this->id      = 'moolre';
@@ -56,10 +58,11 @@ class PMProGateway_moolre extends PMProGateway {
         }
 
         $api_key     = $this->get_option( 'api_key', '' );
+        $api_user    = $this->get_option( 'api_user', '' );
         $account_num = $this->get_option( 'account_number', '' );
         $currency    = $this->get_option( 'currency', 'GHS' );
 
-        if ( empty( $api_key ) || empty( $account_num ) ) {
+        if ( empty( $api_key ) || empty( $account_num ) || empty( $api_user ) ) {
             $order->error      = 'Payment gateway not configured. Please contact the site administrator.';
             $order->error_type = 'pmpro_error';
             return false;
@@ -81,22 +84,27 @@ class PMProGateway_moolre extends PMProGateway {
 
         $reference = $order->id . '_' . time();
         $callback  = rest_url( 'gmg/v1/callback' );
+        $redirect  = add_query_arg( 'pmpro_level', (int) $order->membership_id, home_url( '/membership-confirmation/' ) );
 
         $email = isset( $order->Email ) ? $order->Email : ( isset( $order->user_email ) ? $order->user_email : '' );
         $payload = array(
-            'state'         => 'starter',
+            'type'          => 1,
             'accountnumber' => $account_num,
-            'reference'     => $reference,
-            'nonce_value'   => wp_create_nonce( 'gmg_nonce_' . $order->id ),
+            'externalref'   => $reference,
             'email'         => $email,
-            'amount'        => (float) $amount,
+            'amount'        => number_format( $amount, 2, '.', '' ),
             'currency'      => $currency,
             'callback'      => $callback,
-            'tx_source'     => 'pmpro-plugin',
+            'redirect'      => $redirect,
+            'reusable'      => '0',
         );
 
         $response = wp_remote_post( self::API_URL, array(
-            'headers' => array( 'X-Api-Pubkey' => $api_key ),
+            'headers' => array(
+                'X-API-USER'    => $api_user,
+                'X-API-PUBKEY'  => $api_key,
+                'Content-Type'  => 'application/json',
+            ),
             'body'    => wp_json_encode( $payload ),
             'timeout' => 60,
         ) );
@@ -111,17 +119,15 @@ class PMProGateway_moolre extends PMProGateway {
         $raw_body = wp_remote_retrieve_body( $response );
         $body = json_decode( $raw_body, true );
 
-        if ( $code !== 200 ) {
-            $msg = $body['message'] ?? 'Payment gateway error.';
-            if ( is_array( $msg ) ) {
-                $msg = implode( ', ', $msg );
-            }
+        if ( $code !== 200 || empty( $body['status'] ) ) {
+            $msg = ( is_array( $body['message'] ?? null ) ? implode( ', ', $body['message'] ) : ( $body['message'] ?? 'Payment gateway error.' ) );
             $order->error      = $msg;
             $order->error_type = 'pmpro_error';
             return false;
         }
 
-        if ( empty( $body['status'] ) || empty( $body['data']['authorization_url'] ) ) {
+        $authorization_url = ! empty( $body['data']['authorization_url'] ) ? $body['data']['authorization_url'] : '';
+        if ( empty( $authorization_url ) ) {
             $order->error      = 'Payment initiation failed. Please try again.';
             $order->error_type = 'pmpro_error';
             return false;
@@ -130,7 +136,7 @@ class PMProGateway_moolre extends PMProGateway {
         $order->_moolre_ref = $reference;
         $order->saveOrder();
 
-        wp_redirect( $body['data']['authorization_url'] );
+        wp_redirect( $authorization_url );
         exit;
     }
 
@@ -213,16 +219,22 @@ class PMProGateway_moolre extends PMProGateway {
 
     private function verify_payment( $reference ) {
         $api_key     = $this->get_option( 'api_key', '' );
+        $api_user    = $this->get_option( 'api_user', '' );
         $account_num = $this->get_option( 'account_number', '' );
 
         $payload = array(
-            'state'         => 'confirm',
+            'type'          => 1,
+            'idtype'        => 1,
+            'id'            => $reference,
             'accountnumber' => $account_num,
-            'reference'     => $reference,
         );
 
-        $response = wp_remote_post( self::API_URL, array(
-            'headers' => array( 'X-Api-Pubkey' => $api_key ),
+        $response = wp_remote_post( self::VERIFY_URL, array(
+            'headers' => array(
+                'X-API-USER'    => $api_user,
+                'X-API-PUBKEY'  => $api_key,
+                'Content-Type'  => 'application/json',
+            ),
             'body'    => wp_json_encode( $payload ),
             'timeout' => 60,
         ) );
@@ -231,10 +243,14 @@ class PMProGateway_moolre extends PMProGateway {
             return false;
         }
 
-        $code = wp_remote_retrieve_response_code( $response );
         $body = json_decode( wp_remote_retrieve_body( $response ), true );
+        $code = wp_remote_retrieve_response_code( $response );
 
-        return $code === 200 && ! empty( $body['status'] ) && ! empty( $body['data']['status'] );
+        if ( $code !== 200 || empty( $body['status'] ) ) {
+            return false;
+        }
+
+        return isset( $body['data']['txstatus'] ) && (string) $body['data']['txstatus'] === self::TX_SUCCESS;
     }
 
     /* ------------------------------------------------------------------ */
@@ -274,7 +290,14 @@ class PMProGateway_moolre extends PMProGateway {
             <th scope="row"><label for="gmg_api_key">Moolre API Key</label></th>
             <td>
                 <input type="text" id="gmg_api_key" name="gmg_api_key" value="<?php echo esc_attr( $options['api_key'] ?? '' ); ?>" class="regular-text">
-                <p class="description">Public key from your <a href="https://dashboard.moolre.com" target="_blank" rel="noopener">Moolre dashboard</a>.</p>
+                <p class="description">Public API key from your <a href="https://app.moolre.com" target="_blank" rel="noopener">Moolre dashboard</a>.</p>
+            </td>
+        </tr>
+        <tr class="gateway gateway_moolre">
+            <th scope="row"><label for="gmg_api_user">Moolre Username</label></th>
+            <td>
+                <input type="text" id="gmg_api_user" name="gmg_api_user" value="<?php echo esc_attr( $options['api_user'] ?? '' ); ?>" class="regular-text">
+                <p class="description">Your Moolre account username. Sent as the <code>X-API-USER</code> header.</p>
             </td>
         </tr>
         <tr class="gateway gateway_moolre">
@@ -304,6 +327,7 @@ class PMProGateway_moolre extends PMProGateway {
         $settings = array(
             'environment'    => sanitize_text_field( wp_unslash( $_REQUEST['gmg_environment'] ?? 'sandbox' ) ),
             'api_key'        => sanitize_text_field( wp_unslash( $_REQUEST['gmg_api_key'] ?? '' ) ),
+            'api_user'       => sanitize_text_field( wp_unslash( $_REQUEST['gmg_api_user'] ?? '' ) ),
             'account_number' => sanitize_text_field( wp_unslash( $_REQUEST['gmg_account_number'] ?? '' ) ),
             'currency'       => sanitize_text_field( wp_unslash( $_REQUEST['gmg_currency'] ?? 'GHS' ) ),
         );
