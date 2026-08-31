@@ -113,26 +113,11 @@ class Gabochie_CC_Funnel {
 				)
 			);
 
-			// Fluent uses backslash-heavy object_type; normalize the LIKE width.
-			if ( empty( $lead_ids ) ) {
-				$lead_ids = $wpdb->get_col(
-					$wpdb->prepare(
-						'SELECT DISTINCT s.id FROM %i s INNER JOIN %i piv ON piv.subscriber_id = s.id INNER JOIN %i l ON l.id = piv.object_id WHERE piv.object_type LIKE %s AND l.slug LIKE %s AND s.status = %s',
-						$sub,
-						$piv,
-						$list_table,
-						'FluentCrm\\App\\Models\\Lists',
-						'leadhub-%',
-						'subscribed'
-					)
-				);
-			}
-
 			if ( is_array( $lead_ids ) && count( $lead_ids ) ) {
 				$kpi['leads_total'] = count( $lead_ids );
 				$ids_30d            = $wpdb->get_col(
 					$wpdb->prepare(
-						'SELECT s.id FROM %i s INNER JOIN %i piv ON piv.subscriber_id = s.id INNER JOIN %i l ON l.id = piv.object_id WHERE piv.object_type LIKE %s AND l.slug LIKE %s AND s.status = %s AND s.created_at >= %s',
+						'SELECT s.id FROM %i s INNER JOIN %i piv ON piv.subscriber_id = s.id INNER JOIN %i l ON l.id = piv.object_id WHERE piv.object_type = %s AND l.slug LIKE %s AND s.status = %s AND s.created_at >= %s',
 						$sub,
 						$piv,
 						$list_table,
@@ -146,7 +131,7 @@ class Gabochie_CC_Funnel {
 
 				$kpi['engaged_30d'] = $wpdb->get_var(
 					$wpdb->prepare(
-						'SELECT COUNT(DISTINCT s.id) FROM %i s INNER JOIN %i sn ON sn.subscriber_id = s.id INNER JOIN %i piv ON piv.subscriber_id = s.id INNER JOIN %i l ON l.id = piv.object_id WHERE sn.key IN (%s,%s) AND piv.object_type LIKE %s AND l.slug LIKE %s AND s.status = %s',
+						'SELECT COUNT(DISTINCT s.id) FROM %i s INNER JOIN %i sn ON sn.subscriber_id = s.id INNER JOIN %i piv ON piv.subscriber_id = s.id INNER JOIN %i l ON l.id = piv.object_id WHERE sn.key IN (%s,%s) AND piv.object_type = %s AND l.slug LIKE %s AND s.status = %s',
 						$sub,
 						$p . 'fc_subscriber_meta',
 						$piv,
@@ -161,7 +146,7 @@ class Gabochie_CC_Funnel {
 
 				$qualified        = $wpdb->get_col(
 					$wpdb->prepare(
-						'SELECT DISTINCT s.id FROM %i s INNER JOIN %i piv ON piv.subscriber_id = s.id INNER JOIN %i t ON t.id = piv.object_id WHERE piv.object_type LIKE %s AND (s.phone <> %s OR t.title LIKE %s)',
+						'SELECT DISTINCT s.id FROM %i s INNER JOIN %i piv ON piv.subscriber_id = s.id INNER JOIN %i t ON t.id = piv.object_id WHERE piv.object_type = %s AND (s.phone <> %s OR t.title LIKE %s)',
 						$sub,
 						$piv,
 						$tags,

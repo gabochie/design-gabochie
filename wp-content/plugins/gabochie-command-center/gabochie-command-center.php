@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Gabochie Command Center
  * Description: Revenue Command Center v2 — coordinated crews (Marketing, Sales, After-Sales, RevenueOps), live funnel/KPI engine vs the GH₵1M/yr target, orchestrator task log + ops digest, and human-in-the-loop approvals.
- * Version: 2.0.0
+ * Version: 2.0.2
  * Author: Gabochie Design
  * License: GPL-2.0+
  * Text Domain: gabochie-command-center
