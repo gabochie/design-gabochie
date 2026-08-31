@@ -159,7 +159,7 @@ class Gabochie_CC_Orchestrator {
 				'user_id'   => (int) $user_id,
 				'handled'   => 0,
 			),
-			array( '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d' )
+			array( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d' )
 		);
 		return $ok ? (int) $wpdb->insert_id : 0;
 	}
