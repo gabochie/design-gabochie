@@ -59,11 +59,11 @@ class Gabochie_Co_Db {
 		$charset = $wpdb->get_charset_collate();
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
-		$contacts   = self::table( self::TABLE );
-		$optout     = self::table( self::TABLE_OPTOUT );
-		$log        = self::table( self::TABLE_LOG );
-		$affiliate  = self::table( self::TABLE_AFFILIATE );
-		$referral   = self::table( self::TABLE_REFERRAL );
+		$contacts  = self::table( self::TABLE );
+		$optout    = self::table( self::TABLE_OPTOUT );
+		$log       = self::table( self::TABLE_LOG );
+		$affiliate = self::table( self::TABLE_AFFILIATE );
+		$referral  = self::table( self::TABLE_REFERRAL );
 
 		dbDelta(
 			"CREATE TABLE $contacts (
@@ -284,15 +284,46 @@ class Gabochie_Co_Db {
 		};
 
 		$client_terms = array(
-			'developer', 'real estate', 'realestate', 'property', 'construction',
-			'contractor', 'builder', 'architect', 'engineering', 'infrastructure',
-			'hotel', 'hospitality', 'estate', 'housing', 'home owner', 'factory',
-			'warehouse', 'specifier', 'diaspora', 'land', 'project',
+			'developer',
+			'real estate',
+			'realestate',
+			'property',
+			'construction',
+			'contractor',
+			'builder',
+			'architect',
+			'engineering',
+			'infrastructure',
+			'hotel',
+			'hospitality',
+			'estate',
+			'housing',
+			'home owner',
+			'factory',
+			'warehouse',
+			'specifier',
+			'diaspora',
+			'land',
+			'project',
 		);
-		$aff_terms = array(
-			'affiliate', 'agent', 'broker', 'realtor', 'chamber', 'association',
-			'influence', 'media', 'blogger', 'community', 'network', 'consultant',
-			'event', 'trainer', 'accelerator', 'incubator', 'fintech',
+		$aff_terms    = array(
+			'affiliate',
+			'agent',
+			'broker',
+			'realtor',
+			'chamber',
+			'association',
+			'influence',
+			'media',
+			'blogger',
+			'community',
+			'network',
+			'consultant',
+			'event',
+			'trainer',
+			'accelerator',
+			'incubator',
+			'fintech',
 		);
 
 		$decision = 'unknown';
@@ -322,7 +353,10 @@ class Gabochie_Co_Db {
 			);
 		}
 
-		return array( 'route' => $decision, 'reason' => $reason );
+		return array(
+			'route'  => $decision,
+			'reason' => $reason,
+		);
 	}
 
 	/**
@@ -333,10 +367,10 @@ class Gabochie_Co_Db {
 	 */
 	public static function upsert_affiliate( array $data ) {
 		global $wpdb;
-		$table  = self::table( self::TABLE_AFFILIATE );
-		$email  = sanitize_email( $data['email'] ?? '' );
-		$phone  = sanitize_text_field( $data['phone'] ?? '' );
-		$code   = sanitize_key( $data['referral_code'] ?? '' );
+		$table = self::table( self::TABLE_AFFILIATE );
+		$email = sanitize_email( $data['email'] ?? '' );
+		$phone = sanitize_text_field( $data['phone'] ?? '' );
+		$code  = sanitize_key( $data['referral_code'] ?? '' );
 		if ( '' === $code ) {
 			$code = wp_generate_password( 12, false, false );
 		}

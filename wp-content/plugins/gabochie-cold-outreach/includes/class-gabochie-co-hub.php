@@ -30,6 +30,7 @@ class Gabochie_Co_Hub {
 		add_action( 'gabochie_co_wave_started', array( __CLASS__, 'on_wave_started' ), 10, 2 );
 		add_action( 'gabochie_co_sent', array( __CLASS__, 'on_sent' ), 10, 2 );
 		add_action( 'gabochie_co_opted_out', array( __CLASS__, 'on_opted_out' ), 10, 2 );
+		add_action( 'gabochie_co_routed', array( __CLASS__, 'on_routed' ), 10, 2 );
 	}
 
 	/**
@@ -97,6 +98,29 @@ class Gabochie_Co_Hub {
 				'info'
 			);
 		}
+	}
+
+	/**
+	 * A contact was routed to the client pipeline or the affiliate program —
+	 * surface it so the machine acts on the decision (qualify / send invite).
+	 *
+	 * @param array  $row  Contact row (biz/email/phone).
+	 * @param string $route client|affiliate.
+	 */
+	public static function on_routed( array $row, $route ) {
+		if ( ! self::cc_ready() || ! is_callable( array( 'Gabochie_CC_Orchestrator', 'add_task' ) ) ) {
+			return;
+		}
+		$agent = 'affiliate' === $route ? 'affiliate' : 'sdr';
+		Gabochie_CC_Orchestrator::add_task(
+			$agent,
+			'cold_outreach',
+			'routed_' . $route,
+			'Contact routed to ' . $route . ' pipeline',
+			'Business: ' . sanitize_text_field( $row['biz'] ?? '' ) . ' | ' . implode( ' ', array_filter( array( sanitize_email( $row['email'] ?? '' ), sanitize_text_field( $row['phone'] ?? '' ) ) ) ),
+			0,
+			'info'
+		);
 	}
 
 	/**

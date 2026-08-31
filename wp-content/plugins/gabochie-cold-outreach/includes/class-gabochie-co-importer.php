@@ -54,6 +54,8 @@ class Gabochie_Co_Importer {
 		$failed      = 0;
 		$fluent_ok   = 0;
 		$channel_map = array();
+		$route_map   = array();
+		$referral_source = 'gadata';
 
 		foreach ( $rows as $r ) {
 			$segment = Gabochie_Co_Router::classify( $r['category'] ?? '' );
@@ -71,18 +73,60 @@ class Gabochie_Co_Importer {
 				}
 			}
 
+			$referral_source = sanitize_key( $r['referral_source'] ?? 'gadata' );
+
 			$contact_id = $dry ? 0 : Gabochie_Co_Db::upsert_contact(
 				array(
-					'email'    => $r['email'] ?? '',
-					'phone'    => Gabochie_Co_Router::normalize_phone( $r['phone'] ?? '' ),
-					'biz'      => $r['name'] ?? ( $r['biz'] ?? '' ),
-					'category' => $r['category'] ?? '',
-					'region'   => $r['region'] ?? '',
-					'country'  => $r['country'] ?? '',
-					'channel'  => 'skip' === $channel ? 'skip' : $channel,
-					'segment'  => $segment,
+					'email'           => $r['email'] ?? '',
+					'phone'           => Gabochie_Co_Router::normalize_phone( $r['phone'] ?? '' ),
+					'biz'             => $r['name'] ?? ( $r['biz'] ?? '' ),
+					'category'        => $r['category'] ?? '',
+					'region'          => $r['region'] ?? '',
+					'country'         => $r['country'] ?? '',
+					'website'         => $r['website'] ?? '',
+					'channel'         => 'skip' === $channel ? 'skip' : $channel,
+					'segment'         => $segment,
+					'referral_source' => $referral_source,
+					'source_note'     => $r['source_note'] ?? '',
 				)
 			);
+
+			// Route (client vs affiliate) via segmentation rules.
+			$rule                        = Gabochie_Co_Router::route(
+				array(
+					'id'       => $contact_id,
+					'segment'  => $segment,
+					'category' => $r['category'] ?? '',
+				)
+			);
+			$route_map[ $rule['route'] ] = ( $route_map[ $rule['route'] ] ?? 0 ) + 1;
+
+			// Surface the routing decision to the Command Center (SDR/affiliate).
+			if ( ! $dry ) {
+				do_action(
+					'gabochie_co_routed',
+					array(
+						'biz'   => $r['name'] ?? ( $r['biz'] ?? '' ),
+						'email' => $r['email'] ?? '',
+						'phone' => $r['phone'] ?? '',
+					),
+					$rule['route']
+				);
+			}
+
+			// Convert routed-affiliate rows into invite records when source is a referral.
+			if ( ! $dry && $contact_id && 'affiliate' === $rule['route'] ) {
+				Gabochie_Co_Db::upsert_affiliate(
+					array(
+						'contact_id' => $contact_id,
+						'name'       => $r['name'] ?? ( $r['biz'] ?? '' ),
+						'email'      => $r['email'] ?? '',
+						'phone'      => Gabochie_Co_Router::normalize_phone( $r['phone'] ?? '' ),
+						'region'     => $r['region'] ?? '',
+						'channel'    => 'skip' === $channel ? '' : $channel,
+					)
+				);
+			}
 
 			$channel_map[ $channel ] = ( $channel_map[ $channel ] ?? 0 ) + 1;
 			if ( $dry || $contact_id ) {
@@ -93,13 +137,15 @@ class Gabochie_Co_Importer {
 		}
 
 		$summary = array(
-			'file'      => $file,
-			'dry_run'   => (bool) $dry,
-			'limit'     => $limit,
-			'imported'  => $imported,
-			'failed'    => $failed,
-			'fluent_ok' => $fluent_ok,
-			'channels'  => $channel_map,
+			'file'            => $file,
+			'dry_run'         => (bool) $dry,
+			'limit'           => $limit,
+			'imported'        => $imported,
+			'failed'          => $failed,
+			'fluent_ok'       => $fluent_ok,
+			'channels'        => $channel_map,
+			'routes'          => $route_map,
+			'referral_source' => $referral_source,
 		);
 		do_action( 'gabochie_co_wave_started', (int) $imported, $dry ? 'dry-run' : 'live' );
 		WP_CLI::success( json_encode( $summary, JSON_PRETTY_PRINT ) );
