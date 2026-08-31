@@ -313,6 +313,8 @@ class Gabochie_Co_Db {
 			'realtor',
 			'chamber',
 			'association',
+			'organisation',
+			'organization',
 			'influence',
 			'media',
 			'blogger',
@@ -324,6 +326,15 @@ class Gabochie_Co_Db {
 			'accelerator',
 			'incubator',
 			'fintech',
+			'church',
+			'cathedral',
+			'religious',
+			'school',
+			'college',
+			'university',
+			'education',
+			'academy',
+			'institute',
 		);
 
 		$decision = 'unknown';
