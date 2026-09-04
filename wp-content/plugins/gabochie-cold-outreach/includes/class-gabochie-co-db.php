@@ -378,16 +378,41 @@ class Gabochie_Co_Db {
 	 */
 	public static function upsert_affiliate( array $data ) {
 		global $wpdb;
-		$table = self::table( self::TABLE_AFFILIATE );
-		$email = sanitize_email( $data['email'] ?? '' );
-		$phone = sanitize_text_field( $data['phone'] ?? '' );
-		$code  = sanitize_key( $data['referral_code'] ?? '' );
+		$table      = self::table( self::TABLE_AFFILIATE );
+		$contact_id = max( 0, (int) ( $data['contact_id'] ?? 0 ) );
+		$email      = sanitize_email( $data['email'] ?? '' );
+		$phone      = sanitize_text_field( $data['phone'] ?? '' );
+		$code       = sanitize_key( $data['referral_code'] ?? '' );
 		if ( '' === $code ) {
 			$code = wp_generate_password( 12, false, false );
 		}
 
+		// Dedupe: update the existing invite for this contact if present.
+		$existing = null;
+		if ( $contact_id > 0 ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$existing = $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM %i WHERE contact_id = %d LIMIT 1', $table, $contact_id ) );
+		}
+		if ( $existing ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$wpdb->update(
+				$table,
+				array(
+					'name'          => sanitize_text_field( $data['name'] ?? '' ),
+					'email'         => $email,
+					'phone'         => $phone,
+					'region'        => sanitize_text_field( $data['region'] ?? '' ),
+					'channel'       => sanitize_key( $data['channel'] ?? 'wa' ),
+					'referral_code' => $code,
+					'status'        => sanitize_key( $data['status'] ?? 'invited' ),
+				),
+				array( 'id' => (int) $existing )
+			);
+			return (int) $existing;
+		}
+
 		$insert = array(
-			'contact_id'    => max( 0, (int) ( $data['contact_id'] ?? 0 ) ),
+			'contact_id'    => $contact_id,
 			'name'          => sanitize_text_field( $data['name'] ?? '' ),
 			'email'         => $email,
 			'phone'         => $phone,
