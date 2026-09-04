@@ -48,6 +48,7 @@ class Gabochie_Co_Db {
 		'queued'    => 'Queued',
 		'sent'      => 'Sent',
 		'failed'    => 'Failed',
+		'deferred'  => 'Deferred (no channel under current override)',
 		'opted_out' => 'Opted out',
 	);
 

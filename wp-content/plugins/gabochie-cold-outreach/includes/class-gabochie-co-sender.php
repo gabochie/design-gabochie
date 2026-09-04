@@ -148,8 +148,19 @@ class Gabochie_Co_Sender {
 			}
 			$channel = Gabochie_Co_Router::channel( $row );
 			if ( 'skip' === $channel ) {
-				Gabochie_Co_Db::set_status( (int) $row['id'], 'failed' );
-				Gabochie_Co_Db::log_send( (int) $row['id'], 'skip', 'skip', 'failed', 'no reachable channel' );
+				// A skip here means "no channel under the current override"
+				// (e.g. phone-only rows while channel=email). Those rows are
+				// still reachable once the override changes — park them as
+				// deferred instead of destroying them as failed.
+				$phone = Gabochie_Co_Router::normalize_phone( $row['phone'] ?? '' );
+				$email = sanitize_email( $row['email'] ?? '' );
+				if ( '' !== $phone || '' !== $email ) {
+					Gabochie_Co_Db::set_status( (int) $row['id'], 'deferred' );
+					Gabochie_Co_Db::log_send( (int) $row['id'], 'skip', 'skip', 'deferred', 'no channel under current override (reachable on another channel)' );
+				} else {
+					Gabochie_Co_Db::set_status( (int) $row['id'], 'failed' );
+					Gabochie_Co_Db::log_send( (int) $row['id'], 'skip', 'skip', 'failed', 'no reachable channel' );
+				}
 				continue;
 			}
 

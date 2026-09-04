@@ -50,11 +50,11 @@ class Gabochie_Co_Importer {
 		$rows = $this->parse_csv( $file );
 		$rows = array_slice( $rows, 0, $limit );
 
-		$imported    = 0;
-		$failed      = 0;
-		$fluent_ok   = 0;
-		$channel_map = array();
-		$route_map   = array();
+		$imported        = 0;
+		$failed          = 0;
+		$fluent_ok       = 0;
+		$channel_map     = array();
+		$route_map       = array();
 		$referral_source = 'gadata';
 
 		foreach ( $rows as $r ) {
@@ -149,6 +149,50 @@ class Gabochie_Co_Importer {
 		);
 		do_action( 'gabochie_co_wave_started', (int) $imported, $dry ? 'dry-run' : 'live' );
 		WP_CLI::success( json_encode( $summary, JSON_PRETTY_PRINT ) );
+	}
+
+	/**
+	 * wp gabochie-co requeue [--channel=wa] [--limit=<n>]
+	 *
+	 * Flip `deferred` rows back to `imported` so a later wave can reach them.
+	 * Once the channel override changes (e.g. WhatsApp goes live), run this to
+	 * let the scheduler pick those contacts up again.
+	 *
+	 * @param array $args Positional args.
+	 * @param array $assoc Named args.
+	 */
+	public function requeue( $args, $assoc ) {
+		$channel = isset( $assoc['channel'] ) ? sanitize_key( $assoc['channel'] ) : '';
+		$limit   = isset( $assoc['limit'] ) && (int) $assoc['limit'] > 0 ? (int) $assoc['limit'] : 500;
+
+		Gabochie_Co_Db::install();
+		global $wpdb;
+		$table = Gabochie_Co_Db::table( Gabochie_Co_Db::TABLE );
+
+		$where = 'status = %s';
+		$args2 = array( 'deferred' );
+		if ( '' !== $channel ) {
+			$where  .= ' AND channel = %s';
+			$args2[] = $channel;
+		}
+		$where  .= ' ORDER BY id ASC LIMIT %d';
+		$args2[] = max( 1, (int) $limit );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL
+		$rows = $wpdb->get_col( $wpdb->prepare( 'SELECT id FROM ' . $table . ' WHERE ' . $where, $args2 ) );
+		if ( empty( $rows ) ) {
+			WP_CLI::success( 'No deferred rows to requeue.' );
+			return;
+		}
+		$n = 0;
+		foreach ( $rows as $id ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$ok = $wpdb->update( $table, array( 'status' => 'imported' ), array( 'id' => (int) $id ) );
+			if ( false !== $ok ) {
+				++$n;
+			}
+		}
+		WP_CLI::success( "Requeued {$n} deferred contact(s)." );
 	}
 
 	/**
