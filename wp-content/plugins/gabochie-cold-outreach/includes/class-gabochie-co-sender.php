@@ -183,7 +183,9 @@ class Gabochie_Co_Sender {
 				self::mark_sent( $channel );
 				do_action( 'gabochie_co_sent', $row, $channel );
 			}
-			Gabochie_Co_Db::set_status( (int) $row['id'], $ok ? 'sent' : 'failed' );
+			// In dry-run the message was never delivered — keep the row imported
+			// so a real wave picks it up instead of treating it as sent.
+			Gabochie_Co_Db::set_status( (int) $row['id'], $armed ? ( $ok ? 'sent' : 'failed' ) : 'imported' );
 
 			++$sent_this_pass;
 		}
