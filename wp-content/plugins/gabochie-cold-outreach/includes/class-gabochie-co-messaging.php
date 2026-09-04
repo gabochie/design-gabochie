@@ -20,15 +20,17 @@ class Gabochie_Co_Messaging {
 	/**
 	 * Tracked landing URLs (utm-marked) by offer.
 	 *
-	 * @param string $offer thesis|account.
+	 * @param string $offer   thesis|account.
+	 * @param string $channel wa|email.
 	 * @return string
 	 */
-	public static function landing_url( $offer ) {
-		$base = home_url();
+	public static function landing_url( $offer, $channel = 'wa' ) {
+		$base   = home_url();
+		$medium = 'email' === $channel ? 'email' : 'wa';
 		if ( 'thesis' === $offer ) {
-			return $base . '/thesis/?utm_source=cold_outreach&utm_medium=wa&utm_campaign=cold';
+			return $base . '/thesis/?utm_source=cold_outreach&utm_medium=' . $medium . '&utm_campaign=cold';
 		}
-		return $base . '/onboarding/?utm_source=cold_outreach&utm_medium=wa&utm_campaign=cold';
+		return $base . '/onboarding/?utm_source=cold_outreach&utm_medium=' . $medium . '&utm_campaign=cold';
 	}
 
 	/**
@@ -56,13 +58,13 @@ class Gabochie_Co_Messaging {
 		if ( 'email' === $channel ) {
 			return array(
 				'kind'    => 'cold_intro',
-				'message' => self::email( $label, $segment ),
+				'message' => self::email( $label, $segment, $channel ),
 			);
 		}
 
 		return array(
 			'kind'    => 'cold_intro',
-			'message' => self::wa( $label, $segment ),
+			'message' => self::wa( $label, $segment, $channel ),
 		);
 	}
 
@@ -73,21 +75,21 @@ class Gabochie_Co_Messaging {
 	 * @param string $segment Segment key.
 	 * @return string
 	 */
-	protected static function wa( $label, $segment ) {
+	protected static function wa( $label, $segment, $channel = 'wa' ) {
 		if ( 'development' === $segment ) {
 			return "Hi {$label} — we help Ghanaians build, price and manage development projects without guesswork. "
 				. "Our free 5-min guide (PDF) shows the real gap holding projects back and the exact next steps.\n\n"
-				. 'FREE download → ' . self::landing_url( 'thesis' ) . "\n\n"
+				. 'FREE download → ' . self::landing_url( 'thesis', $channel ) . "\n\n"
 				. 'Twi: Yɛboa Ghanafoɔ sɛ wɔnsi na wɔnyɛ adwuma a ɛnyɛ abodwiri. Fa guide a ɛyɛ FREE yi. '
-				. self::landing_url( 'thesis' ) . "\n\n"
+				. self::landing_url( 'thesis', $channel ) . "\n\n"
 				. self::optout_line();
 		}
 
 		return "Hi {$label} — Gabochie helps Ghanaian businesses get a free client account to plan, esti"
 			. "mate and track their projects. 100% free to start, no card needed.\n\n"
-			. 'Start free → ' . self::landing_url( 'account' ) . "\n\n"
+			. 'Start free → ' . self::landing_url( 'account', $channel ) . "\n\n"
 			. 'Twi: Wo account FREE a obiara ntua hwee. '
-			. self::landing_url( 'account' ) . "\n\n"
+			. self::landing_url( 'account', $channel ) . "\n\n"
 			. self::optout_line();
 	}
 
@@ -98,19 +100,19 @@ class Gabochie_Co_Messaging {
 	 * @param string $segment Segment key.
 	 * @return string
 	 */
-	protected static function email( $label, $segment ) {
+	protected static function email( $label, $segment, $channel = 'email' ) {
 		if ( 'development' === $segment ) {
 			return "Hello {$label},\n\n"
 				. "Gabochie helps development teams and property owners in Ghana plan, cost and execute projects without guesswork.\n\n"
 				. "Here is a free 5-minute PDF that shows the real gap holding projects back and the exact next steps:\n"
-				. self::landing_url( 'thesis' ) . "\n\n"
+				. self::landing_url( 'thesis', $channel ) . "\n\n"
 				. "You'll find it helpful. If you'd rather not hear from us, just let us know and we'll stop.\n\n"
 				. self::optout_line();
 		}
 
 		return "Hello {$label},\n\n"
 			. "Gabochie gives Ghanaian businesses a free client account to plan and track their projects — no card, no commitment.\n\n"
-			. 'Start free here: ' . self::landing_url( 'account' ) . "\n\n"
+			. 'Start free here: ' . self::landing_url( 'account', $channel ) . "\n\n"
 			. "If you'd rather not hear from us, just let us know and we'll stop.\n\n"
 			. self::optout_line();
 	}
