@@ -1,7 +1,9 @@
-/* Gabochie DeFi Checkout Styling */
+/* Gabochie DeFi Checkout — layout only.
+   Tokens/buttons/cards canonical in theme userflow.css
+   (design guide). Hex kept as fallback where var() n/a. */
 .gabochie-defi-checkout-wrapper {
-	background: #FAF7F2;
-	border: 1px solid #E5E2DA;
+	background: var(--cream, #FAF7F2);
+	border: 1px solid var(--border-light, #E5E2DA);
 	border-radius: 12px;
 	padding: 1.25rem 1.4rem;
 	margin-top: 1rem;
@@ -13,13 +15,13 @@
 	justify-content: space-between;
 	align-items: center;
 	padding-bottom: 0.9rem;
-	border-bottom: 1px dashed #D5D0C5;
+	border-bottom: 1px dashed var(--border, #D5D0C5);
 	font-size: 0.92rem;
-	color: #1C2B28;
+	color: var(--charcoal, #1C2B28);
 }
 
 .gd-defi-usd {
-	color: #0D5C52;
+	color: var(--teal, #0D5C52);
 	font-weight: 600;
 }
 
@@ -44,26 +46,26 @@
 }
 
 .gd-chain-btn {
-	background: #ffffff;
-	border: 1.5px solid #D5D0C5;
+	background: var(--cream, #ffffff);
+	border: 1.5px solid var(--border, #D5D0C5);
 	border-radius: 8px;
 	padding: 0.45rem 0.8rem;
 	font-size: 0.78rem;
 	font-weight: 600;
-	color: #4A524D;
+	color: var(--charcoal, #4A524D);
 	cursor: pointer;
 	transition: all 0.2s ease;
 }
 
 .gd-chain-btn:hover {
-	border-color: #0D5C52;
-	color: #0D5C52;
+	border-color: var(--teal, #0D5C52);
+	color: var(--teal, #0D5C52);
 }
 
 .gd-chain-btn.active {
-	background: #0D5C52;
+	background: var(--teal, #0D5C52);
 	color: #FAF7F2;
-	border-color: #0D5C52;
+	border-color: var(--teal, #0D5C52);
 	box-shadow: 0 2px 8px rgba(13, 92, 82, 0.25);
 }
 
@@ -71,8 +73,8 @@
 	display: flex;
 	gap: 1.2rem;
 	align-items: center;
-	background: #ffffff;
-	border: 1px solid #E5E2DA;
+	background: var(--ivory, #ffffff);
+	border: 1px solid var(--border-light, #E5E2DA);
 	border-radius: 10px;
 	padding: 1rem;
 	margin-bottom: 1.1rem;
@@ -93,7 +95,7 @@
 	font-size: 0.75rem;
 	text-transform: uppercase;
 	letter-spacing: 0.08em;
-	color: #6B7C78;
+	color: var(--mist, #6B7C78);
 	margin-bottom: 0.4rem;
 	font-weight: 600;
 }
@@ -102,8 +104,8 @@
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
-	background: #F4EFE6;
-	border: 1px solid #E2E8E5;
+	background: var(--cream, #F4EFE6);
+	border: 1px solid var(--border, #E2E8E5);
 	padding: 0.5rem 0.75rem;
 	border-radius: 8px;
 	margin-bottom: 0.6rem;
@@ -113,15 +115,15 @@
 	flex: 1;
 	font-family: monospace;
 	font-size: 0.82rem;
-	color: #0A4840;
+	color: var(--teal-deep, #0A4840);
 	word-break: break-all;
 	background: transparent;
 	padding: 0;
 }
 
 .gd-copy-btn {
-	background: #C9A96E;
-	color: #0A4840;
+	background: var(--gold, #C9A96E);
+	color: var(--teal-deep, #0A4840);
 	border: none;
 	padding: 0.3rem 0.75rem;
 	border-radius: 6px;
@@ -139,33 +141,33 @@
 
 .gd-net-info {
 	font-size: 0.78rem;
-	color: #6B7C78;
+	color: var(--mist, #6B7C78);
 }
 
 .gd-net-info strong {
-	color: #1C2B28;
+	color: var(--charcoal, #1C2B28);
 }
 
 .gd-defi-tx-input-wrap label {
 	display: block;
 	font-weight: 600;
 	font-size: 0.82rem;
-	color: #1C2B28;
+	color: var(--charcoal, #1C2B28);
 	margin-bottom: 0.35rem;
 }
 
 .gd-defi-tx-input-wrap input {
 	width: 100%;
 	padding: 0.65rem 0.85rem;
-	border: 1.5px solid #D5D0C5;
+	border: 1.5px solid var(--border, #D5D0C5);
 	border-radius: 8px;
 	font-size: 0.88rem;
 	font-family: monospace;
-	background: #fff;
+	background: var(--ivory, #fff);
 }
 
 .gd-defi-tx-input-wrap input:focus {
-	border-color: #0D5C52;
+	border-color: var(--teal, #0D5C52);
 	outline: none;
 	box-shadow: 0 0 0 3px rgba(13, 92, 82, 0.15);
 }
@@ -173,7 +175,7 @@
 .gd-field-note {
 	display: block;
 	font-size: 0.75rem;
-	color: #6B7C78;
+	color: var(--mist, #6B7C78);
 	margin-top: 0.3rem;
 }
 

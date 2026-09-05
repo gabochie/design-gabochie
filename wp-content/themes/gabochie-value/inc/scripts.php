@@ -44,6 +44,14 @@ function gabochie_value_scripts() {
 		GABOCHIE_VALUE_VERSION
 	);
 
+	// Userflow layer: canonical heroes/buttons/cards/recovery/checkout (all pages)
+	wp_enqueue_style(
+		'gabochie-userflow',
+		GABOCHIE_VALUE_URI . '/assets/css/userflow.css',
+		array( 'gabochie-membership' ),
+		GABOCHIE_VALUE_VERSION
+	);
+
 	// Main script (footer, no jQuery dependency)
 	wp_enqueue_script(
 		'gabochie-value-main',

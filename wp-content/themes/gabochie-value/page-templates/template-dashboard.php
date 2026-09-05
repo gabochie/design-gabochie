@@ -198,18 +198,18 @@ if ($current_level) {
 </div>
 
 <?php if ( $is_recovery ) : ?>
-<div class="d2-recovery-banner" style="margin:1.2rem 0;padding:1rem 1.2rem;background:linear-gradient(135deg,#0A4840,#0D5C52);border-radius:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.8rem;color:#FAF7F2">
-    <div><strong style="letter-spacing:0.04em">🏗️ Real Estate Development — Project Recovery Workspace</strong><div style="font-size:0.8rem;opacity:0.9">Step-by-step: take charge of your stuck project. Facilitator can co-drive.</div></div>
-    <span class="d2-badge" style="background:#C9A96E;color:#0A4840"><?php echo esc_html( ucwords( str_replace( '_', ' ', $recovery_status ?: 'triage' ) ) ); ?></span>
+<div class="d2-recovery-banner">
+    <div><strong>🏗️ Real Estate Development — Project Recovery Workspace</strong><div class="d2-sub">Step-by-step: take charge of your stuck project. Facilitator can co-drive.</div></div>
+    <span class="d2-badge gold"><?php echo esc_html( ucwords( str_replace( '_', ' ', $recovery_status ?: 'triage' ) ) ); ?></span>
 </div>
 <?php endif; ?>
 
 <!-- ═══ TABS ═══ -->
 <div class="d2-tabs">
-    <?php if ( $is_recovery ) : ?><div class="d2-tab<?php echo $is_recovery ? ' active' : ''; ?>" data-tab="recovery">Recovery <span style="background:#C9A96E;color:#0A4840;padding:1px 6px;border-radius:8px;font-size:0.6rem;margin-left:4px">NEW</span></div><?php endif; ?>
+    <?php if ( $is_recovery ) : ?><div class="d2-tab active" data-tab="recovery">Recovery <span class="d2-badge gold">NEW</span></div><?php endif; ?>
     <div class="d2-tab<?php echo $is_recovery ? '' : ' active'; ?>" data-tab="timeline">Timeline</div>
     <div class="d2-tab" data-tab="documents">Documents</div>
-    <div class="d2-tab" data-tab="messages">Messages <?php if ($msg_stats['unread'] > 0) echo '<span style="background:var(--gold);color:var(--white);padding:1px 6px;border-radius:8px;font-size:.6rem;margin-left:4px">' . $msg_stats['unread'] . '</span>'; ?></div>
+    <div class="d2-tab" data-tab="messages">Messages <?php if ($msg_stats['unread'] > 0) echo '<span class="d2-badge gold">' . $msg_stats['unread'] . '</span>'; ?></div>
     <div class="d2-tab" data-tab="audit">Activity Log</div>
     <div class="d2-tab" data-tab="costs">Costs</div>
 </div>
@@ -235,24 +235,24 @@ if ($current_level) {
                 <?php $fid = (int) get_post_meta( $latest->ID, 'facilitator_id', true ); if ( $fid ) { $fu = get_userdata( $fid ); echo '<span class="d2-badge gold">Facilitator: ' . esc_html( $fu ? $fu->display_name : '#' . $fid ) . '</span>'; } ?>
             </div>
             <div class="d2-progress" style="margin-top:0"><div class="d2-progress-fill" id="d2-rec-progress-fill" style="width:0%"></div></div>
-            <div id="d2-rec-stepper" style="display:grid;grid-template-columns:repeat(5,1fr);gap:0.6rem;margin:1rem 0"></div>
-            <div id="d2-rec-checklist" style="margin-top:1rem"></div>
-            <div style="display:flex;gap:0.6rem;margin-top:1.2rem;flex-wrap:wrap">
-                <button id="d2-rec-advance" class="btn-gold" style="padding:0.6rem 1.2rem;border:none;border-radius:8px;cursor:pointer;display:none">Advance to Next Step →</button>
-                <button id="d2-rec-approve" class="btn-ghost" style="padding:0.6rem 1rem;border:1px solid var(--border-light);border-radius:8px;cursor:pointer;display:none">Approve Plan (Owner)</button>
-                <a id="d2-rec-pdf" href="#" target="_blank" style="padding:0.6rem 1rem;border:1px solid var(--border-light);border-radius:8px;text-decoration:none;font-size:0.82rem;color:var(--teal);display:inline-flex;align-items:center;gap:0.4rem">📄 Download PDF Report</a>
+            <div id="d2-rec-stepper"></div>
+            <div id="d2-rec-checklist"></div>
+            <div class="rec-actions">
+                <button id="d2-rec-advance" class="btn-gold" style="display:none">Advance to Next Step →</button>
+                <button id="d2-rec-approve" style="display:none">Approve Plan (Owner)</button>
+                <a id="d2-rec-pdf" href="#" target="_blank">📄 Download PDF Report</a>
             </div>
-            <div id="d2-rec-invite" style="margin-top:1.2rem;padding:0.9rem;border:1px dashed var(--border-light);border-radius:10px;background:#FAF7F2">
-                <div style="font-weight:600;font-size:0.85rem;margin-bottom:0.5rem">Invite Facilitator (co-drive this recovery)</div>
-                <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
-                    <input type="email" id="d2-rec-invite-email" placeholder="facilitator@email.com" style="flex:1;min-width:180px;padding:0.55rem 0.7rem;border:1px solid var(--border-light);border-radius:8px">
-                    <input type="text" id="d2-rec-invite-name" placeholder="Name (optional)" style="flex:1;min-width:140px;padding:0.55rem 0.7rem;border:1px solid var(--border-light);border-radius:8px">
-                    <button id="d2-rec-invite-btn" style="padding:0.55rem 1rem;background:var(--teal);color:#fff;border:none;border-radius:8px;cursor:pointer">Invite</button>
+            <div id="d2-rec-invite">
+                <div class="rec-invite-title">Invite Facilitator (co-drive this recovery)</div>
+                <div class="rec-invite-row">
+                    <input type="email" id="d2-rec-invite-email" placeholder="facilitator@email.com">
+                    <input type="text" id="d2-rec-invite-name" placeholder="Name (optional)">
+                    <button id="d2-rec-invite-btn">Invite</button>
                 </div>
-                <div id="d2-rec-invite-msg" style="font-size:0.78rem;color:var(--mist);margin-top:0.4rem"></div>
+                <div id="d2-rec-invite-msg"></div>
             </div>
-            <div id="d2-rec-msg" style="margin-top:0.7rem;font-size:0.82rem;color:var(--mist)"></div>
-            <p style="font-size:0.75rem;color:var(--mist);margin-top:1rem">Works for all building types in Ghana — residential, commercial, mixed-use, renovation & interior. Your facilitator sees the same workspace and can co-drive with you.</p>
+            <div id="d2-rec-msg"></div>
+            <p class="rec-note">Works for all building types in Ghana — residential, commercial, mixed-use, renovation & interior. Your facilitator sees the same workspace and can co-drive with you.</p>
         </div>
     </div>
 </div>
@@ -689,9 +689,7 @@ document.getElementById('d2-msg-field')?.addEventListener('keydown', function(e)
             stepKeys.forEach(function(k, i){
                 var s = steps[k];
                 var cls = i < curIdx ? 'done' : (i===curIdx ? 'current' : 'upcoming');
-                var bg = cls==='done' ? '#0D5C52' : (cls==='current' ? '#C9A96E' : '#E8E8E4');
-                var color = cls==='upcoming' ? '#6B7C78' : '#fff';
-                html += '<div style="text-align:center;padding:0.7rem 0.4rem;border-radius:10px;background:'+bg+';color:'+color+'"><div style="font-size:0.72rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase">'+s.label+'</div><div style="font-size:0.7rem;opacity:0.9;margin-top:0.2rem">'+s.desc+'</div></div>';
+                html += '<div class="rec-step '+cls+'"><div class="rec-step-label">'+s.label+'</div><div class="rec-step-desc">'+s.desc+'</div></div>';
             });
             stepper.innerHTML = html;
         }
@@ -701,10 +699,10 @@ document.getElementById('d2-msg-field')?.addEventListener('keydown', function(e)
             if(!checklist.length){
                 cl.innerHTML = '<div style="padding:1rem;color:var(--mist);font-size:0.85rem">No checklist yet — your facilitator will seed it.</div>';
             } else {
-                var chtml = '<div style="font-weight:600;margin-bottom:0.5rem">Your Recovery Checklist</div>';
+                var chtml = '<div class="rec-invite-title">Your Recovery Checklist</div>';
                 checklist.forEach(function(it){
                     var done = it.status==='done';
-                    chtml += '<label style="display:flex;align-items:center;gap:0.6rem;padding:0.55rem 0.7rem;border:1px solid var(--border-light);border-radius:8px;margin-bottom:0.4rem;background:'+(done?'#F0FAF6':'#fff')+';cursor:pointer"><input type="checkbox" data-id="'+it.id+'" '+(done?'checked':'')+' style="width:16px;height:16px"><span style="flex:1;font-size:0.85rem;'+(done?'text-decoration:line-through;color:var(--mist)':'')+'">'+it.label+'</span><span style="font-size:0.65rem;color:var(--mist);text-transform:uppercase;letter-spacing:0.06em">'+(it.doc_type||'')+'</span></label>';
+                    chtml += '<label class="rec-check'+(done?' is-done':'')+'"><input type="checkbox" data-id="'+it.id+'" '+(done?'checked':'')+'><span class="rec-check-label">'+it.label+'</span><span class="rec-check-tag">'+(it.doc_type||'')+'</span></label>';
                 });
                 cl.innerHTML = chtml;
                 cl.querySelectorAll('input[type=checkbox]').forEach(function(cb){

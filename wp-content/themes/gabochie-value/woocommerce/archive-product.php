@@ -18,13 +18,9 @@ get_header();
 <style>
 /* ══════════════════════════════════════════════
 	SHOP PAGE  (gv-shop- prefix)
-	Self-contained styles — matches design system
+	Layout only — tokens/buttons/heroes/badges live in
+	assets/css/userflow.css (design guide canonical).
 	══════════════════════════════════════════════ */
-:root {
-	--gv-teal:#0D5C52; --gv-teal-deep:#0A4840; --gv-gold:#C9A96E;
-	--gv-cream:#FAF7F2; --gv-ivory:#F4EFE6; --gv-charcoal:#1C2B28;
-	--gv-mist:#6B7C78; --gv-border:#E2E8E5; --gv-border-light:#EFE9DF;
-}
 .gv-shop { background: var(--gv-cream); padding-bottom: 4rem; }
 
 /* Hero */

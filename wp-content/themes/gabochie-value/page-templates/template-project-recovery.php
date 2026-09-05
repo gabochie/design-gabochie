@@ -24,10 +24,10 @@ get_header();
 /* Scoped recovery-wizard styles on top of the onboarding.css layout. */
 .gv-rec-err { color:#b02323; font-size:0.8rem; margin-top:0.7rem; font-family:'Jost',sans-serif; }
 .gv-rec-result { padding:0.5rem 0 0.2rem; }
-.gv-rec-tier { display:inline-block; padding:0.35rem 0.9rem; border-radius:999px; font-size:0.72rem; letter-spacing:0.13em; text-transform:uppercase; font-weight:600; color:#06350F; background:var(--gold,#b08d3f); font-family:'Jost',sans-serif; }
-.gv-rec-tier.gv-t-finish { background:#2ea368; color:#fff; }
-.gv-rec-tier.gv-t-assess { background:#e0a93b; color:#06350F; }
-.gv-rec-tier.gv-t-reconsider { background:#c98a2e; color:#fff; }
+.gv-rec-tier { display:inline-block; padding:0.35rem 0.9rem; border-radius:999px; font-size:0.72rem; letter-spacing:0.13em; text-transform:uppercase; font-weight:600; color:var(--teal-deep); background:var(--gold-pale); border:1px solid rgba(201,169,110,0.35); font-family:'Jost',sans-serif; }
+.gv-rec-tier.gv-t-finish { background:rgba(39,174,96,0.1); color:#27AE60; border-color:rgba(39,174,96,0.3); }
+.gv-rec-tier.gv-t-assess { background:rgba(230,126,34,0.1); color:#E67E22; border-color:rgba(230,126,34,0.3); }
+.gv-rec-tier.gv-t-reconsider { background:rgba(192,57,43,0.1); color:#C0392B; border-color:rgba(192,57,43,0.3); }
 .gv-rec-result h2 { font-size:1.7rem; margin:0.9rem 0 0.5rem; line-height:1.25; }
 .gv-rec-result p { color:var(--mist,#5f6359); font-size:0.95rem; line-height:1.65; margin-bottom:1rem; }
 .gv-rec-received { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:0.6rem; margin:1.1rem 0 1.4rem; }
