@@ -9,6 +9,8 @@ get_header();
 $clarity   = gabochie_value_clarity_url();
 $phone     = gabochie_value_phone();
 $phone_tel = gabochie_value_phone_tel();
+$whatsapp  = gabochie_value_whatsapp();
+$wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
 ?>
 
 <main id="main">
