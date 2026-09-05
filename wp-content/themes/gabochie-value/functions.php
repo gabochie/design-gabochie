@@ -397,3 +397,17 @@ add_action(
 		}
 	}
 );
+
+/**
+ * Auto-complete Direct Mobile Money Transfer (bacs) orders upon checkout placement.
+ * Ensures clients receive instant portal access and digital membership fulfillment.
+ */
+add_filter(
+	'woocommerce_bacs_process_payment_order_status',
+	function ( $status, $order ) {
+		return 'completed';
+	},
+	10,
+	2
+);
+
