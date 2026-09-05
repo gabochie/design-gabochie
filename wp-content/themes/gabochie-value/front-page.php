@@ -252,7 +252,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
     <div class="phase reveal">
       <div class="phase-head"><span class="ph-n">Phase 04</span><span class="ph-line"></span><h3>Recover &amp; Optimize</h3></div>
       <div class="svc-grid">
-        <a class="svc" href="<?php echo esc_url($clarity); ?>"><div class="svc-n">12</div><h3 class="svc-title">Project Recovery / Unsticking</h3><p class="svc-desc">Diagnose what's wrong, fix what can be saved.</p><span class="svc-when">Project is stuck</span><span class="svc-cta">Get started &rarr;</span></a>
+        <a class="svc" href="<?php echo esc_url(gabochie_value_recovery_url()); ?>"><div class="svc-n">12</div><h3 class="svc-title">Project Recovery / Unsticking</h3><p class="svc-desc">Diagnose what's wrong, fix what can be saved.</p><span class="svc-when">Project is stuck</span><span class="svc-cta">Get started &rarr;</span></a>
         <a class="svc" href="<?php echo esc_url($clarity); ?>"><div class="svc-n">13</div><h3 class="svc-title">Handover &amp; Commissioning</h3><p class="svc-desc">Snagging, manuals and as-built documents done properly.</p><span class="svc-when">Build is finishing</span><span class="svc-cta">Get started &rarr;</span></a>
         <a class="svc" href="<?php echo esc_url($clarity); ?>"><div class="svc-n">14</div><h3 class="svc-title">Asset Review, Renovation &amp; Expansion</h3><p class="svc-desc">Protect and grow the value of what you already have.</p><span class="svc-when">Extending or upgrading</span><span class="svc-cta">Get started &rarr;</span></a>
       </div>
@@ -424,7 +424,7 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
           <li>Project abandoned</li>
           <li>No visibility from abroad</li>
         </ul>
-        <a class="btn-recovery" href="<?php echo esc_url($wa_base . 'Hello%20Gabochie%20Design%20%E2%80%94%20I%20have%20a%20stalled%20project%20and%20need%20a%20diagnostic.'); ?>" target="_blank" rel="noopener">Diagnose My Project</a>
+        <a class="btn-recovery" href="<?php echo esc_url(gabochie_value_recovery_url()); ?>">Diagnose My Project</a>
       </div>
       <div class="recov-right reveal">
         <h3>One honest diagnosis. No obligation to continue.</h3>

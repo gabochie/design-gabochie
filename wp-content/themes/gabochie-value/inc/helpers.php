@@ -48,6 +48,15 @@ function gabochie_value_clarity_url() {
 	return home_url( '/#clarity' );
 }
 
+/** "Diagnose My Project" target: the dedicated Project Recovery page. */
+function gabochie_value_recovery_url() {
+	$page = get_page_by_path( 'project-recovery', OBJECT, 'page' );
+	if ( $page && $page->ID && 'trash' !== $page->post_status ) {
+		return get_permalink( $page );
+	}
+	return home_url( '/project-recovery/' );
+}
+
 /** Social network handle => URL (VDAC brand links) */
 function gabochie_value_social_links() {
 	return array(

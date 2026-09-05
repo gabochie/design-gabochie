@@ -3,14 +3,14 @@
  * Gabochie Value Theme Functions
  *
  * @package Gabochie_Value
- * @version 1.6.0
+ * @version 1.7.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GABOCHIE_VALUE_VERSION', '1.6.0' );
+define( 'GABOCHIE_VALUE_VERSION', '1.7.0' );
 define( 'GABOCHIE_VALUE_DIR', get_template_directory() );
 define( 'GABOCHIE_VALUE_URI', get_template_directory_uri() );
 
@@ -160,6 +160,32 @@ add_action(
 		}
 
 		update_option( 'gabochie_value_pages_created', true );
+	}
+);
+
+/* ============================================
+	PROJECT RECOVERY — dedicated diagnostic page
+	Self-healing: recreates the page (with the right
+	template) if it is ever deleted or orphaned.
+	============================================ */
+add_action(
+	'init',
+	function () {
+		$slug     = 'project-recovery';
+		$existing = get_page_by_path( $slug, OBJECT, 'page' );
+		if ( $existing && isset( $existing->ID ) && 'trash' !== $existing->post_status ) {
+			return;
+		}
+		wp_insert_post(
+			array(
+				'post_title'   => 'Project Recovery',
+				'post_name'    => $slug,
+				'post_content' => 'A structured diagnosis for stalled projects — most can be rescued, and often finished for less than starting over.',
+				'post_status'  => 'publish',
+				'post_type'    => 'page',
+				'meta_input'   => array( '_wp_page_template' => 'page-templates/template-project-recovery.php' ),
+			)
+		);
 	}
 );
 
