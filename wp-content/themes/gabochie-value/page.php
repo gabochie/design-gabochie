@@ -4,25 +4,17 @@
  * @package Gabochie_Value
  */
 get_header();
-
-$clarity   = gabochie_value_clarity_url();
-$phone     = gabochie_value_phone();
 ?>
 
 <main id="main">
 
 <?php while (have_posts()) : the_post(); ?>
 
-<!-- ========== PAGE HERO ========== -->
-<section class="hero hero--solo" id="top">
-  <div class="hero-left">
-    <div class="hero-location"><span class="hero-location-dot"></span> Sakumono &middot; Tema &mdash; Ghana</div>
-    <h1 class="hero-h1"><?php the_title(); ?></h1>
-    <div class="hero-rule"></div>
-    <div class="hero-actions">
-      <a class="btn-gold" href="<?php echo esc_url($clarity); ?>">Start Here</a>
-    </div>
-    <div class="hero-note">Prefer to talk? Call <?php echo esc_html($phone); ?></div>
+<!-- ========== PAGE HERO (compact page-hero per design guide) ========== -->
+<section class="page-hero" id="top">
+  <div class="container">
+    <div class="breadcrumb"><a href="<?php echo esc_url( home_url( '/' ) ); ?>">Home</a> / <?php the_title(); ?></div>
+    <h1><?php the_title(); ?></h1>
   </div>
 </section>
 

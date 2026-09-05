@@ -19,27 +19,32 @@ while ( have_posts() ) :
 	the_post();
 	?>
 
-<!-- ========== POST HERO ========== -->
-<section class="hero hero--solo" id="top">
-	<div class="hero-left">
+<!-- ========== POST HERO (compact page-hero per design guide) ========== -->
+<section class="page-hero" id="top">
+	<div class="container">
 	<?php gabochie_value_breadcrumbs(); ?>
-	<div class="hero-location"><span class="hero-location-dot"></span> <?php echo esc_html( get_the_date() ); ?>
+	<div class="page-hero-meta">
+		<span><?php echo esc_html( get_the_date() ); ?></span>
 		<?php $gabochie_author_id = get_post_field( 'post_author' ); ?>
 		<?php if ( $gabochie_author_id ) : ?>
-		&middot; By <span class="hero-author"><?php echo esc_html( get_the_author_meta( 'display_name', $gabochie_author_id ) ); ?></span>
+		<span class="ph-dot" aria-hidden="true"></span>
+		<span>By <?php echo esc_html( get_the_author_meta( 'display_name', $gabochie_author_id ) ); ?></span>
+		<?php endif; ?>
+		<?php $gabochie_cats = get_the_category(); ?>
+		<?php if ( ! empty( $gabochie_cats ) ) : ?>
+		<span class="ph-dot" aria-hidden="true"></span>
+		<span><?php echo esc_html( $gabochie_cats[0]->name ); ?></span>
 		<?php endif; ?>
 	</div>
-	<h1 class="hero-h1"><?php the_title(); ?></h1>
-	<div class="hero-rule"></div>
-	<div class="hero-actions">
-		<a class="btn-gold" href="<?php echo esc_url( $clarity ); ?>">Start Here</a>
-	</div>
-	<div class="hero-note">Prefer to talk? Call <?php echo esc_html( $phone ); ?></div>
+	<h1><?php the_title(); ?></h1>
+	<?php if ( has_excerpt() ) : ?>
+	<p><?php echo esc_html( get_the_excerpt() ); ?></p>
+	<?php endif; ?>
 	</div>
 </section>
 
 <!-- ========== CONTENT ========== -->
-<section class="value" id="content">
+<section class="post-body" id="content">
 	<div class="container">
 	<?php if ( has_post_thumbnail() ) : ?>
 	<div class="entry-thumb"><?php the_post_thumbnail( 'gabochie-value-hero' ); ?></div>

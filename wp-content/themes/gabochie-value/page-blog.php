@@ -8,9 +8,6 @@
 
 get_header();
 
-$clarity = gabochie_value_clarity_url();
-$phone   = gabochie_value_phone();
-
 $paged        = max( 1, (int) get_query_var( 'paged' ) );
 $cat_slug     = get_query_var( 'category_name', '' );
 $current_cat  = $cat_slug ? get_category_by_slug( $cat_slug ) : null;
@@ -31,17 +28,12 @@ $cats = get_categories( array( 'hide_empty' => true ) );
 
 <main id="main">
 
-<!-- ========== BLOG HERO ========== -->
-<section class="hero hero--solo" id="top">
-  <div class="hero-left">
-    <div class="hero-location"><span class="hero-location-dot"></span> Sakumono &middot; Tema &mdash; Ghana</div>
-    <h1 class="hero-h1"><?php echo esc_html( $current_cat ? $current_cat->name : __( 'Blog', 'gabochie-value' ) ); ?></h1>
-    <div class="hero-rule"></div>
-    <p class="hero-sub"><?php esc_html_e( 'Practical guidance on building in Ghana, diaspora property and value-driven design.', 'gabochie-value' ); ?></p>
-    <div class="hero-actions">
-      <a class="btn-gold" href="<?php echo esc_url( $clarity ); ?>">Start Here</a>
-    </div>
-    <div class="hero-note">Prefer to talk? Call <?php echo esc_html( $phone ); ?></div>
+<!-- ========== BLOG HERO (compact page-hero per design guide) ========== -->
+<section class="page-hero" id="top">
+  <div class="container">
+    <div class="breadcrumb"><a href="<?php echo esc_url( home_url( '/' ) ); ?>">Home</a> / <?php echo esc_html( $current_cat ? $current_cat->name : __( 'Blog', 'gabochie-value' ) ); ?></div>
+    <h1><?php echo esc_html( $current_cat ? $current_cat->name : __( 'Blog', 'gabochie-value' ) ); ?></h1>
+    <p><?php esc_html_e( 'Practical guidance on building in Ghana, diaspora property and value-driven design.', 'gabochie-value' ); ?></p>
   </div>
 </section>
 

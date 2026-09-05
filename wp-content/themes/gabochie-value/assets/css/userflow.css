@@ -250,7 +250,17 @@
 .gv-rec-ctas .btn-solid, .gv-rec-ctas .btn-ghost { min-height: 48px; display: inline-flex; align-items: center; }
 .gv-rec-note, .gd-field-note, .gv-shop-note { font-size: 0.78rem; color: var(--mist); line-height: 1.6; }
 
-/* ---- 9. Responsive (mirrors shop breakpoints) ---- */
+/* ---- 9. Blog + post body (design guide alignment) ---- */
+.post-body { background: var(--ivory); }
+.page-hero-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 0.6rem; font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); margin-bottom: 1.5rem; }
+.page-hero-meta .ph-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gold); opacity: 0.6; }
+.entry-content { overflow-wrap: break-word; }
+.entry-content > :first-child { margin-top: 0; }
+.entry-content img { border-radius: var(--r-sm); }
+.entry-content table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.entry-content iframe, .entry-content embed, .entry-content video { max-width: 100%; }
+
+/* ---- 10. Responsive (mirrors shop breakpoints) ---- */
 @media (max-width: 900px) {
 	#d2-rec-stepper { grid-template-columns: repeat(2, 1fr); }
 	.gv-shop-hero, .gv-sp-hero, .onb-hero, .page-hero { padding: 5rem 1.25rem 2.5rem; }
