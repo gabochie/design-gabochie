@@ -180,11 +180,11 @@ get_header();
 		<p id="gvRecSummary"></p>
 		<div class="gv-rec-received" id="gvRecReceived"></div>
 		<p>Your diagnosis reference: <strong id="gvRecRef"></strong> — it's been saved to your project profile.</p>
-		<div class="gv-rec-ctas">
-			<a class="btn-solid" href="<?php echo esc_url( gabochie_value_recovery_product_url() ); ?>">Book the Recovery Diagnostic</a>
+		<div class="gv-rec-ctas" id="gvRecCtas">
+			<a class="btn-solid" id="gvRecCtaPrimary" href="<?php echo esc_url( gabochie_value_recovery_product_url() ); ?>">Book the Recovery Diagnostic — Unlock Workspace</a>
 			<a class="btn-ghost" href="<?php echo esc_url( home_url( '/membership-levels/' ) ); ?>">See Membership Plans</a>
 		</div>
-		<p class="gv-rec-note">Most stuck projects can be rescued &mdash; and often finished for less than starting over. The Recovery Diagnostic is a paid consultation: fixed fee, clear scope, no obligation to continue.</p>
+		<p class="gv-rec-note">All building types in Ghana — residential, commercial, mixed-use, renovation & interior. The Recovery Diagnostic (GHS 1,500) unlocks your step-by-step workspace: Triage → Evidence → Plan → Execution → Verification. Facilitators co-drive from the same workspace.</p>
 		</div>
 
 	</div><!-- /onb-card -->

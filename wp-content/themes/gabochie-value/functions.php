@@ -66,6 +66,11 @@ require_once GABOCHIE_VALUE_DIR . '/inc/client-portal-readiness-api.php';
 require_once GABOCHIE_VALUE_DIR . '/inc/client-portal-verify.php';
 
 /* ============================================
+	PROJECT RECOVERY WORKSPACE (MVP)
+	============================================ */
+require_once GABOCHIE_VALUE_DIR . '/inc/client-portal-recovery.php';
+
+/* ============================================
 	MEMBERSHIP — Client Login & Redirects
 	============================================ */
 add_filter(

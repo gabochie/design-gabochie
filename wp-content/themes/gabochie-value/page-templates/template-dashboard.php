@@ -13,6 +13,15 @@ $user_id = $user->ID;
 $rest_base = rest_url('gabochie/v1/');
 $nonce = wp_create_nonce('wp_rest');
 
+/* Allow deep-link ?project=ID for recovery workspace */
+$forced_project_id = isset( $_GET['project'] ) ? (int) $_GET['project'] : 0;
+if ( $forced_project_id ) {
+	$forced = get_post( $forced_project_id );
+	if ( $forced && 'client_project' === $forced->post_type && ( $is_admin || (int) $forced->post_author === (int) $user_id || ( function_exists( 'gabochie_recovery_can_access' ) && gabochie_recovery_can_access( $forced_project_id, $user_id ) ) ) ) {
+		$latest_forced = $forced;
+	}
+}
+
 /* Fetch user's latest project (or all for admin) */
 $project_args = array(
     'post_type'      => 'client_project',
@@ -23,6 +32,12 @@ $project_args = array(
 if (!$is_admin) $project_args['author'] = $user_id;
 $projects = get_posts($project_args);
 $latest = !empty($projects) ? $projects[0] : null;
+if ( isset( $latest_forced ) && $latest_forced ) {
+	$latest = $latest_forced;
+}
+$is_recovery = $latest && function_exists( 'gabochie_recovery_is_active' ) && gabochie_recovery_is_active( $latest->ID );
+$recovery_status = $is_recovery ? get_post_meta( $latest->ID, 'recovery_status', true ) : '';
+$recovery_step   = $is_recovery && function_exists( 'gabochie_recovery_current_step' ) ? gabochie_recovery_current_step( $latest->ID ) : '';
 
 /* Helper functions */
 $statuses = function_exists('gabochie_value_project_statuses') ? gabochie_value_project_statuses() : array();
@@ -182,17 +197,59 @@ if ($current_level) {
     </div>
 </div>
 
+<?php if ( $is_recovery ) : ?>
+<div class="d2-recovery-banner" style="margin:1.2rem 0;padding:1rem 1.2rem;background:linear-gradient(135deg,#0A4840,#0D5C52);border-radius:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.8rem;color:#FAF7F2">
+    <div><strong style="letter-spacing:0.04em">🏗️ Real Estate Development — Project Recovery Workspace</strong><div style="font-size:0.8rem;opacity:0.9">Step-by-step: take charge of your stuck project. Facilitator can co-drive.</div></div>
+    <span class="d2-badge" style="background:#C9A96E;color:#0A4840"><?php echo esc_html( ucwords( str_replace( '_', ' ', $recovery_status ?: 'triage' ) ) ); ?></span>
+</div>
+<?php endif; ?>
+
 <!-- ═══ TABS ═══ -->
 <div class="d2-tabs">
-    <div class="d2-tab active" data-tab="timeline">Timeline</div>
+    <?php if ( $is_recovery ) : ?><div class="d2-tab<?php echo $is_recovery ? ' active' : ''; ?>" data-tab="recovery">Recovery <span style="background:#C9A96E;color:#0A4840;padding:1px 6px;border-radius:8px;font-size:0.6rem;margin-left:4px">NEW</span></div><?php endif; ?>
+    <div class="d2-tab<?php echo $is_recovery ? '' : ' active'; ?>" data-tab="timeline">Timeline</div>
     <div class="d2-tab" data-tab="documents">Documents</div>
     <div class="d2-tab" data-tab="messages">Messages <?php if ($msg_stats['unread'] > 0) echo '<span style="background:var(--gold);color:var(--white);padding:1px 6px;border-radius:8px;font-size:.6rem;margin-left:4px">' . $msg_stats['unread'] . '</span>'; ?></div>
     <div class="d2-tab" data-tab="audit">Activity Log</div>
     <div class="d2-tab" data-tab="costs">Costs</div>
 </div>
 
+<?php if ( $is_recovery ) : ?>
+<!-- ═══ RECOVERY TAB (All Building Types — Ghana) ═══ -->
+<div class="d2-tab-content active" data-tab="recovery" id="d2-recovery-tab">
+    <div class="d2-section">
+        <div class="d2-section-head">
+            <h3>Recovery Workspace — All Building Types</h3>
+            <span class="d2-badge gold" id="d2-rec-progress-badge">Loading…</span>
+        </div>
+        <div class="d2-section-body">
+            <div style="display:flex;flex-wrap:wrap;gap:0.6rem;margin-bottom:1rem;font-size:0.78rem">
+                <?php
+                $rtype = get_post_meta( $latest->ID, 'project_type', true ) ?: get_post_meta( $latest->ID, 'property_type', true ) ?: '—';
+                $rloc  = get_post_meta( $latest->ID, 'project_location', true ) ?: get_post_meta( $latest->ID, 'land_location', true ) ?: '—';
+                $rblockers = get_post_meta( $latest->ID, 'rec_blockers', true ) ?: '—';
+                ?>
+                <span class="d2-badge teal">Type: <?php echo esc_html( ucwords( str_replace( '_', ' ', $rtype ) ) ); ?></span>
+                <span class="d2-badge">Location: <?php echo esc_html( $rloc ); ?></span>
+                <span class="d2-badge">Blockers: <?php echo esc_html( $rblockers ); ?></span>
+                <?php $fid = (int) get_post_meta( $latest->ID, 'facilitator_id', true ); if ( $fid ) { $fu = get_userdata( $fid ); echo '<span class="d2-badge gold">Facilitator: ' . esc_html( $fu ? $fu->display_name : '#' . $fid ) . '</span>'; } ?>
+            </div>
+            <div class="d2-progress" style="margin-top:0"><div class="d2-progress-fill" id="d2-rec-progress-fill" style="width:0%"></div></div>
+            <div id="d2-rec-stepper" style="display:grid;grid-template-columns:repeat(5,1fr);gap:0.6rem;margin:1rem 0"></div>
+            <div id="d2-rec-checklist" style="margin-top:1rem"></div>
+            <div style="display:flex;gap:0.6rem;margin-top:1.2rem;flex-wrap:wrap">
+                <button id="d2-rec-advance" class="btn-gold" style="padding:0.6rem 1.2rem;border:none;border-radius:8px;cursor:pointer;display:none">Advance to Next Step →</button>
+                <button id="d2-rec-approve" class="btn-ghost" style="padding:0.6rem 1rem;border:1px solid var(--border-light);border-radius:8px;cursor:pointer;display:none">Approve Plan (Owner)</button>
+            </div>
+            <div id="d2-rec-msg" style="margin-top:0.7rem;font-size:0.82rem;color:var(--mist)"></div>
+            <p style="font-size:0.75rem;color:var(--mist);margin-top:1rem">Works for all building types in Ghana — residential, commercial, mixed-use, renovation & interior. Your facilitator sees the same workspace and can co-drive with you.</p>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
 <!-- ═══ TIMELINE TAB ═══ -->
-<div class="d2-tab-content active" data-tab="timeline">
+<div class="d2-tab-content<?php echo $is_recovery ? '' : ' active'; ?>" data-tab="timeline">
     <div class="d2-section">
         <div class="d2-section-head">
             <h3>14-Stage Timeline</h3>
@@ -583,9 +640,107 @@ function d2SendMessage(){
 }
 
 /* Enter to send */
-document.getElementById('d2-msg-field').addEventListener('keydown', function(e){
+document.getElementById('d2-msg-field')?.addEventListener('keydown', function(e){
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); d2SendMessage(); }
 });
+
+/* ─── RECOVERY WORKSPACE (All Building Types, Ghana) ─── */
+(function(){
+    var app = document.getElementById('d2-app');
+    if(!app) return;
+    var pid = app.getAttribute('data-project');
+    var rest = app.getAttribute('data-rest');
+    var nonce = app.getAttribute('data-nonce');
+    var recTab = document.getElementById('d2-recovery-tab');
+    if(!recTab || !pid || pid==='0') return;
+
+    function api(path, opts){
+        opts = opts||{};
+        opts.headers = opts.headers||{};
+        opts.headers['X-WP-Nonce'] = nonce;
+        opts.headers['Content-Type'] = 'application/json';
+        return fetch(rest + path, opts).then(function(r){ return r.json().then(function(d){ return {ok:r.ok, data:d}; }); });
+    }
+
+    function render(data){
+        var steps = data.steps || {};
+        var stepKeys = Object.keys(steps);
+        var current = data.current_step || 'triage';
+        var checklist = data.checklist || [];
+        var badge = document.getElementById('d2-rec-progress-badge');
+        var fill = document.getElementById('d2-rec-progress-fill');
+        if(badge) badge.textContent = data.progress + '% · ' + current;
+        if(fill) fill.style.width = data.progress + '%';
+        // stepper
+        var stepper = document.getElementById('d2-rec-stepper');
+        if(stepper){
+            var html='';
+            var curIdx = stepKeys.indexOf(current);
+            stepKeys.forEach(function(k, i){
+                var s = steps[k];
+                var cls = i < curIdx ? 'done' : (i===curIdx ? 'current' : 'upcoming');
+                var bg = cls==='done' ? '#0D5C52' : (cls==='current' ? '#C9A96E' : '#E8E8E4');
+                var color = cls==='upcoming' ? '#6B7C78' : '#fff';
+                html += '<div style="text-align:center;padding:0.7rem 0.4rem;border-radius:10px;background:'+bg+';color:'+color+'"><div style="font-size:0.72rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase">'+s.label+'</div><div style="font-size:0.7rem;opacity:0.9;margin-top:0.2rem">'+s.desc+'</div></div>';
+            });
+            stepper.innerHTML = html;
+        }
+        // checklist
+        var cl = document.getElementById('d2-rec-checklist');
+        if(cl){
+            if(!checklist.length){
+                cl.innerHTML = '<div style="padding:1rem;color:var(--mist);font-size:0.85rem">No checklist yet — your facilitator will seed it.</div>';
+            } else {
+                var chtml = '<div style="font-weight:600;margin-bottom:0.5rem">Your Recovery Checklist</div>';
+                checklist.forEach(function(it){
+                    var done = it.status==='done';
+                    chtml += '<label style="display:flex;align-items:center;gap:0.6rem;padding:0.55rem 0.7rem;border:1px solid var(--border-light);border-radius:8px;margin-bottom:0.4rem;background:'+(done?'#F0FAF6':'#fff')+';cursor:pointer"><input type="checkbox" data-id="'+it.id+'" '+(done?'checked':'')+' style="width:16px;height:16px"><span style="flex:1;font-size:0.85rem;'+(done?'text-decoration:line-through;color:var(--mist)':'')+'">'+it.label+'</span><span style="font-size:0.65rem;color:var(--mist);text-transform:uppercase;letter-spacing:0.06em">'+(it.doc_type||'')+'</span></label>';
+                });
+                cl.innerHTML = chtml;
+                cl.querySelectorAll('input[type=checkbox]').forEach(function(cb){
+                    cb.addEventListener('change', function(){
+                        var itemId = this.getAttribute('data-id');
+                        var status = this.checked ? 'done' : 'pending';
+                        api('recovery/'+pid+'/checklist', {method:'POST', body: JSON.stringify({item_id:itemId, status:status})}).then(function(res){
+                            if(!res.ok){ alert(res.data.message||'Update failed'); cb.checked = !cb.checked; }
+                        });
+                    });
+                });
+            }
+        }
+        var adv = document.getElementById('d2-rec-advance');
+        var appr = document.getElementById('d2-rec-approve');
+        var msg = document.getElementById('d2-rec-msg');
+        if(adv){
+            var nextIdx = stepKeys.indexOf(current)+1;
+            if(nextIdx < stepKeys.length){
+                adv.style.display = 'inline-block';
+                adv.textContent = 'Advance to ' + steps[stepKeys[nextIdx]].label + ' →';
+                adv.onclick = function(){
+                    adv.disabled=true; adv.textContent='Advancing…';
+                    api('recovery/'+pid+'/advance', {method:'POST', body: JSON.stringify({to: stepKeys[nextIdx]})}).then(function(res){
+                        if(res.ok){ render(res.data); if(msg) msg.textContent='Moved to '+steps[stepKeys[nextIdx]].label; }
+                        else { if(msg) { msg.textContent=res.data.message||'Cannot advance'; msg.style.color='#b02323'; } adv.disabled=false; adv.textContent='Advance to '+steps[stepKeys[nextIdx]].label+' →'; }
+                    });
+                };
+            } else { adv.style.display='none'; }
+        }
+        if(appr){
+            if(current==='plan' && !data.plan_approved){
+                appr.style.display='inline-block';
+                appr.onclick = function(){
+                    appr.disabled=true;
+                    api('recovery/'+pid+'/approve-plan', {method:'POST', body:'{}'}).then(function(res){
+                        if(res.ok){ appr.style.display='none'; if(msg) msg.textContent='Plan approved — you can now advance to Execution.'; }
+                        else { appr.disabled=false; }
+                    });
+                };
+            } else { appr.style.display='none'; }
+        }
+    }
+
+    api('recovery/'+pid).then(function(res){ if(res.ok) render(res.data); else { var m=document.getElementById('d2-rec-msg'); if(m) m.textContent='Recovery workspace not provisioned yet — complete the Diagnostic purchase to unlock.'; } });
+})();
 </script>
 
 <?php get_footer(); ?>

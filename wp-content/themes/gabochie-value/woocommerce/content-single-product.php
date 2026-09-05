@@ -123,11 +123,12 @@ if ( $is_member ) {
 	}
 }
 ?>
+<?php $is_recovery_product = 'project-recovery-diagnostic' === $product->get_slug(); ?>
 <section class="gv-sp-hero">
 	<div class="container">
 		<div class="breadcrumb"><a href="<?php echo esc_url( home_url( '/' ) ); ?>">Home</a> / <a href="<?php echo esc_url( get_post_type_archive_link( 'product' ) ? get_post_type_archive_link( 'product' ) : home_url( '/shop/' ) ); ?>">Shop</a> / <?php echo esc_html( $product->get_name() ); ?></div>
-		<h1><?php echo esc_html( $product->get_name() ); ?> — <em>fixed fee, clear scope.</em></h1>
-		<p><?php echo esc_html( wp_trim_words( wp_strip_all_tags( $product->get_short_description() ? $product->get_short_description() : $product->get_description() ), 30 ) ); ?></p>
+		<h1><?php echo esc_html( $product->get_name() ); ?> — <em><?php echo $is_recovery_product ? 'unlocks your recovery workspace.' : 'fixed fee, clear scope.'; ?></em></h1>
+		<p><?php echo esc_html( wp_trim_words( wp_strip_all_tags( $product->get_short_description() ? $product->get_short_description() : $product->get_description() ), 30 ) ); ?><?php if ( $is_recovery_product ) echo ' — Covers all building types in Ghana: residential, commercial, mixed-use, renovation & interior. Step-by-step workspace with facilitator co-drive.'; ?></p>
 	</div>
 </section>
 
