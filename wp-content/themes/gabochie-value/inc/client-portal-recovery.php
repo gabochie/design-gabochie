@@ -339,7 +339,8 @@ function gabochie_recovery_provision( $order_id, $project_id = 0 ) {
 	$blockers     = $blockers_raw ? array_map( 'trim', explode( ',', $blockers_raw ) ) : array();
 
 	update_post_meta( $project_id, 'project_status', 'recovery_active' );
-	if ( '' === get_post_meta( $project_id, 'recovery_status', true ) ) {
+	$cur_rs = get_post_meta( $project_id, 'recovery_status', true );
+	if ( '' === $cur_rs || 'diagnosed' === $cur_rs ) {
 		update_post_meta( $project_id, 'recovery_status', 'triage' );
 	}
 	update_post_meta( $project_id, 'recovery_paid_order_id', $order_id );
