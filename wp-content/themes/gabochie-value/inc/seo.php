@@ -209,6 +209,7 @@ function gabochie_value_toc_content( $content ) {
 			if ( $text === '' ) {
 				return $m[0];
 			}
+			$is_faq_heading = (bool) preg_match( '/frequently\s*asked|^faq$/i', $text );
 			$has_id = preg_match( '/id=["\']([^"\']+)["\']/', $m[1], $idm );
 			if ( $has_id ) {
 				$id = $idm[1];
@@ -220,11 +221,13 @@ function gabochie_value_toc_content( $content ) {
 					$i++;
 				}
 			}
-			$used[]  = $id;
-			$items[] = array(
-				'id'   => $id,
-				'text' => $text,
-			);
+			$used[] = $id;
+			if ( ! $is_faq_heading ) {
+				$items[] = array(
+					'id'   => $id,
+					'text' => $text,
+				);
+			}
 			if ( $has_id ) {
 				return $m[0];
 			}
@@ -236,6 +239,8 @@ function gabochie_value_toc_content( $content ) {
 	if ( count( $items ) < 3 ) {
 		return $content;
 	}
+
+	$items = array_slice( $items, 0, 6 );
 
 	$nav  = '<nav class="gv-toc" aria-label="On this page">';
 	$nav .= '<p class="gv-toc-title">On this page</p>';
