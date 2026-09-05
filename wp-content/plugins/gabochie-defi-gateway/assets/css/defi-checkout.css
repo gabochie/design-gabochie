@@ -1,0 +1,188 @@
+/* Gabochie DeFi Checkout Styling */
+.gabochie-defi-checkout-wrapper {
+	background: #FAF7F2;
+	border: 1px solid #E5E2DA;
+	border-radius: 12px;
+	padding: 1.25rem 1.4rem;
+	margin-top: 1rem;
+	font-family: 'Jost', system-ui, -apple-system, sans-serif;
+}
+
+.gd-defi-summary {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding-bottom: 0.9rem;
+	border-bottom: 1px dashed #D5D0C5;
+	font-size: 0.92rem;
+	color: #1C2B28;
+}
+
+.gd-defi-usd {
+	color: #0D5C52;
+	font-weight: 600;
+}
+
+.gd-defi-chain-selector {
+	margin: 1.1rem 0;
+}
+
+.gd-defi-chain-selector label {
+	display: block;
+	font-weight: 600;
+	font-size: 0.85rem;
+	color: #1C2B28;
+	margin-bottom: 0.5rem;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.gd-defi-chains {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+}
+
+.gd-chain-btn {
+	background: #ffffff;
+	border: 1.5px solid #D5D0C5;
+	border-radius: 8px;
+	padding: 0.45rem 0.8rem;
+	font-size: 0.78rem;
+	font-weight: 600;
+	color: #4A524D;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.gd-chain-btn:hover {
+	border-color: #0D5C52;
+	color: #0D5C52;
+}
+
+.gd-chain-btn.active {
+	background: #0D5C52;
+	color: #FAF7F2;
+	border-color: #0D5C52;
+	box-shadow: 0 2px 8px rgba(13, 92, 82, 0.25);
+}
+
+.gd-defi-details-box {
+	display: flex;
+	gap: 1.2rem;
+	align-items: center;
+	background: #ffffff;
+	border: 1px solid #E5E2DA;
+	border-radius: 10px;
+	padding: 1rem;
+	margin-bottom: 1.1rem;
+}
+
+.gd-defi-qr-col img {
+	border-radius: 6px;
+	border: 1px solid #eee;
+	display: block;
+}
+
+.gd-defi-address-col {
+	flex: 1;
+}
+
+.gd-defi-address-col .gd-label {
+	display: block;
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: #6B7C78;
+	margin-bottom: 0.4rem;
+	font-weight: 600;
+}
+
+.gd-addr-box {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	background: #F4EFE6;
+	border: 1px solid #E2E8E5;
+	padding: 0.5rem 0.75rem;
+	border-radius: 8px;
+	margin-bottom: 0.6rem;
+}
+
+.gd-addr-box code {
+	flex: 1;
+	font-family: monospace;
+	font-size: 0.82rem;
+	color: #0A4840;
+	word-break: break-all;
+	background: transparent;
+	padding: 0;
+}
+
+.gd-copy-btn {
+	background: #C9A96E;
+	color: #0A4840;
+	border: none;
+	padding: 0.3rem 0.75rem;
+	border-radius: 6px;
+	font-size: 0.75rem;
+	font-weight: 700;
+	cursor: pointer;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	transition: background 0.2s ease;
+}
+
+.gd-copy-btn:hover {
+	background: #b8955e;
+}
+
+.gd-net-info {
+	font-size: 0.78rem;
+	color: #6B7C78;
+}
+
+.gd-net-info strong {
+	color: #1C2B28;
+}
+
+.gd-defi-tx-input-wrap label {
+	display: block;
+	font-weight: 600;
+	font-size: 0.82rem;
+	color: #1C2B28;
+	margin-bottom: 0.35rem;
+}
+
+.gd-defi-tx-input-wrap input {
+	width: 100%;
+	padding: 0.65rem 0.85rem;
+	border: 1.5px solid #D5D0C5;
+	border-radius: 8px;
+	font-size: 0.88rem;
+	font-family: monospace;
+	background: #fff;
+}
+
+.gd-defi-tx-input-wrap input:focus {
+	border-color: #0D5C52;
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(13, 92, 82, 0.15);
+}
+
+.gd-field-note {
+	display: block;
+	font-size: 0.75rem;
+	color: #6B7C78;
+	margin-top: 0.3rem;
+}
+
+@media (max-width: 600px) {
+	.gd-defi-details-box {
+		flex-direction: column;
+		text-align: center;
+	}
+	.gd-addr-box {
+		flex-direction: column;
+	}
+}
