@@ -251,6 +251,13 @@ function gabochie_value_toc_content( $content ) {
 	$nav .= '</ol>';
 	$nav .= '</nav>';
 
+	/* Place the card after the intro (first paragraph), not above it —
+		readers should meet content before the outline. */
+	$pos = strpos( $content, '</p>' );
+	if ( false !== $pos ) {
+		return substr( $content, 0, $pos + 4 ) . "\n" . $nav . substr( $content, $pos + 4 );
+	}
+
 	return $nav . "\n" . $content;
 }
 add_filter( 'the_content', 'gabochie_value_toc_content', 20 );
