@@ -97,5 +97,15 @@ function gabochie_value_scripts() {
 			GABOCHIE_VALUE_VERSION
 		);
 	}
+
+	/* ---- Development Quiz page assets ---- */
+	if ( is_page_template( 'page-templates/template-quiz.php' ) ) {
+		wp_enqueue_style(
+			'gabochie-onb',
+			GABOCHIE_VALUE_URI . '/assets/css/onboarding.css',
+			array( 'gabochie-value-main' ),
+			GABOCHIE_VALUE_VERSION
+		);
+	}
 }
 add_action( 'wp_enqueue_scripts', 'gabochie_value_scripts', 99 );

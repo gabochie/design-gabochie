@@ -22,11 +22,6 @@ get_header();
 
 <style>
 /* Scoped recovery-wizard styles on top of the onboarding.css layout. */
-.gv-rec-progress { display:flex; align-items:center; gap:0.4rem; margin:0.2rem 0 1.6rem; }
-.gv-rec-dot { width:26px; height:26px; border-radius:50%; background:var(--border-light,#e5e2da); color:var(--mist,#5f6359); font-size:0.72rem; font-weight:600; display:flex; align-items:center; justify-content:center; font-family:'Jost',sans-serif; }
-.gv-rec-dot.on { background:var(--gold,#b08d3f); color:#fff; }
-.gv-rec-sep { flex:1; height:2px; background:var(--border-light,#e5e2da); }
-.gv-rec-desc { min-height:12px; font-size:0.78rem; color:var(--mist,#5f6359); margin-bottom:0.9rem; letter-spacing:0.02em; }
 .gv-rec-err { color:#b02323; font-size:0.8rem; margin-top:0.7rem; font-family:'Jost',sans-serif; }
 .gv-rec-result { padding:0.5rem 0 0.2rem; }
 .gv-rec-tier { display:inline-block; padding:0.35rem 0.9rem; border-radius:999px; font-size:0.72rem; letter-spacing:0.13em; text-transform:uppercase; font-weight:600; color:#06350F; background:var(--gold,#b08d3f); font-family:'Jost',sans-serif; }
@@ -64,10 +59,21 @@ get_header();
 	<div class="container">
 	<div class="onb-card">
 
-		<div class="gv-rec-progress" id="gvRecProgress" aria-hidden="true"></div>
-		<p class="gv-rec-desc" id="gvRecDesc"></p>
+		<!-- Progress bar (mirrors onboarding stepper) -->
+		<div class="onb-progress" id="gvRecProgress" aria-hidden="true">
+			<div class="onb-p-step active" data-p="1"><span class="op-num">1</span><span class="op-label">Blockers</span></div>
+			<span class="op-dash"></span>
+			<div class="onb-p-step" data-p="2"><span class="op-num">2</span><span class="op-label">Stage</span></div>
+			<span class="op-dash"></span>
+			<div class="onb-p-step" data-p="3"><span class="op-num">3</span><span class="op-label">Spend</span></div>
+			<span class="op-dash"></span>
+			<div class="onb-p-step" data-p="4"><span class="op-num">4</span><span class="op-label">Goal</span></div>
+			<span class="op-dash"></span>
+			<div class="onb-p-step" data-p="5"><span class="op-num">5</span><span class="op-label">Contact</span></div>
+		</div>
 
 		<form id="gvRecForm" novalidate>
+		<div class="onb-body">
 		<input type="text" name="gabochie_website" class="gv-rec-hp" tabindex="-1" autocomplete="off" aria-hidden="true" value="" />
 
 		<!-- ===== STEP 1: Blockers ===== -->
@@ -157,6 +163,7 @@ get_header();
 			</div>
 			</div>
 		</div>
+		</div><!-- /onb-body -->
 
 		<!-- ===== NAV ===== -->
 		<div class="onb-nav" id="gvRecNav">
@@ -195,13 +202,6 @@ get_header();
 (function () {
 	'use strict';
 	var ENDPOINT = '<?php echo esc_url_raw( home_url( '/wp-json/gabochie/v1/recovery-diagnose' ) ); ?>';
-	var STEP_DESC = {
-	1: 'Step 1 of 5 — tell us what stopped the build.',
-	2: 'Step 2 of 5 — how far the structure got shapes the answer.',
-	3: 'Step 3 of 5 — what you have committed so far.',
-	4: 'Step 4 of 5 — your goal changes the recommendation.',
-	5: 'Step 5 of 5 — where to send the diagnosis.'
-	};
 	var STEP_MAX = 5;
 	var state = {
 	blockers: [],
@@ -213,27 +213,19 @@ get_header();
 	var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
 
 	var progress = $('#gvRecProgress');
-	var desc     = $('#gvRecDesc');
 	var err      = $('#gvRecErr');
 	var nav      = $('#gvRecNav');
 	var form     = $('#gvRecForm');
 	var result   = $('#gvRecResult');
 	var current  = 1;
 
-	function buildProgress() {
-	var html = '';
-	for (var i = 1; i <= STEP_MAX; i++) {
-		if (i > 1) html += '<span class="gv-rec-sep"></span>';
-		html += '<span class="gv-rec-dot' + (i === 1 ? ' on' : '') + '">' + i + '</span>';
-	}
-	progress.innerHTML = html;
-	refresh();
-	}
-
 	function refresh() {
-	var dots = $$('.gv-rec-dot');
-	dots.forEach(function (d, i) { d.classList.toggle('on', i + 1 <= current); });
-	desc.textContent = STEP_DESC[current];
+	var pSteps = $$('.onb-p-step', progress);
+	pSteps.forEach(function (p) {
+		var idx = +p.getAttribute('data-p');
+		p.classList.toggle('active', idx === current);
+		p.classList.toggle('done', idx < current);
+	});
 	err.textContent = '';
 	err.style.display = 'none';
 	}
@@ -368,12 +360,10 @@ get_header();
 	form.style.display = 'none';
 	nav.style.display = 'none';
 	progress.style.display = 'none';
-	desc.style.display = 'none';
 	result.style.display = 'block';
 	result.scrollIntoView({ behavior: 'smooth', block: 'start' });
 	}
 
-	buildProgress();
 	bindChips();
 	show(1);
 })();
