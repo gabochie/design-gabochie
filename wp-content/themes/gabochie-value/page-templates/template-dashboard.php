@@ -240,6 +240,16 @@ if ($current_level) {
             <div style="display:flex;gap:0.6rem;margin-top:1.2rem;flex-wrap:wrap">
                 <button id="d2-rec-advance" class="btn-gold" style="padding:0.6rem 1.2rem;border:none;border-radius:8px;cursor:pointer;display:none">Advance to Next Step →</button>
                 <button id="d2-rec-approve" class="btn-ghost" style="padding:0.6rem 1rem;border:1px solid var(--border-light);border-radius:8px;cursor:pointer;display:none">Approve Plan (Owner)</button>
+                <a id="d2-rec-pdf" href="#" target="_blank" style="padding:0.6rem 1rem;border:1px solid var(--border-light);border-radius:8px;text-decoration:none;font-size:0.82rem;color:var(--teal);display:inline-flex;align-items:center;gap:0.4rem">📄 Download PDF Report</a>
+            </div>
+            <div id="d2-rec-invite" style="margin-top:1.2rem;padding:0.9rem;border:1px dashed var(--border-light);border-radius:10px;background:#FAF7F2">
+                <div style="font-weight:600;font-size:0.85rem;margin-bottom:0.5rem">Invite Facilitator (co-drive this recovery)</div>
+                <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+                    <input type="email" id="d2-rec-invite-email" placeholder="facilitator@email.com" style="flex:1;min-width:180px;padding:0.55rem 0.7rem;border:1px solid var(--border-light);border-radius:8px">
+                    <input type="text" id="d2-rec-invite-name" placeholder="Name (optional)" style="flex:1;min-width:140px;padding:0.55rem 0.7rem;border:1px solid var(--border-light);border-radius:8px">
+                    <button id="d2-rec-invite-btn" style="padding:0.55rem 1rem;background:var(--teal);color:#fff;border:none;border-radius:8px;cursor:pointer">Invite</button>
+                </div>
+                <div id="d2-rec-invite-msg" style="font-size:0.78rem;color:var(--mist);margin-top:0.4rem"></div>
             </div>
             <div id="d2-rec-msg" style="margin-top:0.7rem;font-size:0.82rem;color:var(--mist)"></div>
             <p style="font-size:0.75rem;color:var(--mist);margin-top:1rem">Works for all building types in Ghana — residential, commercial, mixed-use, renovation & interior. Your facilitator sees the same workspace and can co-drive with you.</p>
@@ -740,6 +750,29 @@ document.getElementById('d2-msg-field')?.addEventListener('keydown', function(e)
     }
 
     api('recovery/'+pid).then(function(res){ if(res.ok) render(res.data); else { var m=document.getElementById('d2-rec-msg'); if(m) m.textContent='Recovery workspace not provisioned yet — complete the Diagnostic purchase to unlock.'; } });
+
+    // PDF link
+    var pdfLink = document.getElementById('d2-rec-pdf');
+    if(pdfLink) pdfLink.href = rest + 'recovery/' + pid + '/pdf?_wpnonce=' + nonce;
+
+    // Invite handler
+    var inviteBtn = document.getElementById('d2-rec-invite-btn');
+    if(inviteBtn){
+        inviteBtn.addEventListener('click', function(){
+            var emailEl = document.getElementById('d2-rec-invite-email');
+            var nameEl = document.getElementById('d2-rec-invite-name');
+            var msgEl = document.getElementById('d2-rec-invite-msg');
+            var email = emailEl ? emailEl.value.trim() : '';
+            var name = nameEl ? nameEl.value.trim() : '';
+            if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ if(msgEl){ msgEl.textContent='Valid email required.'; msgEl.style.color='#b02323'; } return; }
+            inviteBtn.disabled=true; inviteBtn.textContent='Inviting…';
+            api('recovery/'+pid+'/invite', {method:'POST', body: JSON.stringify({email:email, name:name})}).then(function(res){
+                if(res.ok){ if(msgEl){ msgEl.textContent='Invited '+res.data.email+' — they can now co-drive.'; msgEl.style.color='#0D5C52'; } if(emailEl) emailEl.value=''; if(nameEl) nameEl.value=''; }
+                else { if(msgEl){ msgEl.textContent=res.data.message||'Invite failed'; msgEl.style.color='#b02323'; } }
+                inviteBtn.disabled=false; inviteBtn.textContent='Invite';
+            });
+        });
+    }
 })();
 </script>
 
