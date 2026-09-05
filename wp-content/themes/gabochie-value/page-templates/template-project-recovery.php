@@ -181,7 +181,7 @@ get_header();
 		<div class="gv-rec-received" id="gvRecReceived"></div>
 		<p>Your diagnosis reference: <strong id="gvRecRef"></strong> — it's been saved to your project profile.</p>
 		<div class="gv-rec-ctas">
-			<a class="btn-solid" href="<?php echo esc_url( home_url( '/contact/' ) ); ?>">Book the Recovery Diagnostic</a>
+			<a class="btn-solid" href="<?php echo esc_url( gabochie_value_recovery_product_url() ); ?>">Book the Recovery Diagnostic</a>
 			<a class="btn-ghost" href="<?php echo esc_url( home_url( '/membership-levels/' ) ); ?>">See Membership Plans</a>
 		</div>
 		<p class="gv-rec-note">Most stuck projects can be rescued &mdash; and often finished for less than starting over. The Recovery Diagnostic is a paid consultation: fixed fee, clear scope, no obligation to continue.</p>

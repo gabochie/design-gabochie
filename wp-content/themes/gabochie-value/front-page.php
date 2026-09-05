@@ -429,6 +429,9 @@ $wa_base   = 'https://wa.me/' . $whatsapp . '?text=';
       <div class="recov-right reveal">
         <h3>One honest diagnosis. No obligation to continue.</h3>
         <p>A structured review of your drawings, contracts, site and spend &mdash; followed by a clear report: what's wrong, what it costs to fix, and whether continuing beats starting over. The diagnostic is a paid consultation &mdash; fixed fee, clear scope.</p>
+        <div class="dia-cta" style="margin-top:1.2rem">
+          <a class="btn-gold" href="<?php echo esc_url( gabochie_value_recovery_product_url() ); ?>">Book the Diagnostic &mdash; ₵1,500</a>
+        </div>
       </div>
     </div>
   </div>

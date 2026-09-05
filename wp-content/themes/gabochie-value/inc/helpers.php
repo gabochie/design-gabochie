@@ -57,6 +57,19 @@ function gabochie_value_recovery_url() {
 	return home_url( '/project-recovery/' );
 }
 
+/** The paid Recovery Diagnostic product page (fallback: /shop/). */
+function gabochie_value_recovery_product_url() {
+	$prod = get_page_by_path( 'project-recovery-diagnostic', OBJECT, 'product' );
+	if ( $prod && $prod->ID && 'publish' === $prod->post_status ) {
+		return get_permalink( $prod );
+	}
+	$shop = (int) get_option( 'woocommerce_shop_page_id', 0 );
+	if ( $shop ) {
+		return get_permalink( $shop );
+	}
+	return home_url( '/shop/' );
+}
+
 /** Social network handle => URL (VDAC brand links) */
 function gabochie_value_social_links() {
 	return array(

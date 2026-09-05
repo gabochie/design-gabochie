@@ -3,16 +3,33 @@
  * Gabochie Value Theme Functions
  *
  * @package Gabochie_Value
- * @version 1.7.0
+ * @version 1.8.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GABOCHIE_VALUE_VERSION', '1.7.0' );
+define( 'GABOCHIE_VALUE_VERSION', '1.8.0' );
 define( 'GABOCHIE_VALUE_DIR', get_template_directory() );
 define( 'GABOCHIE_VALUE_URI', get_template_directory_uri() );
+
+/* ============================================
+	SHOP — WooCommerce support + PMPro product bridge
+	============================================ */
+add_action(
+	'after_setup_theme',
+	function () {
+		add_theme_support( 'woocommerce' );
+		add_theme_support( 'wc-product-gallery-zoom' );
+		add_theme_support( 'wc-product-gallery-lightbox' );
+		add_theme_support( 'wc-product-gallery-slider' );
+	}
+);
+
+remove_action( 'woocommerce_before_main_content', 'woocommerce_breadcrumb', 20 );
+remove_action( 'woocommerce_before_shop_loop', 'woocommerce_result_count', 20 );
+remove_action( 'woocommerce_before_shop_loop', 'woocommerce_catalog_ordering', 30 );
 
 /* ============================================
 	MODULAR INCLUDES
@@ -331,7 +348,15 @@ add_action(
 		}
 
 		$product_levels = get_option( '_pmprowoo_product_levels', array() );
-		$product_id     = array_search( $level_id, $product_levels );
+		$product_id     = 0;
+		foreach ( (array) $product_levels as $pid => $lvl_ids ) {
+			foreach ( (array) $lvl_ids as $lid ) {
+				if ( (int) $lid === $level_id ) {
+					$product_id = (int) $pid;
+					break 2;
+				}
+			}
+		}
 
 		if ( $product_id ) {
 			$product = wc_get_product( $product_id );
