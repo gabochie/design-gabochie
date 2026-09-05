@@ -242,14 +242,14 @@ function gabochie_value_toc_content( $content ) {
 
 	$items = array_slice( $items, 0, 6 );
 
-	$nav  = '<nav class="gv-toc" aria-label="On this page">';
+	$nav  = '<div class="gv-toc" role="navigation" aria-label="On this page">';
 	$nav .= '<p class="gv-toc-title">On this page</p>';
 	$nav .= '<ol>';
 	foreach ( $items as $item ) {
 		$nav .= '<li><a href="#' . esc_attr( $item['id'] ) . '">' . esc_html( $item['text'] ) . '</a></li>';
 	}
 	$nav .= '</ol>';
-	$nav .= '</nav>';
+	$nav .= '</div>';
 
 	/* Place the card after the intro (first paragraph), not above it —
 		readers should meet content before the outline. */
