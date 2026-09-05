@@ -20,29 +20,6 @@ $wa_base  = 'https://wa.me/' . $whatsapp . '?text=';
 get_header();
 ?>
 
-<style>
-/* Scoped recovery-wizard styles on top of the onboarding.css layout. */
-.gv-rec-err { color:#b02323; font-size:0.8rem; margin-top:0.7rem; font-family:'Jost',sans-serif; }
-.gv-rec-result { padding:0.5rem 0 0.2rem; }
-.gv-rec-tier { display:inline-block; padding:0.35rem 0.9rem; border-radius:999px; font-size:0.72rem; letter-spacing:0.13em; text-transform:uppercase; font-weight:600; color:var(--teal-deep); background:var(--gold-pale); border:1px solid rgba(201,169,110,0.35); font-family:'Jost',sans-serif; }
-.gv-rec-tier.gv-t-finish { background:rgba(39,174,96,0.1); color:#27AE60; border-color:rgba(39,174,96,0.3); }
-.gv-rec-tier.gv-t-assess { background:rgba(230,126,34,0.1); color:#E67E22; border-color:rgba(230,126,34,0.3); }
-.gv-rec-tier.gv-t-reconsider { background:rgba(192,57,43,0.1); color:#C0392B; border-color:rgba(192,57,43,0.3); }
-.gv-rec-result h2 { font-size:1.7rem; margin:0.9rem 0 0.5rem; line-height:1.25; }
-.gv-rec-result p { color:var(--mist,#5f6359); font-size:0.95rem; line-height:1.65; margin-bottom:1rem; }
-.gv-rec-received { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:0.6rem; margin:1.1rem 0 1.4rem; }
-.gv-rec-received div { background:var(--soft,#f2efe9); border:1px solid var(--border-light,#e5e2da); border-radius:10px; padding:0.7rem 0.9rem; }
-.gv-rec-received span { display:block; font-size:0.68rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--mist,#5f6359); margin-bottom:0.2rem; font-family:'Jost',sans-serif; }
-.gv-rec-received strong { font-size:0.85rem; font-weight:600; line-height:1.35; display:block; }
-.gv-rec-ctas { display:flex; flex-wrap:wrap; gap:0.8rem; margin:1.2rem 0 0.6rem; }
-.gv-rec-ctas .btn-solid, .gv-rec-ctas .btn-ghost { min-height:44px; }
-.gv-rec-note { font-size:0.78rem; color:var(--mist,#5f6359); margin-top:0.9rem; }
-.gv-rec-hp { position:absolute !important; left:-9999px !important; top:-9999px !important; width:1px !important; height:1px !important; opacity:0 !important; }
-@media (max-width:600px){
-	.gv-rec-received { grid-template-columns:1fr 1fr; }
-}
-</style>
-
 <main id="main" class="onb-main">
 
 <!-- ========== HERO ========== -->
@@ -153,9 +130,9 @@ get_header();
 				<label for="gvRecPhone">Phone (optional)</label>
 				<input type="tel" id="gvRecPhone" name="phone" autocomplete="tel" placeholder="+233 ...">
 			</div>
-			<div class="onb-field">
+			<div class="onb-field onb-field-full">
 				<label>Where are you based? <span class="req">*</span></label>
-				<div class="onb-chip-grid cols-3">
+				<div class="onb-chip-grid cols-3" id="gvBLocation">
 				<button type="button" class="onb-chip" data-field="location_based" data-val="in_ghana">In Ghana</button>
 				<button type="button" class="onb-chip" data-field="location_based" data-val="diaspora">Abroad (Diaspora)</button>
 				<button type="button" class="onb-chip" data-field="location_based" data-val="prefer_not">Prefer not to say</button>
@@ -180,14 +157,102 @@ get_header();
 		<p id="gvRecSummary"></p>
 		<div class="gv-rec-received" id="gvRecReceived"></div>
 		<p>Your diagnosis reference: <strong id="gvRecRef"></strong> — it's been saved to your project profile.</p>
+		<div class="gv-rec-next">
+			<div class="gv-rec-next-title">What happens next</div>
+			<ol>
+				<li><strong>Book the Diagnostic (GHS 1,500)</strong> — fixed fee, clear scope.</li>
+				<li><strong>Your workspace opens</strong> — Triage → Evidence → Plan → Execution → Verification.</li>
+				<li><strong>A facilitator co-drives</strong> — same checklist, docs, costs and messages.</li>
+			</ol>
+		</div>
 		<div class="gv-rec-ctas" id="gvRecCtas">
 			<a class="btn-solid" id="gvRecCtaPrimary" href="<?php echo esc_url( gabochie_value_recovery_product_url() ); ?>">Book the Recovery Diagnostic — Unlock Workspace</a>
 			<a class="btn-ghost" href="<?php echo esc_url( home_url( '/membership-levels/' ) ); ?>">See Membership Plans</a>
 		</div>
-		<p class="gv-rec-note">All building types in Ghana — residential, commercial, mixed-use, renovation & interior. The Recovery Diagnostic (GHS 1,500) unlocks your step-by-step workspace: Triage → Evidence → Plan → Execution → Verification. Facilitators co-drive from the same workspace.</p>
+		<p class="gv-rec-note">All building types in Ghana — residential, commercial, mixed-use, renovation & interior. No obligation beyond the diagnostic.</p>
 		</div>
 
 	</div><!-- /onb-card -->
+	</div>
+</section>
+
+<!-- ========== HOW RECOVERY WORKS ========== -->
+<section class="alone" id="how-it-works">
+	<div class="container">
+		<div class="sec-ey"><span>How recovery works</span></div>
+		<h2 class="sec-h2 reveal">One workspace. <em>Five steps out.</em></h2>
+		<p class="sec-lead reveal">The diagnostic above is step one. Booking it opens your step-by-step Recovery Workspace — you drive, a facilitator co-drives.</p>
+		<div class="strip-wrap reveal">
+			<div class="strip">
+				<div class="strip-node start"><div class="s-dot"></div><div class="s-label">Triage</div></div>
+				<span class="strip-arrow">&rsaquo;</span>
+				<div class="strip-node"><div class="s-dot"></div><div class="s-label">Evidence</div></div>
+				<span class="strip-arrow">&rsaquo;</span>
+				<div class="strip-node"><div class="s-dot"></div><div class="s-label">Plan</div></div>
+				<span class="strip-arrow">&rsaquo;</span>
+				<div class="strip-node"><div class="s-dot"></div><div class="s-label">Execute</div></div>
+				<span class="strip-arrow">&rsaquo;</span>
+				<div class="strip-node end"><div class="s-dot"></div><div class="s-label">Verify</div></div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- ========== TRUST ========== -->
+<section class="trust" id="trust">
+	<div class="container">
+		<div class="sec-ey"><span>Why clients trust the process</span></div>
+		<h2 class="sec-h2 reveal">An honest answer <em>before</em> more spend.</h2>
+		<div class="trust-grid">
+			<div class="trust-item reveal">
+				<div class="t-ico"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+				<h3>Finish vs restart, with numbers</h3>
+				<p>Your diagnosis weighs money committed and structure in the ground against the blockers — so the continue-or-restart call is grounded, not guessed.</p>
+			</div>
+			<div class="trust-item reveal reveal-delay-1">
+				<div class="t-ico"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+				<h3>Evidence before advice</h3>
+				<p>Drawings, contracts, photos and permits are gathered first. No plan is written until the evidence — and your Readiness Score — supports it.</p>
+			</div>
+			<div class="trust-item reveal reveal-delay-2">
+				<div class="t-ico"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+				<h3>Fixed fee, defined scope</h3>
+				<p>The Recovery Diagnostic is GHS 1,500 — one fee, clear deliverables, no obligation to continue. Every building type in Ghana is covered.</p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- ========== FAQ ========== -->
+<section class="faq" id="faq">
+	<div class="container">
+		<div class="sec-ey"><span>Frequently asked</span></div>
+		<h2 class="sec-h2 reveal">Recovery questions, answered.</h2>
+		<div class="faq-list">
+			<div class="faq-item">
+				<button class="faq-q" aria-expanded="false">Is my project too far gone to rescue? <span class="fq-ico">+</span></button>
+				<div class="faq-a"><p>Usually not. If there is structure in the ground and the land position is sound, finishing typically costs less than starting over. The free diagnosis above gives you an honest first read; the paid Diagnostic confirms it with evidence.</p></div>
+			</div>
+			<div class="faq-item">
+				<button class="faq-q" aria-expanded="false">What does the GHS 1,500 Diagnostic include? <span class="fq-ico">+</span></button>
+				<div class="faq-a"><p>A structured review of your drawings, contracts, site photos and spend, a written report (what's wrong, what it costs to fix, continue vs restart), and your step-by-step Recovery Workspace with a facilitator assigned.</p></div>
+			</div>
+			<div class="faq-item">
+				<button class="faq-q" aria-expanded="false">I'm abroad. Can I run a recovery remotely? <span class="fq-ico">+</span></button>
+				<div class="faq-a"><p>Yes — the workspace is built for it: photo evidence, documented reporting and a facilitator as your eyes on site. Choose "Abroad (Diaspora)" in the wizard so reporting is set up accordingly.</p></div>
+			</div>
+			<div class="faq-item">
+				<button class="faq-q" aria-expanded="false">Do I have to continue with Gabochie after the Diagnostic? <span class="fq-ico">+</span></button>
+				<div class="faq-a"><p>No. The Diagnostic is a standalone, fixed-scope consultation. If you continue into Execution, milestones and costs are tracked in the same workspace.</p></div>
+			</div>
+		</div>
+		<div class="faq-cta reveal">
+			<p>Still stuck on whether to start?</p>
+			<div class="faq-cta-btns">
+				<a class="btn-gold" href="#gvRecWizard">Run the Free Diagnosis</a>
+				<a class="btn-ghost" href="<?php echo esc_url( gabochie_value_recovery_product_url() ); ?>">Book the Diagnostic</a>
+			</div>
+		</div>
 	</div>
 </section>
 

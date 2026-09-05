@@ -220,7 +220,27 @@
 #gdThankyouVerifyBtn { background: var(--teal); color: #FAF7F2; }
 #gdThankyouVerifyBtn:hover:not(:disabled) { background: var(--teal-deep); }
 
-/* ---- 7. Flow notes + inline messages ---- */
+/* ---- 7. Recovery wizard (gv-rec-*, ex-template scoped) ---- */
+.onb-chip-grid.cols-2 { display: grid; grid-template-columns: repeat(2, 1fr); }
+.gv-rec-err { color: #C0392B; font-size: 0.8rem; margin-top: 0.7rem; font-family: 'Jost', sans-serif; }
+.gv-rec-result { padding: 0.5rem 0 0.2rem; }
+.gv-rec-tier { display: inline-block; padding: 0.35rem 0.9rem; border-radius: 999px; font-size: 0.72rem; letter-spacing: 0.13em; text-transform: uppercase; font-weight: 600; color: var(--teal-deep); background: var(--gold-pale); border: 1px solid rgba(201,169,110,0.35); font-family: 'Jost', sans-serif; }
+.gv-rec-tier.gv-t-finish { background: rgba(39,174,96,0.1); color: #27AE60; border-color: rgba(39,174,96,0.3); }
+.gv-rec-tier.gv-t-assess { background: rgba(230,126,34,0.1); color: #E67E22; border-color: rgba(230,126,34,0.3); }
+.gv-rec-tier.gv-t-reconsider { background: rgba(192,57,43,0.1); color: #C0392B; border-color: rgba(192,57,43,0.3); }
+.gv-rec-result h2 { font-family: 'Playfair Display', serif; font-weight: 400; font-size: 1.7rem; margin: 0.9rem 0 0.5rem; line-height: 1.25; color: var(--charcoal); }
+.gv-rec-result p { color: var(--mist); font-size: 0.95rem; line-height: 1.65; margin-bottom: 1rem; }
+.gv-rec-received { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.6rem; margin: 1.1rem 0 1.4rem; }
+.gv-rec-received div { background: var(--cream); border: 1px solid var(--border-light); border-radius: var(--r-sm); padding: 0.7rem 0.9rem; }
+.gv-rec-received span { display: block; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mist); margin-bottom: 0.2rem; font-family: 'Jost', sans-serif; }
+.gv-rec-received strong { font-size: 0.85rem; font-weight: 600; line-height: 1.35; display: block; color: var(--charcoal); }
+.gv-rec-next { background: var(--cream); border: 1px solid var(--border-light); border-radius: var(--r-sm); padding: 1rem 1.2rem; margin: 0 0 1.2rem; }
+.gv-rec-next-title { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--teal); margin-bottom: 0.5rem; }
+.gv-rec-next ol { margin: 0; padding-left: 1.2rem; font-size: 0.88rem; color: var(--charcoal); line-height: 1.7; }
+.gv-rec-next li { margin-bottom: 0.25rem; }
+.gv-rec-hp { position: absolute !important; left: -9999px !important; top: -9999px !important; width: 1px !important; height: 1px !important; opacity: 0 !important; }
+
+/* ---- 8. Flow notes + inline messages ---- */
 .rec-note { font-size: 0.75rem; color: var(--mist); margin-top: 1rem; line-height: 1.6; }
 #d2-rec-msg { margin-top: 0.7rem; font-size: 0.82rem; color: var(--mist); line-height: 1.6; }
 #d2-rec-invite-msg { font-size: 0.78rem; color: var(--mist); margin-top: 0.4rem; line-height: 1.5; }
@@ -234,6 +254,10 @@
 @media (max-width: 900px) {
 	#d2-rec-stepper { grid-template-columns: repeat(2, 1fr); }
 	.gv-shop-hero, .gv-sp-hero, .onb-hero, .page-hero { padding: 5rem 1.25rem 2.5rem; }
+}
+@media (max-width: 600px) {
+	.gv-rec-received { grid-template-columns: 1fr 1fr; }
+	.onb-chip-grid.cols-2 { grid-template-columns: 1fr; }
 }
 @media (max-width: 560px) {
 	#d2-rec-stepper { grid-template-columns: 1fr; }
