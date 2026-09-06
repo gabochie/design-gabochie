@@ -94,27 +94,35 @@ class Gab_Auto_Executor {
 	public function generate_from_bank( $bank_post, $date, $force_status = null ) {
 		$today = current_time( 'Y-m-d' );
 		$ai    = Gab_Auto_AI::instance();
-		$text  = $ai->complete( $this->system_prompt(), $this->bank_prompt( $bank_post ) );
 
-		if ( '' === trim( (string) $text ) ) {
-			return array( 'error' => 'ai-unavailable', 'provider' => $ai->last_provider() );
+		// Bounded refine loop: 1 first draft + 1 rewrite if QA fails. Never more.
+		$parsed     = null;
+		$qa         = null;
+		$draft_text = '';
+		$attempt    = 0;
+		while ( $attempt < 2 && ( null === $parsed || ! $qa['pass'] ) ) {
+			++$attempt;
+			$prompt = ( 1 === $attempt ) ? $this->bank_prompt( $bank_post ) : $this->refine_prompt( $bank_post, $draft_text, $qa );
+			$text   = $ai->complete( $this->system_prompt(), $prompt );
+			if ( '' === trim( (string) $text ) ) {
+				return array( 'error' => 'ai-unavailable', 'provider' => $ai->last_provider(), 'attempt' => $attempt );
+			}
+			$draft_text = $text;
+			$parsed     = $this->parse_response( $text, $bank_post );
+			$content    = wp_kses_post( $parsed['content'] );
+			if ( '' === trim( wp_strip_all_tags( $content ) ) ) {
+				return array( 'error' => 'empty-content', 'attempt' => $attempt );
+			}
+			$qa = $this->qa_check( $parsed['title'], $content, $bank_post );
 		}
 
-		$parsed = $this->parse_response( $text, $bank_post );
-
-		$content = wp_kses_post( $parsed['content'] );
-		if ( '' === trim( wp_strip_all_tags( $content ) ) ) {
-			return array( 'error' => 'empty-content' );
-		}
-
+		$content      = wp_kses_post( $parsed['content'] );
 		$category_term = $this->category_term_id( $bank_post['category'] );
 		$author        = (int) get_option( 'gab_author', 2 );
 		if ( 0 === $author ) {
 			$author = 2;
 		}
 		$tags = array( 'Ghana', (string) $bank_post['cluster'], (string) $bank_post['category'] );
-
-		$qa = $this->qa_check( $parsed['title'], $content, $bank_post );
 
 		$time        = $this->scheduled_time();
 		$publish_now = ( $date === $today ) && $qa['pass']
@@ -145,12 +153,71 @@ class Gab_Auto_Executor {
 			'post_id'  => $post_id,
 			'qa'       => $qa,
 			'provider' => $ai->last_provider(),
+			'attempts' => $attempt,
 		);
 		if ( ! $publish_now && ! empty( $qa['reasons'] ) ) {
 			$result['held_reasons'] = $qa['reasons'];
 		}
 		$result['edit_url'] = admin_url( 'post.php?post=' . $post_id . '&action=edit' );
 		return $result;
+	}
+
+	/** Second-attempt prompt: rewrite the failing draft against the QA checklist. */
+	private function refine_prompt( $bank_post, $draft_text, $qa ) {
+		$reasons  = isset( $qa['reasons'] ) ? (array) $qa['reasons'] : array();
+		$fixes    = array();
+		$hub      = isset( $bank_post['hub']['url'] ) ? (string) $bank_post['hub']['url'] : '';
+		$cta_urls = isset( $bank_post['cta']['urls'] ) ? (array) $bank_post['cta']['urls'] : array();
+		$cta_str  = implode( ', ', array_filter( array_map( 'trim', $cta_urls ) ) );
+		if ( '' === $cta_str ) {
+			$cta_str = '/project-recovery-diagnostic/';
+		}
+
+		foreach ( $reasons as $r ) {
+			switch ( true ) {
+				case 0 === strpos( $r, 'short:' ):
+					$fixes[] = 'Word count is only ' . substr( $r, 6 ) . ' words. Rewrite to 900+ words using specific Ghana figures, worked GHS examples and step-by-step guidance — add real substance, never filler.';
+					break;
+				case 'h2:0' === $r || 'h2:1' === $r || 'h2:2' === $r:
+					$fixes[] = 'Use at least 3 H2 sections.';
+					break;
+				case 0 === strpos( $r, 'h2ids:' ):
+					$fixes[] = 'Every H2 MUST carry a lowercase kebab-case id attribute (example: <h2 id="what-it-costs">).';
+					break;
+				case 0 === strpos( $r, 'faq-h3:' ):
+					$fixes[] = 'Add a final <h2 id="faqs"> FAQ section with at least 3 <h3> questions, each literally ending with a question mark.';
+					break;
+				case 'hub-link' === $r:
+					$fixes[] = 'Include one contextual in-body link to ' . ( '' !== $hub ? $hub : '/project-recovery/' ) . '.';
+					break;
+				case 'cta-link' === $r:
+					$fixes[] = 'Include at least one link to a CTA target: ' . $cta_str . '.';
+					break;
+				case 0 === strpos( $r, 'citations:' ):
+					$fixes[] = 'Link at least 3 of the listed authority domains with descriptive anchor text (statsghana.gov.gh, lc.gov.gh, gra.gov.gh).';
+					break;
+				case 'no-focuskw' === $r:
+					$fixes[] = 'Use the exact focus keyphrase naturally inside the title or the first paragraphs.';
+					break;
+				default:
+					$fixes[] = 'Fix QA issue: ' . $r . '.';
+			}
+		}
+
+		$draft = $this->utf8_truncate( (string) $draft_text, 14000 );
+
+		$prompt  = "Below is an AI draft for a blog post. It FAILED the pre-publish QA checklist. Rewrite the ENTIRE post so that every requirement passes — do not just append text to the end. Keep the same focus, tone and accuracy; expand with Ghana-specific data, worked GHS figures and real steps.\n\n";
+		$prompt .= "REQUIRED FIXES (address each):\n- " . implode( "\n- ", $fixes ) . "\n\n";
+		$prompt .= 'Focus keyphrase: ' . $bank_post['focuskw'] . "\n";
+		if ( '' !== $hub ) {
+			$prompt .= 'Must link internally to: ' . $hub . "\n";
+		}
+		$prompt .= "FORMATTING: US English, clean valid HTML only (p, h2, h3, ul, li, strong, em, a). No code fences.\n";
+		$prompt .= "Return EXACTLY this format (no extra prose before or after):\n";
+		$prompt .= "TITLE:\n" . $bank_post['title'] . "\nMETADESC:\n<meta description 120-158 chars containing the focus keyphrase>\nCONTENT:\n<html>\n\n";
+		$prompt .= "DRAFT TO REWRITE:\n" . $draft;
+
+		return $prompt;
 	}
 
 	/** QA hook: quality gate that must pass before a scheduled post publishes. */
