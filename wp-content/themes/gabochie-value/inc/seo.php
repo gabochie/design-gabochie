@@ -8,13 +8,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /* ============================================
-	LLMO: dynamic llms.txt (always-current AI front door)
+	LLMO: llms.txt (Yoast-maintained static file; dynamic route stays as fallback)
 	============================================ */
 
 /**
- * Serve /llms.txt from PHP so the catalog always matches live content and
- * uses the correct host per environment. Yoast's static file is disabled
- * server-side; its writer is also redirected to a non-web path as a guard.
+ * Serve /llms.txt from PHP as a fallback when no static llms.txt exists at
+ * the docroot (e.g. before the first Yoast population). Yoast maintains the
+ * static file at the site root (path pinned in gabochie_value_llmstxt_redirect_yoast_path)
+ * so it is refreshed on its weekly schedule and visible to static file caches.
  */
 function gabochie_value_maybe_serve_llmstxt() {
 	if ( is_admin() || wp_doing_ajax() || wp_doing_cron() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
@@ -36,9 +37,9 @@ function gabochie_value_maybe_serve_llmstxt() {
 }
 add_action( 'init', 'gabochie_value_maybe_serve_llmstxt', 1 );
 
-/** Keep Yoast from ever re-writing a static llms.txt over our dynamic route. */
+/** Pin Yoast's llms.txt writer to the site root so the static file is web-writable and updatable by its weekly population cron. */
 function gabochie_value_llmstxt_redirect_yoast_path( $path ) {
-	return sys_get_temp_dir() . '/yoast-llms.txt';
+	return get_home_path();
 }
 add_filter( 'wpseo_llmstxt_filesystem_path', 'gabochie_value_llmstxt_redirect_yoast_path' );
 
