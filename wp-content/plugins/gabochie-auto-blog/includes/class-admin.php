@@ -69,6 +69,7 @@ class Gabochie_Auto_Admin {
         $settings = array(
             'gab_enabled', 'gab_frequency', 'gab_time', 'gab_category',
             'gab_author', 'gab_status', 'gab_topics',
+            'gab_mode', 'gab_ai_provider', 'gab_ai_key', 'gab_ai_model', 'gab_ai_base_url',
         );
         foreach ($settings as $s) {
             register_setting('gab_settings', $s);
@@ -82,12 +83,21 @@ class Gabochie_Auto_Admin {
         $frequency = get_option('gab_frequency', 'daily');
         $time = get_option('gab_time', '06:00');
         $last = get_option('gab_last_generated', 'Never');
+        $last_bank = get_option('gab_last_bank_run', 'Never');
         $total = get_option('gab_total_generated', 0);
         $next = wp_next_scheduled('gab_generate_content');
         $next_display = $next ? wp_date('Y-m-d H:i:s', $next) : 'Not scheduled';
         $category = get_option('gab_category', 0);
         $cat_name = $category ? get_cat_name($category) : 'Uncategorized';
         $status = get_option('gab_status', 'draft');
+        $mode = get_option('gab_mode', 'bank');
+        $ai_ready = Gab_Auto_AI::instance()->is_configured();
+
+        $bank = Gab_Auto_Bank::instance();
+        $bank_ok = $bank->load();
+        $bank_count = $bank_ok ? $bank->count() : 0;
+        $next_date = $bank_ok ? $bank->next_date() : null;
+        $upcoming = $bank_ok ? $bank->upcoming(6) : array();
         ?>
         <div class="wrap gab-dashboard">
             <h1>Gabochie Auto-Blog</h1>
@@ -98,28 +108,62 @@ class Gabochie_Auto_Admin {
                     <div><strong><?php echo $enabled === '1' ? 'Active' : 'Paused'; ?></strong><span>Status</span></div>
                 </div>
                 <div class="gab-card">
-                    <div><strong><?php echo ucfirst($frequency); ?></strong><span>Frequency</span></div>
+                    <div><strong><?php echo ucfirst($mode); ?></strong><span>Mode</span></div>
                 </div>
                 <div class="gab-card">
-                    <div><strong><?php echo esc_html($next_display); ?></strong><span>Next Generation</span></div>
+                    <div><strong><?php echo $ai_ready ? 'Configured' : 'No AI'; ?></strong><span>AI Engine</span></div>
                 </div>
                 <div class="gab-card">
-                    <div><strong><?php echo $total; ?></strong><span>Total Generated</span></div>
+                    <div><strong><?php echo $bank_ok ? $bank_count : 'Unavailable'; ?></strong><span>Bank Posts</span></div>
                 </div>
                 <div class="gab-card">
-                    <div><strong><?php echo esc_html($last); ?></strong><span>Last Generated</span></div>
+                    <div><strong><?php echo esc_html($next_date ?: '—'); ?></strong><span>Next Bank Date</span></div>
                 </div>
                 <div class="gab-card">
-                    <div><strong><?php echo esc_html($cat_name); ?></strong><span>Target Category</span></div>
+                    <div><strong><?php echo esc_html($last_bank); ?></strong><span>Last Bank Run</span></div>
                 </div>
             </div>
+
+            <?php if ($mode === 'bank'): ?>
+            <h2>Topic Bank — Upcoming Slots</h2>
+            <?php if ($bank_ok && !empty($upcoming)): ?>
+            <table class="wp-list-table widefat fixed striped" style="max-width:760px;">
+                <thead><tr><th>Date</th><th>Slot</th><th>Title</th><th>Category</th><th>Hub</th></tr></thead>
+                <tbody>
+                <?php foreach ($upcoming as $bp):
+                    $existing = get_posts(array('post_type' => 'post', 'post_status' => 'any', 'posts_per_page' => 1, 'fields' => 'ids', 'meta_key' => Gabochie_Auto_Executor::META_BANK_ID, 'meta_value' => $bp['id']));
+                    $state = $existing ? get_post_status($existing[0]) : '—';
+                    $state_badge = 'publish' === $state ? '🏁 published' : ('draft' === $state ? 'draft' : $state);
+                ?>
+                <tr>
+                    <td><?php echo esc_html($bp['date']); ?></td>
+                    <td><?php echo esc_html($bp['slot']); ?></td>
+                    <td><?php echo esc_html($bp['title']); ?></td>
+                    <td><?php echo esc_html($bp['category']); ?></td>
+                    <td><?php echo esc_html($state_badge); ?></td>
+                </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+            <?php else: ?>
+            <p>Bank not available (missing data/topic-bank.json?).</p>
+            <?php endif; ?>
+            <?php endif; ?>
 
             <div style="margin:20px 0;display:flex;gap:10px;flex-wrap:wrap;">
+                <?php if ($mode === 'bank'): ?>
+                <button type="button" class="button button-primary gab-bank-run" data-date="" data-force="">Run Due Slot Now</button>
+                <button type="button" class="button gab-bank-run" data-date="<?php echo esc_attr($next_date ?: ''); ?>" data-force="draft">Pre-generate Next Slot (draft)</button>
+                <button type="button" class="button gab-ai-test">Test AI Connection</button>
+                <span id="gab-bank-message" style="display:inline-flex;align-items:center;margin-left:4px;"></span>
+                <?php else: ?>
                 <button type="button" class="button button-primary gab-generate-now">Generate Now (random topic)</button>
+                <?php endif; ?>
                 <button type="button" class="button gab-reset-schedule">Reset Schedule</button>
             </div>
+            <div id="gab-generate-message" style="margin-top:10px;"></div>
 
-            <h2>Manual Generation</h2>
+            <h2>Manual Generation (topics mode)</h2>
             <div class="gab-manual-gen" style="background:#f6f7f7;padding:16px;border-radius:6px;max-width:600px;">
                 <p><label for="gab-manual-topic" style="font-weight:600;">Topic:</label></p>
                 <div style="display:flex;gap:8px;">
@@ -134,19 +178,25 @@ class Gabochie_Auto_Admin {
                 </div>
                 <p style="color:#787c82;font-size:12px;margin-top:6px;">Post will be created as "<?php echo esc_html($status); ?>" in "<?php echo esc_html($cat_name); ?>".</p>
             </div>
-            <div id="gab-generate-message" style="margin-top:10px;"></div>
+            <div id="gab-generate-message-2" style="margin-top:10px;"></div>
         </div>
         <?php
     }
 
     public function render_settings() {
         $enabled = get_option('gab_enabled', '0');
+        $mode = get_option('gab_mode', 'bank');
         $frequency = get_option('gab_frequency', 'daily');
         $time = get_option('gab_time', '06:00');
         $category = get_option('gab_category', 0);
-        $author = get_option('gab_author', 1);
+        $author = get_option('gab_author', 2);
         $status = get_option('gab_status', 'draft');
         $topics = get_option('gab_topics', "Ghana architecture trends\nSustainable building in Ghana");
+        $ai_provider = get_option('gab_ai_provider', 'gemini');
+        $ai_key = get_option('gab_ai_key', '');
+        $ai_model = get_option('gab_ai_model', 'gemini-flash-latest');
+        $ai_base = get_option('gab_ai_base_url', 'https://api.openai.com/v1');
+        $bank_ok = Gab_Auto_Bank::instance()->load();
         ?>
         <div class="wrap">
             <h1>Auto-Blog Settings</h1>
@@ -163,14 +213,28 @@ class Gabochie_Auto_Admin {
                         </td>
                     </tr>
                     <tr>
+                        <th scope="row">Generation Mode</th>
+                        <td>
+                            <select name="gab_mode">
+                                <option value="bank" <?php selected($mode, 'bank'); ?>>Topic Bank (editorial calendar, Tue/Thu/Sat)</option>
+                                <option value="topics" <?php selected($mode, 'topics'); ?>>Random Topic List (legacy)</option>
+                            </select>
+                            <?php if (!$bank_ok): ?>
+                            <p class="description" style="color:#d63638;">Bank mode is selected but data/topic-bank.json is missing or unreadable.</p>
+                            <?php else: ?>
+                            <p class="description">Bank mode publishes the post scheduled for each calendar date (T/TH/SA), held as draft until its due day.</p>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <tr>
                         <th scope="row">Post Status</th>
                         <td>
                             <select name="gab_status">
-                                <option value="draft" <?php selected($status, 'draft'); ?>>Draft (recommended)</option>
+                                <option value="draft" <?php selected($status, 'draft'); ?>>Draft (recommended for topics mode)</option>
                                 <option value="publish" <?php selected($status, 'publish'); ?>>Publish Immediately</option>
                                 <option value="pending" <?php selected($status, 'pending'); ?>>Pending Review</option>
                             </select>
-                            <p class="description">Draft is recommended so you can review AI-generated content before publishing.</p>
+                            <p class="description">In bank mode this is ignored: posts publish on their calendar date after the QA gate passes.</p>
                         </td>
                     </tr>
                     <tr>
@@ -182,13 +246,14 @@ class Gabochie_Auto_Admin {
                                 <option value="gab_every_other_day" <?php selected($frequency, 'gab_every_other_day'); ?>>Every Other Day</option>
                                 <option value="gab_weekly" <?php selected($frequency, 'gab_weekly'); ?>>Weekly</option>
                             </select>
+                            <p class="description">Applies to the bank check-in too (bank cadence itself is always Tue/Thu/Sat).</p>
                         </td>
                     </tr>
                     <tr>
                         <th scope="row">Time of Day</th>
                         <td>
                             <input type="time" name="gab_time" value="<?php echo esc_attr($time); ?>">
-                            <p class="description">Time of day to generate content (server timezone).</p>
+                            <p class="description">Time of day to generate content (server timezone, Africa/Accra).</p>
                         </td>
                     </tr>
                     <tr>
@@ -201,6 +266,7 @@ class Gabochie_Auto_Admin {
                                 'option_none_value' => 0,
                                 'hierarchical' => true,
                             )); ?>
+                            <p class="description">Used by topics mode. Bank mode maps each post to its own category slug.</p>
                         </td>
                     </tr>
                     <tr>
@@ -217,7 +283,50 @@ class Gabochie_Auto_Admin {
                         <th scope="row">Topics (one per line)</th>
                         <td>
                             <textarea name="gab_topics" rows="10" style="width:100%;max-width:500px;font-family:monospace;"><?php echo esc_textarea($topics); ?></textarea>
-                            <p class="description">One topic per line. The system randomly picks from this list for each scheduled generation. Topics should be Ghana AEC-focused.</p>
+                            <p class="description">Only used in topics mode (legacy). Bank mode ignores this list.</p>
+                        </td>
+                    </tr>
+                </table>
+
+                <h2 style="margin-top:24px;">AI Engine</h2>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">Provider</th>
+                        <td>
+                            <select name="gab_ai_provider">
+                                <option value="gemini" <?php selected($ai_provider, 'gemini'); ?>>Google Gemini</option>
+                                <option value="claude" <?php selected($ai_provider, 'claude'); ?>>Anthropic Claude</option>
+                                <option value="openai" <?php selected($ai_provider, 'openai'); ?>>OpenAI / compatible</option>
+                            </select>
+                            <p class="description">Built-in caller. When no key is saved, the plugin falls back to GHBC or Gabochie AI Engine if either is configured.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">API Key</th>
+                        <td>
+                            <input type="password" name="gab_ai_key" value="<?php echo esc_attr($ai_key); ?>" class="regular-text" style="max-width:420px;" autocomplete="off">
+                            <p class="description">Stored as a wp_option, never logged. Gemini: key from Google AI Studio; Claude: sk-ant-...; OpenAI: sk-...</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Model</th>
+                        <td>
+                            <input type="text" name="gab_ai_model" value="<?php echo esc_attr($ai_model); ?>" class="regular-text" style="max-width:320px;">
+                            <p class="description">Gemini: gemini-flash-latest / gemini-2.5-flash. Claude: claude-sonnet-4-20250514. OpenAI: gpt-4o.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Base URL (OpenAI-compatible)</th>
+                        <td>
+                            <input type="text" name="gab_ai_base_url" value="<?php echo esc_attr($ai_base); ?>" class="regular-text" style="max-width:420px;">
+                            <p class="description">Only used for OpenAI-compatible endpoints (OpenRouter etc.). Example: https://openrouter.ai/api/v1</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Test Connection</th>
+                        <td>
+                            <button type="button" class="button gab-ai-test">Test saved key now</button>
+                            <span id="gab-ai-test-result" style="margin-left:8px;"></span>
                         </td>
                     </tr>
                 </table>
@@ -229,10 +338,13 @@ class Gabochie_Auto_Admin {
             <?php
             $ai = class_exists('Gabochie_AI_Engine') ? Gabochie_AI_Engine::instance() : null;
             $has_ai = $ai && $ai->is_configured();
-            if ($has_ai):
-                echo '<div class="notice notice-success inline"><p>AI Engine is configured. Auto-blog will generate high-quality Ghana AEC content.</p></div>';
+            $gab_ai_ok = Gab_Auto_AI::instance()->is_configured();
+            if ($gab_ai_ok):
+                echo '<div class="notice notice-success inline"><p>Auto-Blog has a usable AI backend (' . esc_html(Gab_Auto_AI::instance()->last_provider() ?: 'configured') . ').</p></div>';
+            elseif ($has_ai):
+                echo '<div class="notice notice-success inline"><p>Gabochie AI Engine is configured. Auto-blog will use it.</p></div>';
             else:
-                echo '<div class="notice notice-warning inline"><p>AI Engine not configured. Posts will use template content. Configure API keys in Gabochie SaaS Tools → AI Settings.</p></div>';
+                echo '<div class="notice notice-warning inline"><p>No AI backend configured. Set the key above (or configure GHBC / Gabochie SaaS Tools AI). Without it the executor cannot generate posts.</p></div>';
             endif;
             ?>
         </div>

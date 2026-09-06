@@ -13,6 +13,7 @@ class Gabochie_Auto_Scheduler {
 
     private function __construct() {
         add_action('gab_generate_content', array($this, 'execute_scheduled_generation'));
+        add_action(Gabochie_Auto_Executor::HOOK, array(Gabochie_Auto_Executor::instance(), 'run_due'));
         add_filter('cron_schedules', array($this, 'add_cron_schedules'));
     }
 
@@ -34,6 +35,7 @@ class Gabochie_Auto_Scheduler {
 
     public function execute_scheduled_generation() {
         if (get_option('gab_enabled', '0') !== '1') return;
+        if (get_option('gab_mode', 'bank') === 'bank') return; // bank mode owns the cadence.
 
         $generator = Gabochie_Auto_Generator::instance();
         $result = $generator->generate_post();
@@ -55,16 +57,20 @@ class Gabochie_Auto_Scheduler {
     public static function setup_schedule() {
         $frequency = get_option('gab_frequency', 'daily');
         $time = get_option('gab_time', '06:00');
+        if (!preg_match('/^\d{1,2}:\d{2}$/', (string) $time)) {
+            $time = '06:00';
+        }
         list($hour, $minute) = explode(':', $time);
         $timestamp = strtotime("today {$hour}:{$minute}:00");
         if ($timestamp <= current_time('timestamp')) {
             $timestamp = strtotime("tomorrow {$hour}:{$minute}:00");
         }
 
-        $hook = 'gab_generate_content';
-        wp_clear_scheduled_hook($hook);
+        wp_clear_scheduled_hook('gab_generate_content');
+        wp_clear_scheduled_hook(Gabochie_Auto_Executor::HOOK);
         if (get_option('gab_enabled', '0') === '1') {
-            wp_schedule_event($timestamp, $frequency, $hook);
+            wp_schedule_event($timestamp, $frequency, 'gab_generate_content');
+            wp_schedule_event($timestamp, 'daily', Gabochie_Auto_Executor::HOOK);
         }
     }
 }
