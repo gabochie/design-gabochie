@@ -48,8 +48,8 @@ register_activation_hook(__FILE__, function () {
     if (!wp_next_scheduled('gab_generate_content')) {
         wp_schedule_event(strtotime('06:00:00'), 'daily', 'gab_generate_content');
     }
-    if (!wp_next_scheduled(Gabochie_Auto_Executor::HOOK)) {
-        wp_schedule_event(strtotime('06:00:00'), 'daily', Gabochie_Auto_Executor::HOOK);
+    if (!wp_next_scheduled(Gab_Auto_Executor::HOOK)) {
+        wp_schedule_event(strtotime('06:00:00'), 'daily', Gab_Auto_Executor::HOOK);
     }
 });
 
@@ -58,8 +58,8 @@ register_deactivation_hook(__FILE__, function () {
     if ($timestamp) {
         wp_unschedule_event($timestamp, 'gab_generate_content');
     }
-    $bank_ts = wp_next_scheduled(Gabochie_Auto_Executor::HOOK);
+    $bank_ts = wp_next_scheduled(Gab_Auto_Executor::HOOK);
     if ($bank_ts) {
-        wp_unschedule_event($bank_ts, Gabochie_Auto_Executor::HOOK);
+        wp_unschedule_event($bank_ts, Gab_Auto_Executor::HOOK);
     }
 });

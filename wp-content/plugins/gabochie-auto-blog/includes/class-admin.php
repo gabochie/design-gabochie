@@ -131,7 +131,7 @@ class Gabochie_Auto_Admin {
                 <thead><tr><th>Date</th><th>Slot</th><th>Title</th><th>Category</th><th>Hub</th></tr></thead>
                 <tbody>
                 <?php foreach ($upcoming as $bp):
-                    $existing = get_posts(array('post_type' => 'post', 'post_status' => 'any', 'posts_per_page' => 1, 'fields' => 'ids', 'meta_key' => Gabochie_Auto_Executor::META_BANK_ID, 'meta_value' => $bp['id']));
+                    $existing = get_posts(array('post_type' => 'post', 'post_status' => 'any', 'posts_per_page' => 1, 'fields' => 'ids', 'meta_key' => Gab_Auto_Executor::META_BANK_ID, 'meta_value' => $bp['id']));
                     $state = $existing ? get_post_status($existing[0]) : '—';
                     $state_badge = 'publish' === $state ? '🏁 published' : ('draft' === $state ? 'draft' : $state);
                 ?>
