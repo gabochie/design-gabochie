@@ -231,7 +231,7 @@ class Gabochie_Go_Live {
                 array('id' => 'ps-pmpro', 'text' => 'PMPro membership levels: name, price, billing cycle, currency (GHS).', 'done' => 0),
                 array('id' => 'ps-pmpropay', 'text' => 'PMPro payment settings: gateway, test/live mode, checkout page.', 'done' => 0),
                 array('id' => 'ps-ghbc', 'text' => 'GhBC LLM: API key verified via Test Connection (provider is Claude).', 'done' => 0),
-                array('id' => 'ps-email', 'text' => 'Email: from name/address and SMTP/transactional mail (FluentCRM/Brevo) configured + test email delivered.', 'done' => 0),
+                array('id' => 'ps-email', 'text' => 'Email: from name/address and SMTP/transactional mail (gabochie-email/Brevo) configured + test email delivered.', 'done' => 0),
                 array('id' => 'ps-seo', 'text' => 'SEO: Yoast site meta, social profiles, sitemap, robots.txt verified.', 'done' => 0),
                 array('id' => 'ps-analytics', 'text' => 'Analytics: Site Kit / Google Analytics / Search Console connected.', 'done' => 0),
                 array('id' => 'ps-push', 'text' => 'Web push: WonderPush configured + test notification sent.', 'done' => 0),
@@ -457,13 +457,13 @@ class Gabochie_Go_Live {
             );
         }
 
-        if (empty(get_option('sib_api_key', ''))) {
+        if (empty(get_option('gabochie_email_api_key', ''))) {
             $recs[] = array(
                 'severity' => 'warning',
                 'title' => 'Brevo API key is not set',
-                'detail' => 'Brevo (mailin) is active but has no API key, so forms, transactional email and web push cannot send.',
-                'action' => admin_url('admin.php?page=sib_page_home'),
-                'action_label' => 'Open Brevo',
+                'detail' => 'gabochie-email is the transactional sender, but no Brevo API key is saved, so forms and transactional email cannot send.',
+                'action' => admin_url('options-general.php?page=gabochie-email'),
+                'action_label' => 'Open Gabochie Email settings',
             );
         }
 

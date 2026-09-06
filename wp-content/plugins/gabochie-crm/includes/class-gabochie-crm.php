@@ -55,34 +55,34 @@ class Gabochie_Crm {
 		if ( self::ready() ) {
 			return;
 		}
-		$table    = self::table();
-		$collate  = $wpdb->get_charset_collate();
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
-		$wpdb->query(
-			"CREATE TABLE IF NOT EXISTS {$table} (
-				id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-				email VARCHAR(190) NOT NULL,
-				first_name VARCHAR(100) NOT NULL DEFAULT '',
-				last_name VARCHAR(100) NOT NULL DEFAULT '',
-				phone VARCHAR(40) NOT NULL DEFAULT '',
-				status VARCHAR(20) NOT NULL DEFAULT 'subscribed',
-				contact_type VARCHAR(40) NOT NULL DEFAULT 'subscriber',
-				list_key VARCHAR(80) NOT NULL DEFAULT '',
-				source VARCHAR(60) NOT NULL DEFAULT '',
-				tags VARCHAR(255) NOT NULL DEFAULT '',
-				utm_source VARCHAR(120) NOT NULL DEFAULT '',
-				utm_medium VARCHAR(120) NOT NULL DEFAULT '',
-				utm_campaign VARCHAR(120) NOT NULL DEFAULT '',
-				created_at DATETIME NOT NULL,
-				updated_at DATETIME NOT NULL,
-				last_engaged_at DATETIME NULL,
-				UNIQUE KEY uq_email (email),
-				KEY idx_status (status),
-				KEY idx_list (list_key),
-				KEY idx_source (source),
-				KEY idx_created (created_at)
-			) {$collate};"
-		);
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		$table   = self::table();
+		$collate = $wpdb->get_charset_collate();
+		$sql     = "CREATE TABLE {$table} (
+			id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+			email VARCHAR(190) NOT NULL,
+			first_name VARCHAR(100) NOT NULL DEFAULT '',
+			last_name VARCHAR(100) NOT NULL DEFAULT '',
+			phone VARCHAR(40) NOT NULL DEFAULT '',
+			status VARCHAR(20) NOT NULL DEFAULT 'subscribed',
+			contact_type VARCHAR(40) NOT NULL DEFAULT 'subscriber',
+			list_key VARCHAR(80) NOT NULL DEFAULT '',
+			source VARCHAR(60) NOT NULL DEFAULT '',
+			tags VARCHAR(255) NOT NULL DEFAULT '',
+			utm_source VARCHAR(120) NOT NULL DEFAULT '',
+			utm_medium VARCHAR(120) NOT NULL DEFAULT '',
+			utm_campaign VARCHAR(120) NOT NULL DEFAULT '',
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL,
+			last_engaged_at DATETIME NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY uq_email (email),
+			KEY idx_status (status),
+			KEY idx_list (list_key),
+			KEY idx_source (source),
+			KEY idx_created (created_at)
+		) {$collate};";
+		dbDelta( $sql );
 	}
 
 	/**
@@ -102,49 +102,63 @@ class Gabochie_Crm {
 		}
 		self::ensure_schema();
 
-		$now   = current_time( 'mysql' );
-		$tags  = self::normalize_tags( $data['tags'] ?? array() );
-		$set   = array(
-			'first_name'    => isset( $data['first_name'] ) ? sanitize_text_field( (string) $data['first_name'] ) : '',
-			'last_name'     => isset( $data['last_name'] ) ? sanitize_text_field( (string) $data['last_name'] ) : '',
-			'phone'         => isset( $data['phone'] ) ? sanitize_text_field( (string) $data['phone'] ) : '',
-			'status'        => self::is_status( $data['status'] ?? '' ) ? $data['status'] : self::STATUS_SUBSCRIBED,
-			'contact_type'  => isset( $data['contact_type'] ) ? sanitize_key( $data['contact_type'] ) : 'subscriber',
-			'list_key'      => isset( $data['list_key'] ) ? sanitize_key( $data['list_key'] ) : '',
-			'source'        => isset( $data['source'] ) ? sanitize_key( $data['source'] ) : '',
-			'tags'          => $tags,
-			'utm_source'    => isset( $data['utm_source'] ) ? sanitize_key( $data['utm_source'] ) : '',
-			'utm_medium'    => isset( $data['utm_medium'] ) ? sanitize_key( $data['utm_medium'] ) : '',
-			'utm_campaign'  => isset( $data['utm_campaign'] ) ? sanitize_key( $data['utm_campaign'] ) : '',
-			'updated_at'    => $now,
+		$now = current_time( 'mysql' );
+		$val = array(
+			'first_name'      => isset( $data['first_name'] ) ? sanitize_text_field( (string) $data['first_name'] ) : null,
+			'last_name'       => isset( $data['last_name'] ) ? sanitize_text_field( (string) $data['last_name'] ) : null,
+			'phone'           => isset( $data['phone'] ) ? sanitize_text_field( (string) $data['phone'] ) : null,
+			'status'          => isset( $data['status'] ) && self::is_status( $data['status'] ) ? $data['status'] : null,
+			'contact_type'    => isset( $data['contact_type'] ) ? sanitize_key( $data['contact_type'] ) : null,
+			'list_key'        => isset( $data['list_key'] ) ? sanitize_key( $data['list_key'] ) : null,
+			'source'          => isset( $data['source'] ) ? sanitize_key( $data['source'] ) : null,
+			'tags'            => isset( $data['tags'] ) ? self::normalize_tags( $data['tags'] ) : null,
+			'utm_source'      => isset( $data['utm_source'] ) ? sanitize_key( $data['utm_source'] ) : null,
+			'utm_medium'      => isset( $data['utm_medium'] ) ? sanitize_key( $data['utm_medium'] ) : null,
+			'utm_campaign'    => isset( $data['utm_campaign'] ) ? sanitize_key( $data['utm_campaign'] ) : null,
 			'last_engaged_at' => isset( $data['last_engaged_at'] ) && is_string( $data['last_engaged_at'] ) && '' !== trim( $data['last_engaged_at'] )
 				? sanitize_text_field( trim( $data['last_engaged_at'] ) )
 				: null,
 		);
 
-		$table   = self::table();
+		$table    = self::table();
 		$existing = $wpdb->get_var(
 			$wpdb->prepare( 'SELECT id FROM %i WHERE email = %s', $table, $email )
 		);
 
 		if ( $existing ) {
+			$update = array( 'updated_at' => $now );
+			foreach ( $val as $col => $v ) {
+				if ( null !== $v ) {
+					$update[ $col ] = $v;
+				}
+			}
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			$res = $wpdb->update(
 				$table,
-				$set,
+				$update,
 				array( 'id' => (int) $existing ),
-				array( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s' ),
+				array_fill( 0, count( $update ), '%s' ),
 				array( '%d' )
 			);
 			return false === $res ? 0 : (int) $existing;
 		}
 
-		$set['created_at'] = isset( $data['created_at'] ) && is_string( $data['created_at'] ) && '' !== trim( $data['created_at'] )
+		$insert                  = array(
+			'email'      => $email,
+			'updated_at' => $now,
+		);
+		$insert['created_at'] = ( isset( $data['created_at'] ) && is_string( $data['created_at'] ) && '' !== trim( $data['created_at'] ) )
 			? sanitize_text_field( trim( $data['created_at'] ) )
 			: $now;
+		foreach ( $val as $col => $v ) {
+			$insert[ $col ] = null === $v ? '' : $v;
+		}
+		if ( '' === $insert['status'] ) {
+			$insert['status'] = self::STATUS_SUBSCRIBED;
+		}
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
-		$res = $wpdb->insert( $table, $set );
+		$res = $wpdb->insert( $table, $insert );
 		return false === $res ? 0 : (int) $wpdb->insert_id;
 	}
 
@@ -165,7 +179,10 @@ class Gabochie_Crm {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		$res = $wpdb->update(
 			self::table(),
-			array( 'status' => $status, 'updated_at' => current_time( 'mysql' ) ),
+			array(
+				'status'     => $status,
+				'updated_at' => current_time( 'mysql' ),
+			),
 			array( 'email' => $email ),
 			array( '%s', '%s' ),
 			array( '%s' )
@@ -221,7 +238,11 @@ class Gabochie_Crm {
 		$fc = $wpdb->prefix . 'fc_subscribers';
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
 		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $fc ) ) !== $fc ) {
-			return array( 'source' => 0, 'migrated' => 0, 'skipped' => 0 );
+			return array(
+				'source'   => 0,
+				'migrated' => 0,
+				'skipped'  => 0,
+			);
 		}
 
 		$rows = $wpdb->get_results(
@@ -232,7 +253,11 @@ class Gabochie_Crm {
 			ARRAY_A
 		);
 		if ( ! is_array( $rows ) ) {
-			return array( 'source' => 0, 'migrated' => 0, 'skipped' => 0 );
+			return array(
+				'source'   => 0,
+				'migrated' => 0,
+				'skipped'  => 0,
+			);
 		}
 
 		$source   = count( $rows );
@@ -263,7 +288,11 @@ class Gabochie_Crm {
 				++$skipped;
 			}
 		}
-		return array( 'source' => $source, 'migrated' => $migrated, 'skipped' => $skipped );
+		return array(
+			'source'   => $source,
+			'migrated' => $migrated,
+			'skipped'  => $skipped,
+		);
 	}
 
 	/**
@@ -272,7 +301,7 @@ class Gabochie_Crm {
 	 * @param mixed $tags Tags input.
 	 * @return string
 	 */
-	private static function normalize_tags( $tags ) {
+	public static function normalize_tags( $tags ) {
 		if ( is_string( $tags ) ) {
 			$tags = explode( ',', $tags );
 		}
@@ -281,7 +310,9 @@ class Gabochie_Crm {
 		}
 		$clean = array();
 		foreach ( $tags as $t ) {
-			$t = sanitize_key( (string) $t );
+			// Colons are significant (source:voice-agent) — sanitize_key would drop them.
+			$t = strtolower( trim( (string) $t ) );
+			$t = preg_replace( '/[^a-z0-9_\-:]/', '', $t );
 			if ( '' !== $t && ! in_array( $t, $clean, true ) ) {
 				$clean[] = $t;
 			}

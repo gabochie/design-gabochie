@@ -2,7 +2,7 @@
 /**
  * Gabochie Cold Outreach — importer.
  *
- * CSV → FluentCRM (audience) + local tracking table (send state).
+ * CSV → Gabochie CRM (audience) + local tracking table (send state).
  * Exposes a `wp gabochie-co import` CLI command with dry-run support.
  *
  * Expected CSV columns (any order): name|biz, phone, email, website,
@@ -18,7 +18,7 @@ if ( defined( 'WP_CLI' ) ) {
 }
 
 /**
- * CSV importer + FluentCRM sync.
+ * CSV importer + Gabochie CRM sync.
  */
 class Gabochie_Co_Importer {
 
@@ -45,14 +45,14 @@ class Gabochie_Co_Importer {
 		$list  = isset( $assoc['list'] ) && '' !== $assoc['list'] ? sanitize_key( $assoc['list'] ) : self::LIST_SLUG;
 
 		Gabochie_Co_Db::install();
-		$fluent_ready = function_exists( 'FluentCrmApi' );
+		$crm_ready = class_exists( 'Gabochie_Crm' );
 
 		$rows = $this->parse_csv( $file );
 		$rows = array_slice( $rows, 0, $limit );
 
 		$imported        = 0;
 		$failed          = 0;
-		$fluent_ok       = 0;
+		$crm_ok          = 0;
 		$channel_map     = array();
 		$route_map       = array();
 		$referral_source = 'gadata';
@@ -66,10 +66,10 @@ class Gabochie_Co_Importer {
 				)
 			);
 
-			// FluentCRM sync (skip in dry-run).
-			if ( ! $dry && $fluent_ready && is_email( $r['email'] ?? '' ) ) {
-				if ( $this->sync_fluent( $r, $list ) ) {
-					++$fluent_ok;
+			// Gabochie CRM sync (skip in dry-run).
+			if ( ! $dry && $crm_ready && is_email( $r['email'] ?? '' ) ) {
+				if ( $this->sync_crm( $r, $list ) ) {
+					++$crm_ok;
 				}
 			}
 
@@ -142,7 +142,7 @@ class Gabochie_Co_Importer {
 			'limit'           => $limit,
 			'imported'        => $imported,
 			'failed'          => $failed,
-			'fluent_ok'       => $fluent_ok,
+			'crm_ok'          => $crm_ok,
 			'channels'        => $channel_map,
 			'routes'          => $route_map,
 			'referral_source' => $referral_source,
@@ -225,46 +225,27 @@ class Gabochie_Co_Importer {
 	}
 
 	/**
-	 * Sync a row to FluentCRM as a cold-outreach contact.
+	 * Sync a row to the Gabochie CRM as a cold-outreach contact.
 	 *
 	 * @param array  $r    Contact row.
-	 * @param string $list List slug.
+	 * @param string $list List key.
 	 * @return bool
 	 */
-	protected function sync_fluent( array $r, $list ) {
-		try {
-			\FluentCrmApi( 'lists' )->importBulk(
-				array(
-					array(
-						'title' => self::LIST_TITLE,
-						'slug'  => $list,
-					),
-				)
-			);
-		} catch ( \Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement
-			// List may already exist — non-fatal.
-		}
-
-		try {
-			$payload = array(
-				'email'        => sanitize_email( $r['email'] ?? '' ),
-				'status'       => 'subscribed',
-				'contact_type' => 'subscriber',
-				'lists'        => array( $list ),
-				'tags'         => array( 'source:gadata', 'cold' ),
-			);
-			if ( '' !== ( $r['name'] ?? '' ) ) {
-				$payload['first_name'] = sanitize_text_field( $r['name'] );
-			}
-			if ( '' !== ( $r['phone'] ?? '' ) ) {
-				$payload['phone'] = sanitize_text_field( $r['phone'] );
-			}
-			\FluentCrmApi( 'contacts' )->createOrUpdate( $payload );
-			return true;
-		} catch ( \Throwable $e ) {
-			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-			error_log( '[ColdOutreach] FluentCRM sync: ' . $e->getMessage() );
+	protected function sync_crm( array $r, $list ) {
+		if ( ! class_exists( 'Gabochie_Crm' ) ) {
 			return false;
 		}
+		$id = Gabochie_Crm::upsert_contact(
+			$r['email'] ?? '',
+			array(
+				'status'       => 'subscribed',
+				'contact_type' => 'subscriber',
+				'list_key'     => '' !== $list ? $list : self::LIST_SLUG,
+				'tags'         => array( 'source:gadata', 'cold' ),
+				'first_name'   => sanitize_text_field( $r['name'] ?? '' ),
+				'phone'        => sanitize_text_field( $r['phone'] ?? '' ),
+			)
+		);
+		return $id > 0;
 	}
 }

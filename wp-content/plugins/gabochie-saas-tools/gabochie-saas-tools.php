@@ -27,8 +27,12 @@ require_once GST_PATH . 'includes/payments.php';
 require_once GST_PATH . 'includes/upgrades.php';
 require_once GST_PATH . 'includes/cpt.php';
 require_once GST_PATH . 'includes/admin.php';
-require_once GST_PATH . 'includes/fluentcrm.php';
-require_once GST_PATH . 'includes/gs-fluent-sms.php';
+
+// FluentCRM integration loads only when the plugin is present (dormant tail).
+if (defined('FLUENTCRM') && function_exists('FluentCrmApi')) {
+	require_once GST_PATH . 'includes/fluentcrm.php';
+	require_once GST_PATH . 'includes/gs-fluent-sms.php';
+}
 
 function gst_activate() {
     gs_register_tool_cpt();

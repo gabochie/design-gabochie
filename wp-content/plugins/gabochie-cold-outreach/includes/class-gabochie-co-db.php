@@ -2,7 +2,7 @@
 /**
  * Gabochie Cold Outreach — database.
  *
- * Outbound job state tables, separate from FluentCRM (the CRM/audience).
+ * Outbound job state tables, separate from the Gabochie CRM (the audience).
  * `cold_outreach` tracks each imported contact through the send pipeline;
  * `cold_outreach_optout` is the do-not-contact registry checked before any send.
  *

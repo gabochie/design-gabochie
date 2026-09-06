@@ -120,12 +120,12 @@ final class Gabochie_Design_Hub {
             array(
                 'id'    => 'email_sending',
                 'title' => 'Email sending connected',
-                'desc'  => 'Neither Brevo (mailin) nor FluentCRM has a sending method configured. Connect Brevo or SMTP so welcome emails, digests and notifications actually arrive. Test with Mailpit locally.',
+                'desc'  => 'No Brevo API key is saved (gabochie-email). Add it so welcome emails, digests and notifications actually arrive. Test with the Settings > Gabochie Email test button.',
                 'group' => 'Payments & Email',
                 'auto'  => true,
                 'check' => array($this, 'check_email_sending'),
-                'url'   => $admin_url . 'admin.php?page=fluentcrm-admin',
-                'url_label' => 'Open FluentCRM settings',
+                'url'   => $admin_url . 'options-general.php?page=gabochie-email',
+                'url_label' => 'Open Gabochie Email settings',
             ),
             array(
                 'id'    => 'sitekit',
@@ -208,14 +208,8 @@ final class Gabochie_Design_Hub {
     }
 
     private function check_email_sending() {
-        $brevo_key = get_option('mailin_api_key', '');
-        $brevo_con = get_option('mailin_connected', '');
-        if (!empty($brevo_key) || !empty($brevo_con)) {
-            return true;
-        }
-        // FluentCRM stores its sending settings under its own option.
-        $fcrm = get_option('fluentcrm_settings', array());
-        return is_array($fcrm) && !empty($fcrm);
+        // gabochie-email is the single Brevo interceptor; its key proves sending is configured.
+        return '' !== (string) get_option('gabochie_email_api_key', '');
     }
 
     private function check_sitekit() {
