@@ -80,8 +80,8 @@ class Gab_Auto_Executor {
 			if ( 'publish' === get_post_status( $existing ) ) {
 				return array( 'skipped' => 'already-published', 'post_id' => $existing );
 			}
-			// A pre-generated draft is promoted only on its due date.
-			if ( $date === $today && 'publish' !== $force_status ) {
+			// A pre-generated draft is promoted only on its due date unless force='draft' (hold).
+			if ( $date === $today && 'draft' !== $force_status ) {
 				return $this->maybe_publish_existing( $existing, $bank_post );
 			}
 			return array( 'skipped' => 'held-draft', 'post_id' => $existing, 'status' => get_post_status( $existing ) );
