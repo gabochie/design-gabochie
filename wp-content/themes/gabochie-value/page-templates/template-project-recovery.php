@@ -256,6 +256,54 @@ get_header();
 	</div>
 </section>
 
+<!-- ========== RECOVERY LIBRARY ========== -->
+<section class="alone" id="recovery-library">
+	<div class="container">
+		<div class="sec-ey"><span>Start with a read</span></div>
+		<h2 class="sec-h2 reveal">The recovery library <em>&mdash; free reads, zero fluff.</em></h2>
+		<p class="sec-lead reveal">The diagnosis gives you a verdict; these guides tell you what to do with it &mdash; whether you finish, restart, or hand the project to a facilitator.</p>
+		<div class="res-grid">
+			<a class="res-card reveal" href="<?php echo esc_url( home_url( '/finish-or-restart-stalled-building-ghana-cost/' ) ); ?>">
+				<div class="r-tag">The verdict</div>
+				<h3>Finish or restart? The real math</h3>
+				<p>The 3-number decision framework and 2026 completion costs, stage by stage.</p>
+				<span class="r-link">Read the guide &rsaquo;</span>
+			</a>
+			<a class="res-card reveal reveal-delay-1" href="<?php echo esc_url( home_url( '/contractor-walked-off-stalled-ghana-build-recovery/' ) ); ?>">
+				<div class="r-tag">Contractor walked off</div>
+				<h3>Unfreeze the project</h3>
+				<p>Re-secure the site and restart without a dispute burning more money.</p>
+				<span class="r-link">Read the guide &rsaquo;</span>
+			</a>
+			<a class="res-card reveal reveal-delay-2" href="<?php echo esc_url( home_url( '/diaspora-ghana-stalled-build-remote-recovery/' ) ); ?>">
+				<div class="r-tag">From abroad</div>
+				<h3>Run recovery from the UK or US</h3>
+				<p>Remote evidence, documented reporting and a facilitator as your eyes on site.</p>
+				<span class="r-link">Read the guide &rsaquo;</span>
+			</a>
+			<a class="res-card reveal" href="<?php echo esc_url( home_url( '/stalled-ghana-build-recovery-composite-case/' ) ); ?>">
+				<div class="r-tag">Case study</div>
+				<h3>Anatomy of a recovery</h3>
+				<p>Two years of silence to a finish verdict &mdash; a composite case readout in numbers.</p>
+				<span class="r-link">Read the case &rsaquo;</span>
+			</a>
+			<a class="res-card reveal reveal-delay-1" href="<?php echo esc_url( home_url( '/when-to-walk-away-stalled-building-ghana/' ) ); ?>">
+				<div class="r-tag">The hard call</div>
+				<h3>When walking away is right</h3>
+				<p>How to exit cleanly &mdash; and protect your family's capital &mdash; when finishing is the wrong answer.</p>
+				<span class="r-link">Read the guide &rsaquo;</span>
+			</a>
+			<a class="res-card reveal reveal-delay-2" href="<?php echo esc_url( home_url( '/whats-included-in-ghana-project-recovery-diagnostic/' ) ); ?>">
+				<div class="r-tag">The GHS 1,500 deliverable</div>
+				<h3>What the Diagnostic includes</h3>
+				<p>The exact scope, evidence and deliverables behind the paid report and workspace.</p>
+				<span class="r-link">See the scope &rsaquo;</span>
+			</a>
+		</div>
+		<p class="sec-lead reveal" style="margin-top:2.25rem">Cost-aware first: compare today's cement, rebar and labour bands on the <a href="<?php echo esc_url( home_url( '/building-cost-board/' ) ); ?>">Ghana Build Price Board (2026)</a>, or model your floor plan in the <a href="<?php echo esc_url( home_url( '/building-cost-calculator/' ) ); ?>">cost calculator</a>.</p>
+	</div>
+</section>
+
 </main>
 
 <?php
