@@ -105,7 +105,6 @@ while ( have_posts() ) :
 		<div class="post-nav-prev"><?php previous_post_link( '%link', '&larr; %title' ); ?></div>
 		<div class="post-nav-next"><?php next_post_link( '%link', '%title &rarr;' ); ?></div>
 	</nav>
-	<?php comments_template(); ?>
 	</div>
 </section>
 

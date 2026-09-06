@@ -3,14 +3,14 @@
  * Gabochie Value Theme Functions
  *
  * @package Gabochie_Value
- * @version 1.9.5
+ * @version 1.9.6
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GABOCHIE_VALUE_VERSION', '1.9.5' );
+define( 'GABOCHIE_VALUE_VERSION', '1.9.6' );
 define( 'GABOCHIE_VALUE_DIR', get_template_directory() );
 define( 'GABOCHIE_VALUE_URI', get_template_directory_uri() );
 
@@ -414,5 +414,29 @@ add_filter(
 	},
 	10,
 	2
+);
+
+/* ============================================
+	BLOG COMMENTS DISABLED (policy: no replies on posts, now + future)
+	============================================ */
+// Force comments and pings closed for every post regardless of stored status.
+add_filter( 'comments_open', '__return_false', 10, 2 );
+add_filter( 'pings_open', '__return_false', 10, 2 );
+// Suppress the legacy "Comments are closed" template block on single posts.
+add_filter(
+	'comments_template',
+	function ( $file, $post_id ) {
+		return '';
+	},
+	10,
+	2
+);
+// Remove comment support from the post type so no UI surfaces anywhere.
+add_action(
+	'init',
+	function () {
+		remove_post_type_support( 'post', 'comments' );
+		remove_post_type_support( 'post', 'trackbacks' );
+	}
 );
 
