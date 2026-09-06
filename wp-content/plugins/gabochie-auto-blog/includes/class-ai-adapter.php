@@ -164,7 +164,7 @@ class Gab_Auto_AI {
 		if ( '' === $key ) {
 			return '';
 		}
-		$url = 'https://generativelanguage.googleapis.com/v1beta/models/' . rawurlencode( $model ) . ':generateContent?key=' . rawurlencode( $key );
+		$url  = 'https://generativelanguage.googleapis.com/v1beta/models/' . rawurlencode( $model ) . ':generateContent?key=' . rawurlencode( $key );
 		$body = array(
 			'systemInstruction' => array( 'parts' => array( array( 'text' => $system ) ) ),
 			'contents'          => array( array( 'parts' => array( array( 'text' => $prompt ) ) ) ),
@@ -173,27 +173,47 @@ class Gab_Auto_AI {
 				'maxOutputTokens' => 8192,
 			),
 		);
-		$res = $this->http_post_json( $url, $body, array() );
-		if ( ! $res ) {
-			return '';
-		}
-		$data = $res['data'];
-		if ( $res['code'] >= 400 ) {
-			$this->log_error( 'gemini HTTP ' . $res['code'] . ': ' . ( isset( $data['error']['message'] ) ? (string) $data['error']['message'] : 'unknown' ) );
-			return '';
-		}
-		if ( empty( $data['candidates'][0]['content']['parts'] ) ) {
-			$reason = isset( $data['promptFeedback']['blockReason'] ) ? 'blocked:' . $data['promptFeedback']['blockReason'] : 'empty-candidates';
-			$this->log_error( 'gemini: ' . $reason );
-			return '';
-		}
-		$text = '';
-		foreach ( $data['candidates'][0]['content']['parts'] as $part ) {
-			if ( isset( $part['text'] ) ) {
-				$text .= (string) $part['text'];
+
+		// Retry-with-backoff on 5xx/429/transport: free-tier Gemini is frequently
+		// saturated ("high demand") and spikes are transient.
+		$last_error = '';
+		for ( $attempt = 1; $attempt <= 4; $attempt++ ) {
+			$res = $this->http_post_json( $url, $body, array() );
+			if ( ! $res ) {
+				$last_error = 'gemini transport error';
+				if ( $attempt < 4 ) {
+					sleep( $attempt * 6 );
+				}
+				continue;
 			}
+			$data = $res['data'];
+			$code = $res['code'];
+			if ( $code >= 500 || 429 === $code || 0 === $code ) {
+				$last_error = 'gemini HTTP ' . $code . ': ' . ( isset( $data['error']['message'] ) ? (string) $data['error']['message'] : 'unknown' );
+				if ( $attempt < 4 ) {
+					sleep( $attempt * 6 );
+				}
+				continue;
+			}
+			if ( $code >= 400 ) {
+				$this->log_error( 'gemini HTTP ' . $code . ': ' . ( isset( $data['error']['message'] ) ? (string) $data['error']['message'] : 'unknown' ) );
+				return '';
+			}
+			if ( empty( $data['candidates'][0]['content']['parts'] ) ) {
+				$reason = isset( $data['promptFeedback']['blockReason'] ) ? 'blocked:' . $data['promptFeedback']['blockReason'] : 'empty-candidates';
+				$this->log_error( 'gemini: ' . $reason );
+				return '';
+			}
+			$text = '';
+			foreach ( $data['candidates'][0]['content']['parts'] as $part ) {
+				if ( isset( $part['text'] ) ) {
+					$text .= (string) $part['text'];
+				}
+			}
+			return trim( $text );
 		}
-		return trim( $text );
+		$this->log_error( $last_error . ' (retries exhausted)' );
+		return '';
 	}
 
 	private function claude_chat( $system, $prompt, $model ) {
