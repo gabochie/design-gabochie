@@ -22,6 +22,8 @@ class Gab_Auto_Executor {
 
 	const HOOK = 'gab_bank_publish';
 
+	const RETRY_HOOK = 'gab_bank_retry';
+
 	private static $instance = null;
 
 	/**
@@ -36,6 +38,7 @@ class Gab_Auto_Executor {
 
 	private function __construct() {
 		add_action( self::HOOK, array( $this, 'run_due' ) );
+		add_action( self::RETRY_HOOK, array( $this, 'run_due' ) );
 		add_action( 'wp_ajax_gab_bank_run', array( $this, 'ajax_bank_run' ) );
 	}
 
@@ -87,7 +90,30 @@ class Gab_Auto_Executor {
 			return array( 'skipped' => 'held-draft', 'post_id' => $existing, 'status' => get_post_status( $existing ) );
 		}
 
-		return $this->generate_from_bank( $bank_post, $date, $force_status );
+		$result = $this->generate_from_bank( $bank_post, $date, $force_status );
+		if ( $date === $today && isset( $result['error'] ) && 'ai-unavailable' === $result['error'] ) {
+			$this->schedule_retry( $date );
+		}
+		return $result;
+	}
+
+	/**
+	 * Schedule a bounded 15-minute follow-up of the bank cron after a transient
+	 * AI outage. Free-tier Gemini "high demand" (HTTP 503) bursts settle within
+	 * minutes, so a short retry window keeps the due-date slot honest without
+	 * burning quota on an up-front backoff marathon.
+	 */
+	private function schedule_retry( $date ) {
+		$key = 'gab_retry_' . str_replace( '-', '', (string) $date );
+		$count = (int) get_transient( $key );
+		if ( $count >= 3 ) {
+			delete_transient( $key );
+			return;
+		}
+		set_transient( $key, $count + 1, 2 * HOUR_IN_SECONDS );
+		if ( ! wp_next_scheduled( self::RETRY_HOOK ) ) {
+			wp_schedule_single_event( time() + 15 * MINUTE_IN_SECONDS, self::RETRY_HOOK );
+		}
 	}
 
 	/** Generate a post from a bank entry, apply lineage/SEO, QA, then publish when due. */
