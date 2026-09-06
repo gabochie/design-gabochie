@@ -3,9 +3,9 @@
  * Gabochie Command Center — funnel & revenue engine.
  *
  * Computes the live funnel (Captured → Qualified → Engaged → Enrolled →
- * Paid → Retained → Won) from FluentCRM + PMPro + WooCommerce data, snapshots
- * KPIs, and compares every stage to the GH₵1M/yr revenue-model targets so the
- * agents (and the operator) always know the gap to the number.
+ * Paid → Retained → Won) from the Gabochie CRM table + PMPro + WooCommerce
+ * data, snapshots KPIs, and compares every stage to the GH₵1M/yr revenue-model
+ * targets so the agents (and the operator) always know the gap to the number.
  *
  * @package Gabochie_Command_Center
  */
@@ -95,68 +95,51 @@ class Gabochie_CC_Funnel {
 			'liquid_mrr_day' => 0.0,
 		);
 
-		$list_table = $p . 'fc_lists';
-		if ( self::table_exists( $list_table ) ) {
-			$sub  = $p . 'fc_subscribers';
-			$piv  = $p . 'fc_subscriber_pivot';
-			$tags = $p . 'fc_tags';
-
-			$lead_ids = $wpdb->get_col(
+		$crm = $p . 'gab_contacts';
+		if ( self::table_exists( $crm ) ) {
+			$kpi['leads_total'] = (int) $wpdb->get_var(
 				$wpdb->prepare(
-					'SELECT DISTINCT s.id FROM %i s INNER JOIN %i piv ON piv.subscriber_id = s.id INNER JOIN %i l ON l.id = piv.object_id WHERE piv.object_type = %s AND l.slug LIKE %s AND s.status = %s',
-					$sub,
-					$piv,
-					$list_table,
-					'FluentCrm\\App\\Models\\Lists',
+					'SELECT COUNT(DISTINCT id) FROM %i WHERE status = %s AND (list_key LIKE %s OR source <> %s)',
+					$crm,
+					'subscribed',
 					'leadhub-%',
-					'subscribed'
+					''
 				)
 			);
 
-			if ( is_array( $lead_ids ) && count( $lead_ids ) ) {
-				$kpi['leads_total'] = count( $lead_ids );
-				$ids_30d            = $wpdb->get_col(
-					$wpdb->prepare(
-						'SELECT s.id FROM %i s INNER JOIN %i piv ON piv.subscriber_id = s.id INNER JOIN %i l ON l.id = piv.object_id WHERE piv.object_type = %s AND l.slug LIKE %s AND s.status = %s AND s.created_at >= %s',
-						$sub,
-						$piv,
-						$list_table,
-						'FluentCrm\\App\\Models\\Lists',
-						'leadhub-%',
-						'subscribed',
-						gmdate( 'Y-m-d H:i:s', strtotime( '-30 days' ) )
-					)
-				);
-				$kpi['leads_30d']   = is_array( $ids_30d ) ? count( $ids_30d ) : 0;
+			$kpi['leads_30d'] = (int) $wpdb->get_var(
+				$wpdb->prepare(
+					'SELECT COUNT(DISTINCT id) FROM %i WHERE status = %s AND (list_key LIKE %s OR source <> %s) AND created_at >= %s',
+					$crm,
+					'subscribed',
+					'leadhub-%',
+					'',
+					gmdate( 'Y-m-d H:i:s', strtotime( '-30 days' ) )
+				)
+			);
 
-				$kpi['engaged_30d'] = $wpdb->get_var(
-					$wpdb->prepare(
-						'SELECT COUNT(DISTINCT s.id) FROM %i s INNER JOIN %i sn ON sn.subscriber_id = s.id INNER JOIN %i piv ON piv.subscriber_id = s.id INNER JOIN %i l ON l.id = piv.object_id WHERE sn.key IN (%s,%s) AND piv.object_type = %s AND l.slug LIKE %s AND s.status = %s',
-						$sub,
-						$p . 'fc_subscriber_meta',
-						$piv,
-						$list_table,
-						'email_opened_count',
-						'last_clicked_at',
-						'FluentCrm\\App\\Models\\Lists',
-						'leadhub-%',
-						'subscribed'
-					)
-				);
+			$engaged = $wpdb->get_var(
+				$wpdb->prepare(
+					'SELECT COUNT(DISTINCT id) FROM %i WHERE status = %s AND (list_key LIKE %s OR source <> %s) AND last_engaged_at >= %s',
+					$crm,
+					'subscribed',
+					'leadhub-%',
+					'',
+					gmdate( 'Y-m-d H:i:s', strtotime( '-30 days' ) )
+				)
+			);
+			$kpi['engaged_30d'] = is_numeric( $engaged ) ? (int) $engaged : 0;
 
-				$qualified        = $wpdb->get_col(
-					$wpdb->prepare(
-						'SELECT DISTINCT s.id FROM %i s INNER JOIN %i piv ON piv.subscriber_id = s.id INNER JOIN %i t ON t.id = piv.object_id WHERE piv.object_type = %s AND (s.phone <> %s OR t.title LIKE %s)',
-						$sub,
-						$piv,
-						$tags,
-						'FluentCrm\\App\\Models\\Tag',
-						'',
-						'source:voice-agent'
-					)
-				);
-				$kpi['qualified'] = is_array( $qualified ) ? count( $qualified ) : 0;
-			}
+			$kpi['qualified'] = (int) $wpdb->get_var(
+				$wpdb->prepare(
+					'SELECT COUNT(DISTINCT id) FROM %i WHERE status = %s AND (phone <> %s OR source = %s OR tags LIKE %s)',
+					$crm,
+					'subscribed',
+					'',
+					'voice-agent',
+					'%source:voice-agent%'
+				)
+			);
 		}
 
 		// PMPro memberships = Enrolled (Free Lead) / Paid (Active + Premium).
@@ -475,7 +458,7 @@ class Gabochie_CC_Funnel {
 		$kpi = self::metrics();
 		echo '<h2 style="display:flex;align-items:center;gap:12px;">Revenue &amp; Funnel · target GH₵1M/yr';
 		echo '<button class="button button-small" onclick="location.href=\'' . esc_url( admin_url( 'admin.php?page=gabochie-command-center&tab=revenue&recalc=1' ) ) . '\'">Recompute</button></h2>';
-		echo '<p class="description">Live counts from FluentCRM, PMPro and WooCommerce, compared to the revenue-model targets. Recompute forces a fresh snapshot.</p>';
+		echo '<p class="description">Live counts from the Gabochie CRM (gab_contacts), PMPro and WooCommerce, compared to the revenue-model targets. Recompute forces a fresh snapshot.</p>';
 		echo self::kpi_cards_html( $kpi ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo '<h2>Funnel</h2>';
 		echo self::funnel_table_html( $kpi ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped

@@ -71,8 +71,8 @@ class Gabochie_CC_Agents {
 				'id'    => 'nurture_agent',
 				'crew'  => 'marketing',
 				'name'  => 'Nurture Agent',
-				'role'  => 'FluentCRM sequences: thesis → checklist → readiness score → level attempt',
-				'tools' => array( 'FluentCRM', 'Brevo (gabochie-email)', 'Lead Hub tags' ),
+				'role'  => 'Gabochie CRM sequences: thesis → checklist → readiness score → level attempt',
+				'tools' => array( 'Gabochie CRM', 'Brevo (gabochie-email)', 'Lead Hub tags' ),
 				'gate'  => 'No gate — notify-only until sequences approved',
 			),
 			array(
@@ -106,7 +106,7 @@ class Gabochie_CC_Agents {
 				'crew'  => 'sales',
 				'name'  => 'Membership Converter',
 				'role'  => '8-dimension score + thesis readers → Active Client ₵399',
-				'tools' => array( 'PMPro funnel', 'FluentCRM', 'Readiness quiz' ),
+				'tools' => array( 'PMPro funnel', 'Gabochie CRM', 'Readiness quiz' ),
 				'gate'  => 'Notify on attempts',
 			),
 
@@ -124,7 +124,7 @@ class Gabochie_CC_Agents {
 				'crew'  => 'aftersales',
 				'name'  => 'Success & Retention',
 				'role'  => 'Onboarding checklist, check-ins, churn-risk, win-back',
-				'tools' => array( 'FluentCRM', 'PMPro start/end dates', 'order history' ),
+				'tools' => array( 'Gabochie CRM', 'PMPro start/end dates', 'order history' ),
 				'gate'  => 'Escalation on at-risk clients',
 			),
 			array(
@@ -207,9 +207,9 @@ class Gabochie_CC_Agents {
 					: array( '#dba617', 'Setup', 'Content/SEO plugins not both active.' );
 
 			case 'nurture_agent':
-				return $is_active( 'fluent-crm' ) && ! empty( get_option( 'gabochie_email_api_key', '' ) )
+				return $is_active( 'gabochie-crm' ) && ! empty( get_option( 'gabochie_email_api_key', '' ) )
 					? $ok
-					: array( '#dba617', 'Setup', 'FluentCRM active but Brevo key missing.' );
+					: array( '#dba617', 'Setup', 'Gabochie CRM active but Brevo key missing.' );
 
 			case 'sdr':
 			case 'membership_converter':
@@ -243,7 +243,7 @@ class Gabochie_CC_Agents {
 				return $ok;
 
 			case 'orchestrator':
-				return $is_active( 'fluent-crm' ) ? $ok : array( '#dba617', 'Degraded', 'FluentCRM inactive — events buffered in backlog.' );
+				return $is_active( 'gabochie-crm' ) ? $ok : array( '#dba617', 'Degraded', 'Gabochie CRM inactive — events buffered in backlog.' );
 
 			default:
 				return $ai['valid'] ? $ok : $blk;

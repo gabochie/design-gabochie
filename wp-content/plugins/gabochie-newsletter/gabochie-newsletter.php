@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Gabochie Newsletter
  * Plugin URI:        https://gabochiedesign.com
- * Description:       Emails newsletter subscribers (FluentCRM) as soon as a blog post is published. Each send is routed through gabochie-email/Brevo with a per-recipient one-click unsubscribe link, daily/run caps, an admin test-send, and a send log.
+ * Description:       Emails newsletter subscribers (Gabochie CRM table) as soon as a blog post is published. Each send is routed through gabochie-email/Brevo with a per-recipient one-click unsubscribe link, daily/run caps, an admin test-send, and a send log.
  * Version:           1.0.0
  * Requires at least: 6.0
  * Requires PHP:      8.0

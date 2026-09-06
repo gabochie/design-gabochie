@@ -731,7 +731,7 @@ class Gabochie_Command_Center {
 				'icon'  => 'dashicons-email-alt',
 				'name'  => 'SDR',
 				'role'  => 'Lead qualification',
-				'task'  => 'Captures leads + runs nurture sequences (FluentCRM) once Brevo key is set.',
+				'task'  => 'Captures leads + runs nurture sequences (Gabochie CRM) once Brevo key is set.',
 				'state' => array( '#8c8f94', 'Standby' ),
 				'gate'  => 'Soft — notify only',
 			),

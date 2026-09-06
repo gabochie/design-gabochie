@@ -3,8 +3,9 @@
  * Gabochie Newsletter core.
  *
  * Fires on `transition_post_status` into `publish` for blog posts, reads the
- * subscribed contacts from FluentCRM, and delivers a branded HTML brief to each
- * via wp_mail (which the gabochie-email plugin routes through Brevo).
+ * subscribed contacts from the Gabochie CRM table, and delivers a branded HTML
+ * brief to each via wp_mail (which the gabochie-email plugin routes through
+ * Brevo).
  *
  * @package Gabochie_Newsletter
  */
@@ -104,7 +105,7 @@ class Gabochie_Newsletter {
 	}
 
 	/**
-	 * Send the announcement for one post to all subscribed FluentCRM contacts.
+	 * Send the announcement for one post to all subscribed CRM contacts.
 	 *
 	 * @param WP_Post $post
 	 */
@@ -149,32 +150,19 @@ class Gabochie_Newsletter {
 	}
 
 	/**
-	 * Active FluentCRM contacts (status subscribed), excluding known unsubs.
+	 * Active Gabochie CRM contacts (status subscribed), excluding known unsubs.
 	 *
 	 * @return array<int,array{email:string,name:string}>
 	 */
 	public function subscribers() {
-		global $wpdb;
-		$table = $wpdb->prefix . 'fc_subscribers';
-		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) {
-			return array();
-		}
-		$rows = $wpdb->get_results(
-			$wpdb->prepare( 'SELECT email, first_name, last_name FROM %i WHERE status = %s ORDER BY id ASC', $table, 'subscribed' ),
-			ARRAY_A
-		);
-		if ( ! is_array( $rows ) ) {
+		if ( ! class_exists( 'Gabochie_Crm' ) ) {
 			return array();
 		}
 		$out = array();
-		foreach ( $rows as $row ) {
-			$email = strtolower( trim( sanitize_email( (string) $row['email'] ) ) );
-			if ( '' === $email || ! is_email( $email ) ) {
-				continue;
-			}
+		foreach ( Gabochie_Crm::subscribers() as $row ) {
 			$name  = trim( (string) $row['first_name'] . ' ' . (string) $row['last_name'] );
 			$out[] = array(
-				'email' => $email,
+				'email' => $row['email'],
 				'name'  => $name,
 			);
 		}
@@ -280,7 +268,8 @@ class Gabochie_Newsletter {
 
 	/**
 	 * One-click unsubscribe route (?gabochie-nl=unsub&e=..&k=..). Marks the
-	 * contact unsubscribed in FluentCRM and serves a confirmation page.
+	 * contact unsubscribed in the Gabochie CRM table and serves a confirmation
+	 * page.
 	 */
 	public function maybe_handle_unsub() {
 		if ( 'unsub' !== sanitize_key( wp_unslash( $_GET['gabochie-nl'] ?? '' ) ) || is_admin() ) {
@@ -306,7 +295,7 @@ class Gabochie_Newsletter {
 	}
 
 	/**
-	 * Persist an unsubscribe (own map + FluentCRM status).
+	 * Persist an unsubscribe (own map + Gabochie CRM status).
 	 *
 	 * @param string $email
 	 */
@@ -315,12 +304,8 @@ class Gabochie_Newsletter {
 		$unsubs[ $email ] = current_time( 'mysql' );
 		update_option( self::OPT_UNSUBS, $unsubs );
 
-		global $wpdb;
-		$table = $wpdb->prefix . 'fc_subscribers';
-		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) === $table ) {
-			$wpdb->query(
-				$wpdb->prepare( 'UPDATE %i SET status = %s WHERE LOWER(email) = %s', $table, 'unsubscribed', $email )
-			);
+		if ( class_exists( 'Gabochie_Crm' ) ) {
+			Gabochie_Crm::set_status( $email, 'unsubscribed' );
 		}
 	}
 
@@ -441,7 +426,7 @@ class Gabochie_Newsletter {
 		?>
 		<div class="wrap">
 			<h1>Gabochie Newsletter</h1>
-			<p>Emails subscribed contacts as soon as a blog post is published. Recipients are read from the FluentCRM subscriber list; delivery goes through <em>gabochie-email</em> (Brevo).</p>
+			<p>Emails subscribed contacts as soon as a blog post is published. Recipients are read from the Gabochie CRM subscribers table (<code>gab_contacts</code>); delivery goes through <em>gabochie-email</em> (Brevo).</p>
 			<hr>
 			<form method="post" action="options.php">
 				<?php settings_fields( 'gabochie-newsletter' ); ?>

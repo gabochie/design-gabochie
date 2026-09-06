@@ -11,7 +11,7 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Route a lead into the pipeline (FluentCRM when ready, else backlog).
+ * Route a lead into the pipeline (Gabochie CRM when ready, else backlog).
  *
  * @param string $email Lead email.
  * @param array  $data  Lead context (list, source, name, phone, journey, blocker, utm_*).

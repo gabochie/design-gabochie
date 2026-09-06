@@ -3,9 +3,9 @@
  * Gabochie Lead Hub — core.
  *
  * Listens for `gabochie/lead/captured` (email, data) fired by every capture
- * point on gabochiedesign.com and routes each lead into FluentCRM, tagged by
- * source. When FluentCRM is unavailable, leads are stored in a backlog and
- * replayed from the WordPress admin.
+ * point on gabochiedesign.com and routes each lead into the Gabochie CRM
+ * tuple, tagged by source. When the CRM table is unavailable, leads are stored
+ * in a backlog and replayed from the WordPress admin.
  *
  * @package Gabochie_Lead_Hub
  */
@@ -72,7 +72,7 @@ class Gabochie_Lead_Hub {
 	}
 
 	/**
-	 * Activation hook — seed lists immediately when FluentCRM is live.
+	 * Activation hook — ensure the CRM table exists.
 	 */
 	public function activate() {
 		$this->maybe_seed_lists();
@@ -81,7 +81,7 @@ class Gabochie_Lead_Hub {
 	/**
 	 * Lead lists keyed by machine name.
 	 *
-	 * @return string[] key => FluentCRM list title.
+	 * @return string[] key => list label.
 	 */
 	public static function lists() {
 		return array(
@@ -96,45 +96,29 @@ class Gabochie_Lead_Hub {
 	}
 
 	/**
-	 * Whether FluentCRM is loaded and addressable.
+	 * Whether the Gabochie CRM store is present.
 	 *
 	 * @return bool
 	 */
-	protected function fluent_crm_ready() {
-		return function_exists( 'FluentCrmApi' );
+	protected function crm_ready() {
+		return class_exists( 'Gabochie_Crm' ) && \Gabochie_Crm::ready();
 	}
 
 	/**
-	 * Create the lead lists inside FluentCRM once per plugin version.
+	 * Ensure the CRM table exists once per plugin version.
 	 *
 	 * @param bool $force Re-run even if already seeded.
 	 */
 	public function maybe_seed_lists( $force = false ) {
-		if ( ! $this->fluent_crm_ready() ) {
+		if ( ! $this->crm_ready() ) {
 			return;
 		}
 		if ( ! $force && GABOCHIE_LEAD_HUB_VERSION === (string) get_option( self::OPTION_SEEDED, '' ) ) {
 			return;
 		}
 
-		$rows = array();
-		foreach ( $this->lists() as $key => $label ) {
-			$rows[] = array(
-				'title'       => $label,
-				'slug'        => 'leadhub-' . $key,
-				'description' => 'Leads captured at ' . $label,
-			);
-		}
-
-		try {
-			if ( empty( $rows ) ) {
-				return;
-			}
-			\FluentCrmApi( 'lists' )->importBulk( $rows );
-			update_option( self::OPTION_SEEDED, GABOCHIE_LEAD_HUB_VERSION, false );
-		} catch ( \Throwable $e ) {
-			$this->log_error( 'seed_lists: ' . $e->getMessage() );
-		}
+		Gabochie_Crm::ensure_schema();
+		update_option( self::OPTION_SEEDED, GABOCHIE_LEAD_HUB_VERSION, false );
 	}
 
 	/**
@@ -142,7 +126,7 @@ class Gabochie_Lead_Hub {
 	 *
 	 * @param string $email Captured email address.
 	 * @param array  $data  Lead context (list, source, name, phone, journey, blocker, utm_*).
-	 * @return bool True when synced to FluentCRM (or queued to backlog), false on invalid input.
+	 * @return bool True when synced to the Gabochie CRM (or queued to backlog), false on invalid input.
 	 */
 	public function capture( $email, $data ) {
 		$email = is_string( $email ) ? sanitize_email( $email ) : '';
@@ -174,22 +158,20 @@ class Gabochie_Lead_Hub {
 	}
 
 	/**
-	 * Create or update the FluentCRM contact (+ list + source tags).
+	 * Create or update the Gabochie CRM contact (+ list + source/utm tags).
 	 *
 	 * @param string $email Sanitized email.
 	 * @param array  $data  Lead context.
 	 * @return bool
 	 */
 	protected function sync_contact( $email, array $data ) {
-		if ( ! $this->fluent_crm_ready() ) {
+		if ( ! $this->crm_ready() ) {
 			return false;
 		}
 
 		$list_key = sanitize_key( $data['list'] ?? '' );
-		$found    = false;
 
 		$payload = array(
-			'email'        => $email,
 			'status'       => 'subscribed',
 			'contact_type' => 'subscriber',
 		);
@@ -206,36 +188,34 @@ class Gabochie_Lead_Hub {
 
 		$lists = $this->lists();
 		if ( isset( $lists[ $list_key ] ) ) {
-			$payload['lists'] = array( 'leadhub-' . $list_key );
-			$found            = true;
+			$payload['list_key'] = 'leadhub-' . $list_key;
 		}
 
-		$tags = array();
+		$tags   = array();
 		$source = sanitize_key( $data['source'] ?? 'general' );
 		if ( '' !== $source ) {
-			$tags[] = 'source:' . $source;
+			$payload['source'] = $source;
+			$tags[]            = 'source:' . $source;
 		}
 		foreach ( array( 'utm_source', 'utm_medium', 'utm_campaign' ) as $utm_key ) {
 			$utm_val = sanitize_key( $data[ $utm_key ] ?? '' );
 			if ( '' !== $utm_val ) {
-				$tags[] = 'utm:' . $utm_val;
+				$tags[]                 = 'utm:' . $utm_val;
+				$payload[ $utm_key ]    = $utm_val;
 			}
 		}
-		if ( ! empty( $tags ) ) {
-			$payload['tags'] = $tags;
-		}
+		$payload['tags'] = $tags;
 
-		try {
-			$contact = \FluentCrmApi( 'contacts' )->createOrUpdate( $payload );
-			return true === $found || ( is_object( $contact ) || is_array( $contact ) );
-		} catch ( \Throwable $e ) {
-			$this->log_error( 'sync_contact: ' . $e->getMessage() );
-			return false;
+		$id = Gabochie_Crm::upsert_contact( $email, $payload );
+		if ( $id > 0 ) {
+			return true;
 		}
+		$this->log_error( 'sync_contact: upsert failed for ' . $email );
+		return false;
 	}
 
 	/**
-	 * Persist to the backlog (FluentCRM asleep or contact call failed).
+	 * Persist to the backlog (CRM table unavailable or contact call failed).
 	 *
 	 * @param array $entry Backlog entry.
 	 */
@@ -262,7 +242,7 @@ class Gabochie_Lead_Hub {
 	 * Replay the backlog from the admin (capped per run).
 	 */
 	public function flush_backlog() {
-		if ( ! $this->fluent_crm_ready() || ! current_user_can( 'manage_options' ) ) {
+		if ( ! $this->crm_ready() || ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
 		$items = $this->backlog_items();
@@ -294,7 +274,7 @@ class Gabochie_Lead_Hub {
 	 * Track captured/synced volume per source.
 	 *
 	 * @param string $source Lead source key.
-	 * @param bool   $synced Whether the contact reached FluentCRM.
+	 * @param bool   $synced Whether the contact reached the Gabochie CRM.
 	 */
 	protected function bump_stats( $source, $synced ) {
 		$stats = get_option( self::OPTION_STATS, array() );
@@ -370,7 +350,7 @@ class Gabochie_Lead_Hub {
 	 * Render the admin dashboard.
 	 */
 	public function render_admin_page() {
-		$ready     = $this->fluent_crm_ready();
+		$ready     = $this->crm_ready();
 		$backlog   = $this->backlog_items();
 		$stats     = $this->get_stats();
 		$seeded    = (string) get_option( self::OPTION_SEEDED, '' );
@@ -385,7 +365,7 @@ class Gabochie_Lead_Hub {
 			<div style="display:flex;gap:12px;flex-wrap:wrap;margin:12px 0 20px;">
 				<div style="background:#fff;border:1px solid #c3c4c7;border-radius:6px;padding:14px 18px;min-width:170px;">
 					<div style="font-size:22px;font-weight:600;"><?php echo esc_html( $ready ? 'Online' : 'Standby' ); ?></div>
-					<div style="color:#646970;">FluentCRM</div>
+					<div style="color:#646970;">Gabochie CRM</div>
 				</div>
 				<div style="background:#fff;border:1px solid #c3c4c7;border-radius:6px;padding:14px 18px;min-width:170px;">
 					<div style="font-size:22px;font-weight:600;"><?php echo esc_html( (string) count( $backlog ) ); ?></div>
@@ -409,18 +389,18 @@ class Gabochie_Lead_Hub {
 			<form method="post" style="margin-bottom:24px;">
 				<?php wp_nonce_field( 'gabochie_lead_hub_admin' ); ?>
 				<input type="hidden" name="gabochie_lead_hub_action" value="reseed" />
-				<input type="submit" class="button button-link" value="<?php esc_attr_e( 'Re-seed FluentCRM lists', 'gabochie-lead-hub' ); ?>" />
+				<input type="submit" class="button button-link" value="<?php esc_attr_e( 'Re-verify CRM table', 'gabochie-lead-hub' ); ?>" />
 			</form>
 
 			<h2><?php esc_html_e( 'Lead lists', 'gabochie-lead-hub' ); ?></h2>
 			<table class="widefat striped">
-				<thead><tr><th><?php esc_html_e( 'Key', 'gabochie-lead-hub' ); ?></th><th><?php esc_html_e( 'FluentCRM list', 'gabochie-lead-hub' ); ?></th><th><?php esc_html_e( 'Status', 'gabochie-lead-hub' ); ?></th></tr></thead>
+				<thead><tr><th><?php esc_html_e( 'Key', 'gabochie-lead-hub' ); ?></th><th><?php esc_html_e( 'List', 'gabochie-lead-hub' ); ?></th><th><?php esc_html_e( 'Status', 'gabochie-lead-hub' ); ?></th></tr></thead>
 				<tbody>
 				<?php foreach ( $this->lists() as $key => $label ) : ?>
 					<tr>
 						<td><code><?php echo esc_html( $key ); ?></code></td>
 						<td><?php echo esc_html( $label ); ?></td>
-						<td><?php echo $ready && '' !== $seeded ? esc_html( $seeded ) : esc_html__( 'pending (FluentCRM offline or not seeded)', 'gabochie-lead-hub' ); ?></td>
+						<td><?php echo $ready && '' !== $seeded ? esc_html( $seeded ) : esc_html__( 'pending (CRM table missing)', 'gabochie-lead-hub' ); ?></td>
 					</tr>
 				<?php endforeach; ?>
 				</tbody>
