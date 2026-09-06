@@ -66,7 +66,10 @@ class Gab_Auto_Executor {
 			$date = $today;
 		}
 		if ( ! $bank->load() ) {
-			return array( 'error' => 'bank-unavailable', 'file' => $bank->data_file() );
+			return array(
+				'error' => 'bank-unavailable',
+				'file'  => $bank->data_file(),
+			);
 		}
 
 		$bank_post = $bank->post_for_date( $date );
@@ -81,13 +84,20 @@ class Gab_Auto_Executor {
 		$existing = $this->existing_post( $bank_post['id'] );
 		if ( $existing ) {
 			if ( 'publish' === get_post_status( $existing ) ) {
-				return array( 'skipped' => 'already-published', 'post_id' => $existing );
+				return array(
+					'skipped' => 'already-published',
+					'post_id' => $existing,
+				);
 			}
 			// A pre-generated draft is promoted only on its due date unless force='draft' (hold).
 			if ( $date === $today && 'draft' !== $force_status ) {
 				return $this->maybe_publish_existing( $existing, $bank_post );
 			}
-			return array( 'skipped' => 'held-draft', 'post_id' => $existing, 'status' => get_post_status( $existing ) );
+			return array(
+				'skipped' => 'held-draft',
+				'post_id' => $existing,
+				'status'  => get_post_status( $existing ),
+			);
 		}
 
 		$result = $this->generate_from_bank( $bank_post, $date, $force_status );
@@ -104,7 +114,7 @@ class Gab_Auto_Executor {
 	 * burning quota on an up-front backoff marathon.
 	 */
 	private function schedule_retry( $date ) {
-		$key = 'gab_retry_' . str_replace( '-', '', (string) $date );
+		$key   = 'gab_retry_' . str_replace( '-', '', (string) $date );
 		$count = (int) get_transient( $key );
 		if ( $count >= 3 ) {
 			delete_transient( $key );
@@ -131,18 +141,25 @@ class Gab_Auto_Executor {
 			$prompt = ( 1 === $attempt ) ? $this->bank_prompt( $bank_post ) : $this->refine_prompt( $bank_post, $draft_text, $qa );
 			$text   = $ai->complete( $this->system_prompt(), $prompt );
 			if ( '' === trim( (string) $text ) ) {
-				return array( 'error' => 'ai-unavailable', 'provider' => $ai->last_provider(), 'attempt' => $attempt );
+				return array(
+					'error'    => 'ai-unavailable',
+					'provider' => $ai->last_provider(),
+					'attempt'  => $attempt,
+				);
 			}
 			$draft_text = $text;
 			$parsed     = $this->parse_response( $text, $bank_post );
 			$content    = wp_kses_post( $parsed['content'] );
 			if ( '' === trim( wp_strip_all_tags( $content ) ) ) {
-				return array( 'error' => 'empty-content', 'attempt' => $attempt );
+				return array(
+					'error'   => 'empty-content',
+					'attempt' => $attempt,
+				);
 			}
 			$qa = $this->qa_check( $parsed['title'], $content, $bank_post );
 		}
 
-		$content      = wp_kses_post( $parsed['content'] );
+		$content       = wp_kses_post( $parsed['content'] );
 		$category_term = $this->category_term_id( $bank_post['category'] );
 		$author        = (int) get_option( 'gab_author', 2 );
 		if ( 0 === $author ) {
@@ -319,7 +336,11 @@ class Gab_Auto_Executor {
 		$qa   = $this->qa_check( $post->post_title, $post->post_content, $bank_post );
 		$this->store_qa( $post_id, $qa );
 		if ( ! $qa['pass'] ) {
-			return array( 'status' => 'draft', 'post_id' => $post_id, 'qa' => $qa );
+			return array(
+				'status'  => 'draft',
+				'post_id' => $post_id,
+				'qa'      => $qa,
+			);
 		}
 		wp_update_post(
 			array(
@@ -327,7 +348,11 @@ class Gab_Auto_Executor {
 				'post_status' => 'publish',
 			)
 		);
-		return array( 'status' => 'publish', 'post_id' => $post_id, 'qa' => $qa );
+		return array(
+			'status'  => 'publish',
+			'post_id' => $post_id,
+			'qa'      => $qa,
+		);
 	}
 
 	private function existing_post( $bank_id ) {
@@ -446,7 +471,7 @@ class Gab_Auto_Executor {
 
 		$prompt .= "\nGHS FIGURES TO USE (rate-dated, incorporate in context where they fit):\n" . $figs . "\n";
 
-		$prompt .= "\nCALL-TO-ACTION: " . $cta_copy . " Target URLs: " . ( '' === $cta_links ? '/project-recovery-diagnostic/' : $cta_links ) . "\n";
+		$prompt .= "\nCALL-TO-ACTION: " . $cta_copy . ' Target URLs: ' . ( '' === $cta_links ? '/project-recovery-diagnostic/' : $cta_links ) . "\n";
 
 		$prompt .= "\nFORMATTING: US English, GHS amounts as 'GHS 1,500'. Escape nothing. One <a href> per link. FAQ <h3> questions must literally end with '?'.\n";
 		$prompt .= "Return EXACTLY this format (no extra prose before or after, no code fences):\n";
@@ -506,10 +531,10 @@ class Gab_Auto_Executor {
 		if ( function_exists( 'mb_substr' ) ) {
 			return mb_substr( $str, 0, $max, 'UTF-8' );
 		}
-		$out  = '';
-		$len  = 0;
-		$i    = 0;
-		$n    = strlen( $str );
+		$out = '';
+		$len = 0;
+		$i   = 0;
+		$n   = strlen( $str );
 		while ( $i < $n && $len < $max ) {
 			$c = ord( $str[ $i ] );
 			if ( $c < 0x80 ) {

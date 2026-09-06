@@ -19,8 +19,8 @@ class Gab_Auto_AI {
 	const BASE_URL_OPT = 'gab_ai_base_url';
 	const ERRORS_OPT   = 'gab_ai_errors';
 
-	private static $instance   = null;
-	private $last_provider     = '';
+	private static $instance = null;
+	private $last_provider   = '';
 
 	/**
 	 * @return Gab_Auto_AI
@@ -79,7 +79,12 @@ class Gab_Auto_AI {
 			$ai->refresh_config();
 			if ( $ai->is_configured() ) {
 				$res = $ai->chat(
-					array( array( 'role' => 'user', 'content' => $prompt ) ),
+					array(
+						array(
+							'role'    => 'user',
+							'content' => $prompt,
+						),
+					),
 					(string) $system,
 					0.6
 				);
@@ -95,7 +100,12 @@ class Gab_Auto_AI {
 			if ( $llm->is_ready() ) {
 				$res = $llm->complete(
 					(string) $system,
-					array( array( 'role' => 'user', 'content' => $prompt ) )
+					array(
+						array(
+							'role'    => 'user',
+							'content' => $prompt,
+						),
+					)
 				);
 				if ( is_array( $res ) && ! empty( $res['success'] ) && '' !== trim( (string) ( $res['text'] ?? '' ) ) ) {
 					$this->last_provider = 'ghbc-llm';
@@ -119,10 +129,20 @@ class Gab_Auto_AI {
 		if ( '' === $key ) {
 			$msg = 'No API key saved in Auto-Blog Settings yet. ';
 			if ( function_exists( 'class_exists' ) && class_exists( 'GHBC_LLM' ) && GHBC_LLM::instance()->is_ready() ) {
-				wp_send_json_success( array( 'message' => $msg . 'GHBC LLM is already configured and will be used.', 'path' => 'ghbc-llm' ) );
+				wp_send_json_success(
+					array(
+						'message' => $msg . 'GHBC LLM is already configured and will be used.',
+						'path'    => 'ghbc-llm',
+					)
+				);
 			}
 			if ( class_exists( 'Gabochie_AI_Engine' ) && Gabochie_AI_Engine::instance()->is_configured() ) {
-				wp_send_json_success( array( 'message' => $msg . 'Gabochie AI Engine is already configured and will be used.', 'path' => 'gabochie-ai-engine' ) );
+				wp_send_json_success(
+					array(
+						'message' => $msg . 'Gabochie AI Engine is already configured and will be used.',
+						'path'    => 'gabochie-ai-engine',
+					)
+				);
 			}
 			wp_send_json_error( array( 'message' => $msg . 'Configure an API key below (or in GHBC / Gabochie SaaS Tools) before running the executor.' ) );
 		}
@@ -221,18 +241,23 @@ class Gab_Auto_AI {
 		if ( '' === $key ) {
 			return '';
 		}
-		$body = array(
+		$body    = array(
 			'model'       => $model,
 			'max_tokens'  => 4096,
 			'temperature' => 0.6,
 			'system'      => (string) $system,
-			'messages'    => array( array( 'role' => 'user', 'content' => $prompt ) ),
+			'messages'    => array(
+				array(
+					'role'    => 'user',
+					'content' => $prompt,
+				),
+			),
 		);
 		$headers = array(
 			'x-api-key'         => $key,
 			'anthropic-version' => '2023-06-01',
 		);
-		$res = $this->http_post_json( 'https://api.anthropic.com/v1/messages', $body, $headers );
+		$res     = $this->http_post_json( 'https://api.anthropic.com/v1/messages', $body, $headers );
 		if ( ! $res ) {
 			return '';
 		}
@@ -253,18 +278,24 @@ class Gab_Auto_AI {
 		if ( '' === $key ) {
 			return '';
 		}
-		$base = untrailingslashit( (string) get_option( self::BASE_URL_OPT, 'https://api.openai.com/v1' ) );
-		$body = array(
+		$base    = untrailingslashit( (string) get_option( self::BASE_URL_OPT, 'https://api.openai.com/v1' ) );
+		$body    = array(
 			'model'       => $model,
 			'max_tokens'  => 4096,
 			'temperature' => 0.6,
 			'messages'    => array(
-				array( 'role' => 'system', 'content' => (string) $system ),
-				array( 'role' => 'user', 'content' => $prompt ),
+				array(
+					'role'    => 'system',
+					'content' => (string) $system,
+				),
+				array(
+					'role'    => 'user',
+					'content' => $prompt,
+				),
 			),
 		);
 		$headers = array( 'authorization' => 'Bearer ' . $key );
-		$res = $this->http_post_json( $base . '/chat/completions', $body, $headers );
+		$res     = $this->http_post_json( $base . '/chat/completions', $body, $headers );
 		if ( ! $res ) {
 			return '';
 		}
@@ -293,9 +324,9 @@ class Gab_Auto_AI {
 		$response = wp_remote_post(
 			$url,
 			array(
-				'headers'    => $headers,
-				'body'       => wp_json_encode( $body ),
-				'timeout'    => 120,
+				'headers'     => $headers,
+				'body'        => wp_json_encode( $body ),
+				'timeout'     => 120,
 				'httpversion' => '1.1',
 			)
 		);
@@ -313,7 +344,10 @@ class Gab_Auto_AI {
 	/** Never log secrets - messages only. */
 	private function log_error( $msg ) {
 		$errors   = (array) get_option( self::ERRORS_OPT, array() );
-		$errors[] = array( 'time' => current_time( 'mysql' ), 'error' => substr( $msg, 0, 300 ) );
+		$errors[] = array(
+			'time'  => current_time( 'mysql' ),
+			'error' => substr( $msg, 0, 300 ),
+		);
 		update_option( self::ERRORS_OPT, array_slice( $errors, -10 ) );
 	}
 

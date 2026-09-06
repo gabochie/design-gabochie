@@ -83,7 +83,7 @@ class Gab_Auto_Bank {
 		if ( empty( $this->by_date ) ) {
 			return null;
 		}
-		$from = ( null === $from_ts ) ? current_time( 'Y-m-d' ) : date( 'Y-m-d', $from_ts ); // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
+		$from  = ( null === $from_ts ) ? current_time( 'Y-m-d' ) : date( 'Y-m-d', $from_ts ); // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
 		$dates = array_keys( $this->by_date );
 		sort( $dates );
 		foreach ( $dates as $d ) {
