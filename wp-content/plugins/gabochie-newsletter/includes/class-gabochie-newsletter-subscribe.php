@@ -126,6 +126,12 @@ class Gabochie_Newsletter_Subscribe {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public static function handle_subscribe( $request ) {
+		// WP REST get_param() doesn't read JSON bodies — merge them in.
+		$json = $request->get_json_params();
+		if ( ! empty( $json ) && is_array( $json ) ) {
+			$request->set_body_params( array_merge( $request->get_body_params(), $json ) );
+		}
+
 		$nonce = (string) $request->get_param( '_gab_nl_nonce' );
 		if ( ! wp_verify_nonce( $nonce, self::NONCE_ACTION ) ) {
 			return new WP_Error( 'gab_nl_bad_nonce', __( 'Session expired – please reload the page and try again.', 'gabochie-design' ), array( 'status' => 400 ) );
