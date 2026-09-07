@@ -40,30 +40,6 @@ class Gabochie_Newsletter_Subscribe {
 				'methods'             => 'POST',
 				'callback'            => array( __CLASS__, 'handle_subscribe' ),
 				'permission_callback' => '__return_true',
-				'args'                => array(
-					'first_name'    => array(
-						'type'              => 'string',
-						'sanitize_callback' => 'sanitize_text_field',
-					),
-					'email'         => array(
-						'type'              => 'string',
-						'required'          => true,
-						'sanitize_callback' => 'sanitize_email',
-					),
-					'consent'       => array(
-						'type'              => 'string',
-						'required'          => true,
-						'sanitize_callback' => 'sanitize_text_field',
-					),
-					'website'       => array(
-						'type'              => 'string',
-						'sanitize_callback' => 'sanitize_text_field',
-					),
-					'_gab_nl_nonce' => array(
-						'type'              => 'string',
-						'sanitize_callback' => 'sanitize_key',
-					),
-				),
 			)
 		);
 	}
@@ -126,28 +102,26 @@ class Gabochie_Newsletter_Subscribe {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public static function handle_subscribe( $request ) {
-		// WP REST get_param() doesn't read JSON bodies — merge them in.
+		// WP REST get_param() doesn't read JSON bodies — read the JSON directly.
 		$json = $request->get_json_params();
-		if ( ! empty( $json ) && is_array( $json ) ) {
-			$request->set_body_params( array_merge( $request->get_body_params(), $json ) );
-		}
+		$json = is_array( $json ) ? $json : array();
 
-		$nonce = (string) $request->get_param( '_gab_nl_nonce' );
+		$nonce = (string) sanitize_key( isset( $json['_gab_nl_nonce'] ) ? $json['_gab_nl_nonce'] : '' );
 		if ( ! wp_verify_nonce( $nonce, self::NONCE_ACTION ) ) {
 			return new WP_Error( 'gab_nl_bad_nonce', __( 'Session expired – please reload the page and try again.', 'gabochie-design' ), array( 'status' => 400 ) );
 		}
 
 		// Honeypot: bots fill it, humans never see it. Answer cheerfully.
-		$website = (string) $request->get_param( 'website' );
+		$website = (string) sanitize_text_field( isset( $json['website'] ) ? $json['website'] : '' );
 		if ( '' !== $website ) {
 			return self::ok();
 		}
 
-		if ( '1' !== (string) $request->get_param( 'consent' ) ) {
+		if ( '1' !== (string) ( isset( $json['consent'] ) ? $json['consent'] : '' ) ) {
 			return new WP_Error( 'gab_nl_no_consent', __( 'Please confirm you want to receive the newsletter.', 'gabochie-design' ), array( 'status' => 400 ) );
 		}
 
-		$email = strtolower( trim( (string) $request->get_param( 'email' ) ) );
+		$email = strtolower( trim( (string) sanitize_email( isset( $json['email'] ) ? $json['email'] : '' ) ) );
 		if ( '' === $email || ! is_email( $email ) ) {
 			return new WP_Error( 'gab_nl_bad_email', __( 'Please enter a valid email address.', 'gabochie-design' ), array( 'status' => 400 ) );
 		}
@@ -160,7 +134,7 @@ class Gabochie_Newsletter_Subscribe {
 			return new WP_Error( 'gab_nl_crm_missing', __( 'Subscription is temporarily unavailable. Please try again later.', 'gabochie-design' ), array( 'status' => 503 ) );
 		}
 
-		$first = trim( (string) $request->get_param( 'first_name' ) );
+		$first = trim( (string) sanitize_text_field( isset( $json['first_name'] ) ? $json['first_name'] : '' ) );
 		$id    = gabochie_crm_upsert(
 			$email,
 			array(
