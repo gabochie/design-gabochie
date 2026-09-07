@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       Gabochie Newsletter
  * Plugin URI:        https://gabochiedesign.com
- * Description:       Emails newsletter subscribers (Gabochie CRM table) as soon as a blog post is published. Each send is routed through gabochie-email/Brevo with a per-recipient one-click unsubscribe link, open/click tracking (stamps last_engaged_at on CRM contacts), daily/run caps, an admin test-send, and a send log.
- * Version:           1.1.0
+ * Description:       Emails newsletter subscribers (Gabochie CRM table) as soon as a blog post is published. Each send is routed through gabochie-email/Brevo with a per-recipient one-click unsubscribe link, open/click tracking (stamps last_engaged_at on CRM contacts), daily/run caps, a public [gabochie_subscribe] opt-in form (single opt-in + consent), an admin test-send, and a send log.
+ * Version:           1.2.0
  * Requires at least: 6.0
  * Requires PHP:      8.0
  * Author:            Gabochie Design
@@ -13,15 +13,17 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'GABOCHIE_NEWSLETTER_VERSION', '1.1.0' );
+define( 'GABOCHIE_NEWSLETTER_VERSION', '1.2.0' );
 define( 'GABOCHIE_NEWSLETTER_PATH', plugin_dir_path( __FILE__ ) );
 
 require_once GABOCHIE_NEWSLETTER_PATH . 'includes/class-gabochie-newsletter.php';
+require_once GABOCHIE_NEWSLETTER_PATH . 'includes/class-gabochie-newsletter-subscribe.php';
 
 add_action(
 	'plugins_loaded',
 	function () {
 		Gabochie_Newsletter::instance();
+		Gabochie_Newsletter_Subscribe::register();
 	}
 );
 

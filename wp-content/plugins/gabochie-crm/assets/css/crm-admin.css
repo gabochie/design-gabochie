@@ -1,0 +1,50 @@
+.gab-crm-status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    line-height: 1.6;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.gab-crm-status--subscribed {
+    background: #dff6e1;
+    color: #1a7f37;
+}
+
+.gab-crm-status--unsubscribed {
+    background: #fde8e8;
+    color: #b42318;
+}
+
+.gab-crm-status--pending {
+    background: #fff4d6;
+    color: #9a6700;
+}
+
+a.gab-crm-tag {
+    display: inline-block;
+    margin: 1px 2px 1px 0;
+    padding: 1px 7px;
+    border-radius: 9px;
+    background: #f0f0f1;
+    border: 1px solid #dcdcde;
+    color: #2271b1;
+    font-size: 11px;
+    line-height: 1.8;
+    text-decoration: none;
+}
+
+a.gab-crm-tag:hover {
+    background: #e5f1fb;
+    border-color: #2271b1;
+}
+
+#gab-crm-filter .search-box {
+    margin-bottom: 8px;
+}
+
+#gab-crm-filter select {
+    margin-right: 4px;
+}
