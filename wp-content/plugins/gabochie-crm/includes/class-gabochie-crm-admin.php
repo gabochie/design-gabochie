@@ -106,6 +106,11 @@ class Gabochie_Crm_Admin {
 			Gabochie_Crm_Export::admin_export();
 		}
 
+		$tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'contacts'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( 'newsletter' !== $tab ) {
+			$tab = 'contacts';
+		}
+
 		$action = isset( $_GET['action'] ) ? sanitize_key( wp_unslash( $_GET['action'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		if ( '' === $action && isset( $_GET['action2'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			$action = sanitize_key( wp_unslash( $_GET['action2'] ) );
@@ -121,15 +126,14 @@ class Gabochie_Crm_Admin {
 			$nonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			if ( $id > 0 && wp_verify_nonce( $nonce, 'gab_crm_delete_' . $id ) ) {
 				$deleted = Gabochie_Crm::delete_contact( $id );
-				wp_safe_redirect(
-					add_query_arg(
-						array(
-							'page'    => self::PAGE,
-							'deleted' => $deleted ? '1' : '0',
-						),
-						admin_url( 'admin.php' )
-					)
+				$args = array(
+					'page'    => self::PAGE,
+					'deleted' => $deleted ? '1' : '0',
 				);
+				if ( 'newsletter' === $tab ) {
+					$args['tab'] = 'newsletter';
+				}
+				wp_safe_redirect( add_query_arg( $args, admin_url( 'admin.php' ) ) );
 				exit;
 			}
 			return;
@@ -161,6 +165,9 @@ class Gabochie_Crm_Admin {
 				case 'set_pending':
 					$count  = Gabochie_Crm::bulk_set_status( $ids, str_replace( 'set_', '', $action ) );
 					$notice = 'bulk-status';
+					if ( 'newsletter' === $tab && in_array( $action, array( 'set_subscribed', 'set_unsubscribed' ), true ) ) {
+						self::sync_newsletter_map( $ids, 'set_subscribed' === $action ? 'subscribe' : 'unsubscribe' );
+					}
 					break;
 				case 'add_tags':
 				case 'remove_tags':
@@ -184,62 +191,369 @@ class Gabochie_Crm_Admin {
 				Gabochie_Crm_Export::stream_contact_ids( $export_ids );
 			}
 
-			wp_safe_redirect(
-				add_query_arg(
-					array(
-						'page'  => self::PAGE,
-						$notice => $count,
-					),
-					admin_url( 'admin.php' )
-				)
+			$redirect_args = array(
+				'page'  => self::PAGE,
+				$notice => $count,
 			);
+			if ( 'newsletter' === $tab ) {
+				$redirect_args['tab'] = 'newsletter';
+			}
+
+			wp_safe_redirect( add_query_arg( $redirect_args, admin_url( 'admin.php' ) ) );
 			exit;
 		}
 
-		// Single contact edit save (edit form, per-id nonce).
+// Single contact edit save (edit form, per-id nonce).
 		if ( 'gab_crm_update' === $action ) {
 			$id    = isset( $_GET['contact'] ) ? (int) wp_unslash( $_GET['contact'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			$nonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			if ( $id > 0 && wp_verify_nonce( $nonce, 'gab_crm_update_' . $id ) ) {
 				$data    = array(
 					'first_name' => isset( $_GET['first_name'] ) ? sanitize_text_field( wp_unslash( $_GET['first_name'] ) ) : null, // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-				'last_name'      => isset( $_GET['last_name'] ) ? sanitize_text_field( wp_unslash( $_GET['last_name'] ) ) : null, // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-				'phone'          => isset( $_GET['phone'] ) ? sanitize_text_field( wp_unslash( $_GET['phone'] ) ) : null, // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-				'status'         => isset( $_GET['status'] ) ? sanitize_key( wp_unslash( $_GET['status'] ) ) : null, // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-				'contact_type'   => isset( $_GET['contact_type'] ) ? sanitize_key( wp_unslash( $_GET['contact_type'] ) ) : null, // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-				'list_key'       => isset( $_GET['list_key'] ) ? sanitize_key( wp_unslash( $_GET['list_key'] ) ) : null, // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-				'source'         => isset( $_GET['source'] ) ? sanitize_key( wp_unslash( $_GET['source'] ) ) : null, // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-				'tags'           => isset( $_GET['tags'] ) ? wp_unslash( $_GET['tags'] ) : null, // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+					'last_name'      => isset( $_GET['last_name'] ) ? sanitize_text_field( wp_unslash( $_GET['last_name'] ) ) : null, // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+					'phone'          => isset( $_GET['phone'] ) ? sanitize_text_field( wp_unslash( $_GET['phone'] ) ) : null, // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+					'status'         => isset( $_GET['status'] ) ? sanitize_key( wp_unslash( $_GET['status'] ) ) : null, // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+					'contact_type'   => isset( $_GET['contact_type'] ) ? sanitize_key( wp_unslash( $_GET['contact_type'] ) ) : null, // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+					'list_key'       => isset( $_GET['list_key'] ) ? sanitize_key( wp_unslash( $_GET['list_key'] ) ) : null, // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+					'source'         => isset( $_GET['source'] ) ? sanitize_key( wp_unslash( $_GET['source'] ) ) : null, // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+					'tags'           => isset( $_GET['tags'] ) ? wp_unslash( $_GET['tags'] ) : null, // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 				);
 				$updated = Gabochie_Crm::update_contact( $id, $data );
-				wp_safe_redirect(
-					add_query_arg(
-						array(
-							'page'    => self::PAGE,
-							'updated' => $updated ? '1' : '0',
-							'edit'    => $id,
-						),
-						admin_url( 'admin.php' )
+				$redirect_args = array(
+					'page'    => self::PAGE,
+					'updated' => $updated ? '1' : '0',
+					'edit'    => $id,
+				);
+				if ( 'newsletter' === $tab ) {
+					$redirect_args['tab'] = 'newsletter';
+				}
+				wp_safe_redirect( add_query_arg( $redirect_args, admin_url( 'admin.php' ) ) );
+				exit;
+			}
+		}
+
+		// Newsletter: add-contact form (GET, per-form nonce).
+		if ( 'gab_nl_add' === $action && check_admin_referer( 'gab-nl-add' ) ) {
+			$email = strtolower( trim( sanitize_email( wp_unslash( $_GET['email'] ?? '' ) ) ) );
+			$url   = add_query_arg( array( 'page' => self::PAGE, 'tab' => 'newsletter' ), admin_url( 'admin.php' ) );
+			if ( '' === $email || ! is_email( $email ) ) {
+				wp_safe_redirect( add_query_arg( 'nl-status', 'bad-email', $url ) );
+				exit;
+			}
+			$first = isset( $_GET['first_name'] ) ? sanitize_text_field( wp_unslash( $_GET['first_name'] ) ) : '';
+			$last  = isset( $_GET['last_name'] ) ? sanitize_text_field( wp_unslash( $_GET['last_name'] ) ) : '';
+			$tags  = isset( $_GET['tags'] ) ? sanitize_text_field( wp_unslash( $_GET['tags'] ) ) : '';
+			$id    = Gabochie_Crm::upsert_contact(
+				$email,
+				array(
+					'first_name' => '' === $first ? null : $first,
+					'last_name'  => '' === $last ? null : $last,
+					'status'     => 'subscribed',
+					'source'     => 'newsletter-admin',
+					'list_key'   => 'newsletter-subscribe',
+					'tags'       => '' === $tags ? null : $tags,
+				)
+			);
+			if ( $id > 0 ) {
+				if ( class_exists( 'Gabochie_Newsletter' ) ) {
+					Gabochie_Newsletter::instance()->admin_subscribe( $email );
+				}
+				wp_safe_redirect( add_query_arg( 'nl-status', 'added', $url ) );
+			} else {
+				wp_safe_redirect( add_query_arg( 'nl-status', 'save-failed', $url ) );
+			}
+			exit;
+		}
+	}
+		}
+	}
+
+/**
+	 * Render the admin page (edit form or list table).
+	 */
+	public static function render_page() {
+		$tab     = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'contacts'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$tab     = 'newsletter' === $tab ? 'newsletter' : 'contacts';
+		$edit_id = isset( $_GET['edit'] ) ? (int) $_GET['edit'] : 0; // phpcs:ignore WordPS.Security.NonceVerification.Recommended
+
+		echo '<div class="wrap">';
+		echo '<h1 class="wp-heading-inline">' . esc_html__( 'Contacts', 'gabochie-crm' ) . '</h1>';
+		self::render_tabs( $tab );
+		self::render_notices();
+		if ( $edit_id > 0 ) {
+			self::render_edit( $edit_id, $tab );
+			echo '</div>';
+			return;
+		}
+		if ( 'newsletter' === $tab ) {
+			self::render_newsletter();
+			echo '</div>';
+			return;
+		}
+		self::render_list();
+		echo '</div>';
+	}
+
+	/**
+	 * Nav tabs for Contacts / Newsletter views.
+	 *
+	 * @param string $current Active tab key.
+	 */
+	private static function render_tabs( $current ) {
+		$tabs = array(
+			'contacts'   => __( 'Contacts', 'gabochie-crm' ),
+			'newsletter' => __( 'Newsletter', 'gabochie-crm' ),
+		);
+		echo '<nav class="nav-tab-wrapper wp-clearfix">';
+		foreach ( $tabs as $key => $label ) {
+			$url = add_query_arg( array( 'page' => self::PAGE, 'tab' => $key ), admin_url( 'admin.php' ) );
+			$cls = 'nav-tab' . ( $key === $current ? ' nav-tab-active' : '' );
+			echo '<a class="' . esc_attr( $cls ) . '" href="' . esc_url( $url ) . '">' . esc_html( $label ) . '</a>';
+		}
+		echo '</nav>';
+		echo '<hr class="wp-header-end">';
+	}
+
+	/**
+	 * Render the Newsletter audience list + add-contact form.
+	 */
+	private static function render_newsletter() {
+		$stats = self::newsletter_stats();
+		$table = new Gabochie_Crm_List_Table(
+			array(
+				'tab'            => 'newsletter',
+				'default_status' => 'subscribed',
+			)
+		);
+		$table->prepare_items();
+		?>
+		<div class="gab-crm-nl-stats" style="margin:12px 0;padding:12px 16px;background:#f6f7f7;border:1px solid #c3c4c7;border-radius:4px;">
+			<p>
+				<?php
+				echo esc_html(
+					sprintf(
+						/* translators: %1$d = audience (subscribed minus do-not-email), %2$d = subscribed total, %3$d = do-not-email map entries */
+						__( 'Newsletter audience: %1$d of %2$d subscribed contacts (do-not-email map: %3$d entries) — these receive the next publish email.', 'gabochie-crm' ),
+						$stats['audience'],
+						$stats['subscribed'],
+						$stats['unsub_map']
 					)
 				);
-				exit;
+				?>
+			</p>
+		</div>
+
+		<div class="gab-crm-nl-add" style="max-width:720px;margin:12px 0;padding:12px 16px;background:#f6f7f7;border:1px solid #c3c4c7;border-radius:4px;">
+			<h2 style="margin:0 0 8px;font-size:14px;"><?php esc_html_e( 'Add contact to the newsletter', 'gabochie-crm' ); ?></h2>
+			<form method="get" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>">
+				<input type="hidden" name="page" value="<?php echo esc_attr( self::PAGE ); ?>">
+				<input type="hidden" name="tab" value="newsletter">
+				<input type="hidden" name="action" value="gab_nl_add">
+				<?php wp_nonce_field( 'gab-nl-add' ); ?>
+				<table class="form-table" role="presentation" style="margin:0;">
+					<tr>
+						<th scope="row"><label for="gab-nl-add-email"><?php esc_html_e( 'Email', 'gabochie-crm' ); ?> *</label></th>
+						<td><input type="email" class="regular-text" id="gab-nl-add-email" name="email" required></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="gab-nl-add-first"><?php esc_html_e( 'First name', 'gabochie-crm' ); ?></label></th>
+						<td><input type="text" class="regular-text" id="gab-nl-add-first" name="first_name"></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="gab-nl-add-last"><?php esc_html_e( 'Last name', 'gabochie-crm' ); ?></label></th>
+						<td><input type="text" class="regular-text" id="gab-nl-add-last" name="last_name"></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="gab-nl-add-tags"><?php esc_html_e( 'Tags', 'gabochie-crm' ); ?></label></th>
+						<td>
+							<input type="text" class="regular-text" id="gab-nl-add-tags" name="tags" placeholder="<?php esc_attr_e( 'e.g. newsletter-manual', 'gabochie-crm' ); ?>">
+							<p class="description"><?php esc_html_e( 'New contacts are stored as status subscribed, source newsletter-admin, list newsletter-subscribe, and are emailed on the next publish.', 'gabochie-crm' ); ?></p>
+						</td>
+					</tr>
+				</table>
+				<?php submit_button( __( 'Add contact', 'gabochie-crm' ), 'primary', 'gab-nl-add-btn', false ); ?>
+			</form>
+		</div>
+
+		<form method="get" id="gab-crm-filter">
+			<input type="hidden" name="page" value="<?php echo esc_attr( self::PAGE ); ?>">
+			<input type="hidden" name="tab" value="newsletter">
+			<?php $table->search_box( __( 'Search newsletter', 'gabochie-crm' ), 'gab-nl-search' ); ?>
+			<?php $table->display(); ?>
+		</form>
+		<?php
+	}
+
+	/**
+	 * Stats for the newsletter view.
+	 *
+	 * @return array{subscribed:int,audience:int,unsub_map:int}
+	 */
+	private static function newsletter_stats() {
+		$subscribed = Gabochie_Crm::count_contacts( 'subscribed' );
+		$map        = class_exists( 'Gabochie_Newsletter' ) ? Gabochie_Newsletter::do_not_email_map() : array();
+		$audience   = $subscribed;
+		if ( ! empty( $map ) && Gabochie_Crm::ready() ) {
+			global $wpdb;
+			$emails           = array_keys( $map );
+			$placeholders     = implode( ',', array_fill( 0, count( $emails ), '%s' ) );
+			$mapped_subscribed = (int) $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT COUNT(*) FROM `%i` WHERE status = %s AND email IN ({$placeholders})", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery
+					Gabochie_Crm::table(),
+					Gabochie_Crm::STATUS_SUBSCRIBED,
+					...$emails
+				)
+			);
+			$audience = max( 0, $subscribed - $mapped_subscribed );
+		}
+		return array(
+			'subscribed' => $subscribed,
+			'audience'   => $audience,
+			'unsub_map'  => count( $map ),
+		);
+	}
+
+	/**
+	 * Sync the newsletter do-not-email map for a bulk status change.
+	 *
+	 * @param array  $ids  Contact IDs.
+	 * @param string $mode 'subscribe' or 'unsubscribe'.
+	 */
+	private static function sync_newsletter_map( array $ids, $mode ) {
+		if ( ! class_exists( 'Gabochie_Newsletter' ) ) {
+			return;
+		}
+		foreach ( array_unique( array_map( 'absint', $ids ) ) as $id ) {
+			$row = Gabochie_Crm::get_contact_by_id( $id );
+			if ( ! $row || empty( $row['email'] ) ) {
+				continue;
+			}
+			if ( 'unsubscribe' === $mode ) {
+				Gabochie_Newsletter::instance()->admin_unsubscribe( $row['email'] );
+			} else {
+				Gabochie_Newsletter::instance()->admin_subscribe( $row['email'] );
 			}
 		}
 	}
 
 	/**
-	 * Render the admin page (edit form or list table).
+	 * Render the newsletter audience view.
 	 */
-	public static function render_page() {
-		$edit_id = isset( $_GET['edit'] ) ? (int) $_GET['edit'] : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		echo '<div class="wrap">';
-		echo '<h1 class="wp-heading-inline">' . esc_html__( 'Contacts', 'gabochie-crm' ) . '</h1>';
-		self::render_notices();
-		if ( $edit_id > 0 ) {
-			self::render_edit( $edit_id );
-			echo '</div>';
+	private static function render_newsletter() {
+		$stats = self::newsletter_stats();
+		$table = new Gabochie_Crm_List_Table(
+			array(
+				'tab'            => 'newsletter',
+				'default_status' => 'subscribed',
+			)
+		);
+		$table->prepare_items();
+		?>
+		<div class="gab-crm-nl-stats">
+			<p>
+				<?php
+				echo esc_html(
+					sprintf(
+						/* translators: %d = number of contacts */
+						__( 'Newsletter audience: %d subscribed contact(s) — these receive the next publish email.', 'gabochie-crm' ),
+						$stats['audience']
+					)
+				);
+				?>
+				&ensp;|&ensp;<?php esc_html_e( 'Do-not-email map:', 'gabochie-crm' ); ?> <strong><?php echo esc_html( (string) $stats['unsub_map'] ); ?></strong>
+			</p>
+		</div>
+
+		<div class="gab-crm-nl-add" style="max-width:720px;margin:12px 0;padding:12px 16px;background:#f6f7f7;border:1px solid #c3c4c7;border-radius:4px;">
+			<h2 style="margin:0 0 8px;font-size:14px;"><?php esc_html_e( 'Add contact to the newsletter', 'gabochie-crm' ); ?></h2>
+			<form method="get" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>">
+				<input type="hidden" name="page" value="<?php echo esc_attr( self::PAGE ); ?>">
+				<input type="hidden" name="tab" value="newsletter">
+				<input type="hidden" name="action" value="gab_nl_add">
+				<?php wp_nonce_field( 'gab-nl-add' ); ?>
+				<table class="form-table" role="presentation" style="margin:0;">
+					<tr>
+						<th scope="row"><label for="gab-nl-add-email"><?php esc_html_e( 'Email', 'gabochie-crm' ); ?> *</label></th>
+						<td><input type="email" class="regular-text" id="gab-nl-add-email" name="email" required></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="gab-nl-add-first"><?php esc_html_e( 'First name', 'gabochie-crm' ); ?></label></th>
+						<td><input type="text" class="regular-text" id="gab-nl-add-first" name="first_name"></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="gab-nl-add-last"><?php esc_html_e( 'Last name', 'gabochie-crm' ); ?></label></th>
+						<td><input type="text" class="regular-text" id="gab-nl-add-last" name="last_name"></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="gab-nl-add-tags"><?php esc_html_e( 'Tags', 'gabochie-crm' ); ?></label></th>
+						<td><input type="text" class="regular-text" id="gab-nl-add-tags" name="tags" placeholder="<?php esc_attr_e( 'e.g. newsletter-manual', 'gabochie-crm' ); ?>"><p class="description"><?php esc_html_e( 'New contacts are stored as status subscribed, source newsletter-admin, list newsletter-subscribe, and are emailed on the next publish.', 'gabochie-crm' ); ?></p></td>
+					</tr>
+				</table>
+				<?php submit_button( __( 'Add contact', 'gabochie-crm' ), 'primary', 'gab-nl-add-btn', false ); ?>
+			</form>
+		</div>
+
+		<form method="get" id="gab-crm-filter">
+			<input type="hidden" name="page" value="<?php echo esc_attr( self::PAGE ); ?>">
+			<input type="hidden" name="tab" value="newsletter">
+		<?php $table->search_box( __( 'Search newsletter', 'gabochie-crm' ), 'gab-crm-search' ); ?>
+		<?php $table->display(); ?>
+		</form>
+		<?php
+	}
+
+	/**
+	 * Stats for the newsletter tab header.
+	 *
+	 * @return array{audience:int,unsub_map:int}
+	 */
+	private static function newsletter_stats() {
+		$subscribed = Gabochie_Crm::count_contacts( 'subscribed' );
+		$map        = class_exists( 'Gabochie_Newsletter' ) ? Gabochie_Newsletter::do_not_email_map() : array();
+		$audience   = $subscribed;
+		if ( ! empty( $map ) && Gabochie_Crm::ready() ) {
+			global $wpdb;
+			$emails           = array_keys( $map );
+			$placeholders     = implode( ',', array_fill( 0, count( $emails ), '%s' ) );
+			$mapped_subscribed = (int) $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT COUNT(*) FROM `%i` WHERE status = %s AND email IN ({$placeholders})", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery
+					Gabochie_Crm::table(),
+					Gabochie_Crm::STATUS_SUBSCRIBED,
+					...$emails
+				)
+			);
+			$audience = max( 0, $subscribed - $mapped_subscribed );
+		}
+		return array(
+			'audience'  => $audience,
+			'unsub_map' => count( $map ),
+		);
+	}
+
+	/**
+	 * Keep the newsletter do-not-email map in sync when status changes in the newsletter tab.
+	 *
+	 * @param array  $ids  Contact IDs.
+	 * @param string $mode 'subscribe' or 'unsubscribe'.
+	 */
+	private static function sync_newsletter_map( array $ids, $mode ) {
+		if ( ! class_exists( 'Gabochie_Newsletter' ) ) {
 			return;
 		}
+		foreach ( array_unique( array_map( 'absint', $ids ) ) as $id ) {
+			$row = Gabochie_Crm::get_contact_by_id( $id );
+			if ( ! $row || empty( $row['email'] ) ) {
+				continue;
+			}
+			if ( 'unsubscribe' === $mode ) {
+				Gabochie_Newsletter::instance()->admin_unsubscribe( $row['email'] );
+			} else {
+				Gabochie_Newsletter::instance()->admin_subscribe( $row['email'] );
+			}
+		}
+	}
 		self::render_list();
 		echo '</div>';
 	}
@@ -288,17 +602,21 @@ class Gabochie_Crm_Admin {
 		<?php
 	}
 
-	/**
+/**
 	 * Render the single-contact edit form.
 	 *
-	 * @param int $id Contact id.
+	 * @param int    $id  Contact id.
+	 * @param string $tab Current admin tab.
 	 */
-	private static function render_edit( $id ) {
+	private static function render_edit( $id, $tab = 'contacts' ) {
 		$row = Gabochie_Crm::get_contact_by_id( $id );
 		if ( ! $row ) {
 			echo '<p>' . esc_html__( 'Contact not found.', 'gabochie-crm' ) . '</p>';
 			return;
 		}
+		$back = 'newsletter' === $tab
+			? admin_url( 'admin.php?page=' . self::PAGE . '&tab=newsletter' )
+			: admin_url( 'admin.php?page=' . self::PAGE );
 		$url = add_query_arg(
 			array(
 				'action'   => 'gab_crm_update',
@@ -308,9 +626,12 @@ class Gabochie_Crm_Admin {
 			admin_url( 'admin.php?page=' . self::PAGE )
 		);
 		?>
-		<p><a href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE ) ); ?>">&larr; <?php esc_html_e( 'Back to list', 'gabochie-crm' ); ?></a></p>
+		<p><a href="<?php echo esc_url( $back ); ?>">&larr; <?php esc_html_e( 'Back to list', 'gabochie-crm' ); ?></a></p>
 		<form method="get" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>">
 			<input type="hidden" name="page" value="<?php echo esc_attr( self::PAGE ); ?>">
+			<?php if ( 'newsletter' === $tab ) : ?>
+				<input type="hidden" name="tab" value="newsletter">
+			<?php endif; ?>
 			<input type="hidden" name="action" value="gab_crm_update">
 			<input type="hidden" name="contact" value="<?php echo esc_attr( (string) $id ); ?>">
 		<?php wp_nonce_field( 'gab_crm_update_' . $id ); ?>
@@ -336,7 +657,7 @@ class Gabochie_Crm_Admin {
 					<td>
 						<select name="status" id="gab-status">
 		<?php foreach ( array( 'subscribed', 'unsubscribed', 'pending' ) as $s ) : ?>
-								<option value="<?php echo esc_attr( $s ); ?>" <?php selected( $row['status'], $s ); ?>><?php echo esc_html( $s ); ?></option>
+							<option value="<?php echo esc_attr( $s ); ?>" <?php selected( $row['status'], $s ); ?>><?php echo esc_html( $s ); ?></option>
 		<?php endforeach; ?>
 						</select>
 					</td>

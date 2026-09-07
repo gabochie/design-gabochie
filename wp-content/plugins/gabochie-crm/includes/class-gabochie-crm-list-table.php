@@ -21,9 +21,30 @@ class Gabochie_Crm_List_Table extends WP_List_Table {
 
 
 	/**
-	 * Constructor.
+	 * Active admin tab ('' = Contacts, 'newsletter' = Newsletter list).
+	 *
+	 * @var string
 	 */
-	public function __construct() {
+	public $tab = '';
+
+	/**
+	 * Status filter applied when the request carries none.
+	 *
+	 * @var string
+	 */
+	public $default_status = '';
+
+	/**
+	 * Constructor.
+	 *
+	 * @param array $args {
+	 *                    Optional view configuration.
+	 *
+	 * @type string $tab            Admin sub-tab shown alongside this table.
+	 * @type string $default_status Status filter that applies without a request value.
+	 * }
+	 */
+	public function __construct( array $args = array() ) {
 		parent::__construct(
 			array(
 				'singular' => 'contact',
@@ -31,6 +52,19 @@ class Gabochie_Crm_List_Table extends WP_List_Table {
 				'ajax'     => false,
 			)
 		);
+		$this->tab            = isset( $args['tab'] ) ? sanitize_key( (string) $args['tab'] ) : '';
+		$this->default_status = isset( $args['default_status'] ) ? sanitize_key( (string) $args['default_status'] ) : '';
+	}
+
+	/**
+	 * Base admin URL for this list (keeps the active tab when set).
+	 *
+	 * @return string
+	 */
+	private function list_url() {
+		return '' !== $this->tab
+			? admin_url( 'admin.php?page=gabochie-crm&tab=' . urlencode( $this->tab ) ) // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.urlencode_urlencode -- query value, safe here.
+			: admin_url( 'admin.php?page=gabochie-crm' );
 	}
 
 	/**
@@ -71,12 +105,12 @@ class Gabochie_Crm_List_Table extends WP_List_Table {
 		$actions           = array();
 		$actions['view']   = sprintf(
 			'<a href="%s">%s</a>',
-			esc_url( add_query_arg( array( 'view' => $id ), wp_get_referer() ? remove_query_arg( array( 'view', 'edit' ) ) : admin_url( 'admin.php?page=gabochie-crm' ) ) ),
+			esc_url( add_query_arg( array( 'view' => $id ), wp_get_referer() ? remove_query_arg( array( 'view', 'edit' ) ) : $this->list_url() ) ),
 			esc_html__( 'View', 'gabochie-crm' )
 		);
 		$actions['edit']   = sprintf(
 			'<a href="%s">%s</a>',
-			esc_url( add_query_arg( array( 'edit' => $id ), admin_url( 'admin.php?page=gabochie-crm' ) ) ),
+			esc_url( add_query_arg( array( 'edit' => $id ), $this->list_url() ) ),
 			esc_html__( 'Edit', 'gabochie-crm' )
 		);
 		$actions['delete'] = sprintf(
@@ -88,7 +122,7 @@ class Gabochie_Crm_List_Table extends WP_List_Table {
 						'contact'  => $id,
 						'_wpnonce' => wp_create_nonce( 'gab_crm_delete_' . $id ),
 					),
-					admin_url( 'admin.php?page=gabochie-crm' )
+					$this->list_url()
 				)
 			),
 			esc_html__( 'Delete', 'gabochie-crm' )
@@ -117,7 +151,7 @@ class Gabochie_Crm_List_Table extends WP_List_Table {
 			}
 			$url   = add_query_arg(
 				array( 'tag' => rawurlencode( $t ) ),
-				admin_url( 'admin.php?page=gabochie-crm' )
+				$this->list_url()
 			);
 			$out[] = '<a class="gab-crm-tag" href="' . esc_url( $url ) . '" title="Filter by this tag">' . esc_html( $t ) . '</a>';
 		}
@@ -207,7 +241,7 @@ class Gabochie_Crm_List_Table extends WP_List_Table {
 
 		$args = array(
 			'search'   => isset( $_REQUEST['s'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) : '',
-			'status'   => isset( $_REQUEST['status'] ) ? sanitize_key( wp_unslash( $_REQUEST['status'] ) ) : '',
+			'status'   => isset( $_REQUEST['status'] ) ? sanitize_key( wp_unslash( $_REQUEST['status'] ) ) : $this->default_status,
 			'source'   => isset( $_REQUEST['source'] ) ? sanitize_key( wp_unslash( $_REQUEST['source'] ) ) : '',
 			'list_key' => isset( $_REQUEST['list_key'] ) ? sanitize_key( wp_unslash( $_REQUEST['list_key'] ) ) : '',
 			'tag'      => isset( $_REQUEST['tag'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['tag'] ) ) : '',
@@ -239,7 +273,7 @@ class Gabochie_Crm_List_Table extends WP_List_Table {
 		if ( 'top' !== $which ) {
 			return;
 		}
-		$current_status = isset( $_REQUEST['status'] ) ? sanitize_key( wp_unslash( $_REQUEST['status'] ) ) : '';
+		$current_status = isset( $_REQUEST['status'] ) ? sanitize_key( wp_unslash( $_REQUEST['status'] ) ) : $this->default_status;
 		$current_source = isset( $_REQUEST['source'] ) ? sanitize_key( wp_unslash( $_REQUEST['source'] ) ) : '';
 		$current_list   = isset( $_REQUEST['list_key'] ) ? sanitize_key( wp_unslash( $_REQUEST['list_key'] ) ) : '';
 		$current_tag    = isset( $_REQUEST['tag'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['tag'] ) ) : '';
@@ -281,13 +315,39 @@ class Gabochie_Crm_List_Table extends WP_List_Table {
 		);
 		?>
 		<?php if ( '' !== $current_tag ) : ?>
-				<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=gabochie-crm' ) ); ?>"><?php esc_html_e( 'Clear tag filter', 'gabochie-crm' ); ?></a>
+				<a class="button" href="<?php echo esc_url( $this->list_url() ); ?>"><?php esc_html_e( 'Clear tag filter', 'gabochie-crm' ); ?></a>
 		<?php endif; ?>
 			<span class="gab-crm-bulk-tags">
 				<label for="gab-crm-bulk-tags"><?php esc_html_e( 'Tags:', 'gabochie-crm' ); ?></label>
 				<input type="text" id="gab-crm-bulk-tags" name="bulk_tags" value="" placeholder="<?php esc_attr_e( 'e.g. hot-lead, source:gadata', 'gabochie-crm' ); ?>" style="width:220px">
 			</span>
 		</div>
+		<?php
+	}
+
+	/**
+	 * Search box (core behaviour, plus keeps the active admin tab).
+	 *
+	 * @param string $text     Button label.
+	 * @param string $input_id Search field id.
+	 */
+	public function search_box( $text, $input_id ) {
+		if ( empty( $_REQUEST['s'] ) && ! $this->has_items() ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			return;
+		}
+		$input_id = $input_id . '-search-input';
+		?>
+		<form class="search-box wp-clearfix" method="get">
+			<input type="hidden" name="page" value="gabochie-crm">
+			<?php
+			if ( '' !== $this->tab ) {
+				echo '<input type="hidden" name="tab" value="' . esc_attr( $this->tab ) . '">';
+			}
+			?>
+			<input type="search" id="<?php echo esc_attr( $input_id ); ?>" name="s"
+				value="<?php _admin_search_query(); ?>" placeholder="<?php echo esc_attr( $text ); ?>" />
+			<?php submit_button( $text, '', '', false, array( 'id' => 'search-submit' ) ); ?>
+		</form>
 		<?php
 	}
 }
