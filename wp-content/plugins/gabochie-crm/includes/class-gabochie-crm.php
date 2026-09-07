@@ -191,6 +191,38 @@ class Gabochie_Crm {
 	}
 
 	/**
+	 * Record that a contact just engaged (newsletter open/click, login, ...).
+	 * Feeds the Command Center engaged_30d KPI via last_engaged_at.
+	 *
+	 * @param string $email Contact email.
+	 * @return bool
+	 */
+	public static function stamp_engagement( $email ) {
+		global $wpdb;
+		$email = strtolower( trim( sanitize_email( (string) $email ) ) );
+		if ( '' === $email || ! is_email( $email ) ) {
+			return false;
+		}
+		self::ensure_schema();
+		if ( ! self::ready() ) {
+			return false;
+		}
+		$now = current_time( 'mysql' );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$res = $wpdb->update(
+			self::table(),
+			array(
+				'last_engaged_at' => $now,
+				'updated_at'      => $now,
+			),
+			array( 'email' => $email ),
+			array( '%s', '%s' ),
+			array( '%s' )
+		);
+		return false !== $res;
+	}
+
+	/**
 	 * All subscribed contacts, oldest first.
 	 *
 	 * @return array<int,array{email:string,first_name:string,last_name:string,phone:string}>

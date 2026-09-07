@@ -24,6 +24,7 @@ class Gabochie_Newsletter {
 	const OPT_DAILY   = 'gabochie_newsletter_daily_cap';
 	const OPT_RUN_CAP = 'gabochie_newsletter_run_cap';
 	const OPT_SECRET  = 'gabochie_newsletter_secret';
+	const OPT_TRACKING = 'gabochie_newsletter_tracking';
 	const OPT_UNSUBS  = 'gabochie_newsletter_unsubs';
 	const OPT_LOG     = 'gabochie_newsletter_log';
 	const OPT_USAGE   = 'gabochie_newsletter_usage';
@@ -47,7 +48,9 @@ class Gabochie_Newsletter {
 	 */
 	private function __construct() {
 		add_action( 'transition_post_status', array( $this, 'on_transition' ), 12, 3 );
+		add_action( 'template_redirect', array( $this, 'maybe_handle_tracking' ) );
 		add_action( 'template_redirect', array( $this, 'maybe_handle_unsub' ) );
+		add_action( 'wp_login', array( $this, 'on_login' ), 10, 2 );
 		add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_post_gabochie_nl_test', array( $this, 'handle_test_send' ) );
@@ -68,6 +71,9 @@ class Gabochie_Newsletter {
 		}
 		if ( false === get_option( self::OPT_SECRET, false ) ) {
 			add_option( self::OPT_SECRET, wp_generate_password( 48, false ) );
+		}
+		if ( false === get_option( self::OPT_TRACKING, false ) ) {
+			add_option( self::OPT_TRACKING, '1' );
 		}
 		if ( false === get_option( self::OPT_UNSUBS, false ) ) {
 			add_option( self::OPT_UNSUBS, array() );
@@ -203,6 +209,10 @@ class Gabochie_Newsletter {
 		$perma = $perma ? $perma : home_url( '/' );
 		$title = htmlspecialchars( get_the_title( $post ), ENT_QUOTES, 'UTF-8' );
 
+		$track   = $this->tracking_enabled();
+		$click_a = $track ? $this->click_url( $perma, $email ) : $perma;
+		$pixel   = $track ? $this->open_pixel( $email ) : '';
+
 		$image = get_the_post_thumbnail_url( $post, 'large' );
 		if ( ! $image ) {
 			$image = '';
@@ -234,14 +244,15 @@ class Gabochie_Newsletter {
 <div style="background:#ffffff;border:1px solid #e4e0d8;border-radius:12px;padding:28px;">
 <p style="margin:0 0 6px 0;font-size:13px;color:#6b7681;">The Ghana Development Intelligence Newsletter</p>
 ' . $img_html . '
-<h1 style="margin:0 0 14px 0;font-size:24px;line-height:1.3;color:#16232e;"><a href="' . $perma . '" style="color:#0e4d45;text-decoration:none;">' . $title . '</a></h1>
+<h1 style="margin:0 0 14px 0;font-size:24px;line-height:1.3;color:#16232e;"><a href="' . $click_a . '" style="color:#0e4d45;text-decoration:none;">' . $title . '</a></h1>
 <p style="margin:0 0 22px 0;font-size:15px;line-height:1.6;color:#3a4652;">' . $excerpt . '&hellip;</p>
-<p style="margin:0 0 10px 0;"><a href="' . $perma . '" style="display:inline-block;background:#0e4d45;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-size:14px;">Read the full article</a></p>
+<p style="margin:0 0 10px 0;"><a href="' . $click_a . '" style="display:inline-block;background:#0e4d45;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-size:14px;">Read the full article</a></p>
 <p style="margin:0 0 26px 0;"><a href="' . esc_url( home_url( '/project-recovery/' ) ) . '" style="color:#0e4d45;font-size:13px;">Stuck with a half-built house or stalled project? See the project recovery route &rarr;</a></p>
 </div>
 <p style="margin:20px 0 0 0;font-size:11px;line-height:1.5;color:#8a929b;">Gabochie Design &middot; Development made understandable, measurable, investable. &middot; <a href="' . esc_url( home_url( '/' ) ) . '" style="color:#8a929b;">gabochiedesign.com</a></p>
 <p style="margin:0 0 26px 0;font-size:11px;color:#8a929b;"><a href="' . $unsub . '" style="color:#8a929b;">Unsubscribe from future updates</a></p>
 </div>
+' . $pixel . '
 </div>';
 	}
 
@@ -267,6 +278,142 @@ class Gabochie_Newsletter {
 	}
 
 	/**
+	 * Whether open/click tracking is enabled.
+	 *
+	 * @return bool
+	 */
+	private function tracking_enabled() {
+		return '1' === get_option( self::OPT_TRACKING, '1' );
+	}
+
+	/**
+	 * Deterministic per-email tracking token (same secret as unsub).
+	 *
+	 * @param string $email
+	 * @return string
+	 */
+	private function track_hash( $email ) {
+		return md5( $email . ':' . get_option( self::OPT_SECRET, '' ) );
+	}
+
+	/**
+	 * Open-tracking 1x1 pixel URL for one recipient.
+	 *
+	 * @param string $email
+	 * @return string
+	 */
+	private function open_pixel( $email ) {
+		$src = esc_url(
+			home_url( '/' ) . '?gab-nl=open&e=' . rawurlencode( $email ) . '&k=' . $this->track_hash( $email )
+		);
+		return '<img src="' . $src . '" alt="" width="1" height="1" style="display:block;width:1px;height:1px;border:0;" />';
+	}
+
+	/**
+	 * Click-tracking redirect URL for one recipient.
+	 *
+	 * @param string $target Absolute destination URL (same host).
+	 * @param string $email
+	 * @return string
+	 */
+	private function click_url( $target, $email ) {
+		return esc_url_raw(
+			home_url( '/' ) . '?gab-nl=click&e=' . rawurlencode( $email ) . '&k=' . $this->track_hash( $email ) . '&u=' . rawurlencode( $target )
+		);
+	}
+
+	/**
+	 * Open (+click) tracking endpoint (?gab-nl=open|click&e=..&k=..[&u=..]).
+	 * Validates the per-email token, stamps last_engaged_at on the CRM contact
+	 * (feeds engaged_30d) and serves the pixel / 302 redirect.
+	 */
+	public function maybe_handle_tracking() {
+		if ( is_admin() ) {
+			return;
+		}
+		$action = sanitize_key( wp_unslash( $_GET['gab-nl'] ?? '' ) );
+		if ( ! in_array( $action, array( 'open', 'click' ), true ) ) {
+			return;
+		}
+		$email = strtolower( trim( sanitize_email( wp_unslash( $_GET['e'] ?? '' ) ) ) );
+		$key   = (string) preg_replace( '/[^a-f0-9]/', '', sanitize_key( wp_unslash( $_GET['k'] ?? '' ) ) );
+		if ( '' === $email || ! is_email( $email ) || ! hash_equals( $this->track_hash( $email ), $key ) ) {
+			status_header( 404 );
+			nocache_headers();
+			wp_die( 'Invalid tracking request.', 'Gabochie Design', array( 'response' => 404 ) );
+		}
+
+		$this->stamp( $email );
+		$this->no_cache();
+
+		if ( 'click' === $action ) {
+			$target = esc_url_raw( wp_unslash( $_GET['u'] ?? '' ) );
+			if ( '' !== $target ) {
+				wp_safe_redirect( $target, 302 );
+				exit;
+			}
+			status_header( 404 );
+		}
+
+		// Open pixel: 1x1 transparent GIF.
+		$gif = base64_decode( 'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', true );
+		status_header( 200 );
+		header( 'Content-Type: image/gif' );
+		header( 'Content-Length: ' . strlen( $gif ) );
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped, WordPress.PHP.DiscouragedPHPFunctions
+		echo $gif;
+		exit;
+	}
+
+	/**
+	 * Stamp last_engaged_at on a contact, throttled to once per hour so a mail
+	 * client re-loading the pixel or a drive-by URL cannot inflate the KPI.
+	 *
+	 * @param string $email
+	 * @return bool
+	 */
+	private function stamp( $email ) {
+		if ( ! class_exists( 'Gabochie_Crm' ) || ! Gabochie_Crm::ready() ) {
+			return false;
+		}
+		global $wpdb;
+		$last = $wpdb->get_var(
+			$wpdb->prepare( 'SELECT last_engaged_at FROM %i WHERE email = %s', Gabochie_Crm::table(), $email )
+		);
+		if ( null !== $last && $last ) {
+			$ts = strtotime( (string) $last );
+			if ( $ts && ( time() - $ts ) < HOUR_IN_SECONDS ) {
+				return false;
+			}
+		}
+		return Gabochie_Crm::stamp_engagement( $email );
+	}
+
+	/**
+	 * Keep tracking requests out of any page cache (LiteSpeed + core).
+	 */
+	private function no_cache() {
+		if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+			define( 'DONOTCACHEPAGE', true );
+		}
+		do_action( 'litespeed_control_set_nocache', 'gab-nl-tracking' );
+		nocache_headers();
+	}
+
+	/**
+	 * A contact logging into the site is a strong engagement signal.
+	 *
+	 * @param string  $user_login
+	 * @param WP_User $user
+	 */
+	public function on_login( $user_login, $user ) {
+		if ( ! $user instanceof WP_User || '' === $user->user_email ) {
+			return;
+		}
+		$this->stamp( strtolower( trim( sanitize_email( $user->user_email ) ) ) );
+	}
+
+	/**
 	 * One-click unsubscribe route (?gabochie-nl=unsub&e=..&k=..). Marks the
 	 * contact unsubscribed in the Gabochie CRM table and serves a confirmation
 	 * page.
@@ -288,6 +435,7 @@ class Gabochie_Newsletter {
 			nocache_headers();
 			wp_die( 'Invalid unsubscribe request.', 'Gabochie Design', array( 'response' => 404 ) );
 		}
+		$this->stamp( $email );
 		$this->mark_unsubscribed( $email );
 		nocache_headers();
 		echo '<!doctype html><html><head><meta charset="utf-8"><title>Unsubscribed</title><style>body{font-family:Helvetica,Arial,sans-serif;background:#f4f2ee;color:#16232e;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;} .box{max-width:440px;padding:32px;background:#fff;border:1px solid #e4e0d8;border-radius:12px;} h1{font-size:20px;color:#0e4d45;} p{line-height:1.6;} a{color:#0e4d45;}</style></head><body><div class="box"><h1>You are unsubscribed</h1><p>You have been removed from the Gabochie Design newsletter. No further content updates will be emailed to this address.</p><p><a href="' . esc_url( home_url( '/' ) ) . '">Return to gabochiedesign.com</a></p></div></body></html>';
@@ -401,6 +549,14 @@ class Gabochie_Newsletter {
 				'sanitize_callback' => 'absint',
 			)
 		);
+		register_setting(
+			'gabochie-newsletter',
+			self::OPT_TRACKING,
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => array( $this, 'sanitize_enabled' ),
+			)
+		);
 	}
 
 	/**
@@ -445,6 +601,13 @@ class Gabochie_Newsletter {
 					<tr>
 						<th scope="row"><label for="gabochie-nl-run">Max per run</label></th>
 						<td><input type="number" id="gabochie-nl-run" name="<?php echo esc_attr( self::OPT_RUN_CAP ); ?>" min="1" value="<?php echo esc_attr( (string) get_option( self::OPT_RUN_CAP, 200 ) ); ?>"></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="gabochie-nl-track">Track opens &amp; clicks</label></th>
+						<td>
+							<input type="checkbox" id="gabochie-nl-track" name="<?php echo esc_attr( self::OPT_TRACKING ); ?>" value="1" <?php checked( get_option( self::OPT_TRACKING, '1' ), '1' ); ?>>
+							<p class="description">Adds an open-tracking pixel and click-tracking redirect to every newsletter email. Each open/click stamps <code>last_engaged_at</code> on the contact (<code>gab_contacts</code>) — this is what feeds the Command Center <em>engaged_30d</em> KPI.</p>
+						</td>
 					</tr>
 				</table>
 				<?php submit_button( 'Save settings' ); ?>

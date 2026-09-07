@@ -168,7 +168,7 @@ final class Gabochie_Email {
 			'sender'      => $sender,
 			'to'          => $to,
 			'subject'     => $prepared['subject'],
-			'htmlContent' => $this->to_html( $prepared['message'] ),
+			'htmlContent' => $this->message_html( $prepared['message'], $prepared['headers'] ),
 		);
 
 		if ( ! empty( $cc ) ) {
@@ -260,6 +260,25 @@ final class Gabochie_Email {
 	 */
 	private function to_html( $message ) {
 		return nl2br( esc_html( (string) $message ) );
+	}
+
+	/**
+	 * Choose the Brevo HTML body. Emails already doing HTML (Content-Type:
+	 * text/html) are passed through untouched so markup, links and tracking
+	 * pixels survive; plain-text bodies get the core-style conversion.
+	 *
+	 * @param string $message Raw message body.
+	 * @param array  $headers Normalised mail headers.
+	 * @return string HTML content.
+	 */
+	private function message_html( $message, $headers ) {
+		foreach ( (array) $headers as $header ) {
+			$header = strtolower( (string) $header );
+			if ( false !== strpos( $header, 'content-type:' ) && false !== strpos( $header, 'text/html' ) ) {
+				return (string) $message;
+			}
+		}
+		return $this->to_html( $message );
 	}
 
 	/**

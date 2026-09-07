@@ -41,3 +41,13 @@ function gabochie_crm_subscribers() {
 function gabochie_crm_set_status( $email, $status ) {
 	return Gabochie_Crm::set_status( $email, $status );
 }
+
+/**
+ * Record engagement (newsletter open/click, login) on a contact.
+ *
+ * @param string $email Contact email.
+ * @return bool
+ */
+function gabochie_crm_stamp_engagement( $email ) {
+	return Gabochie_Crm::stamp_engagement( $email );
+}
