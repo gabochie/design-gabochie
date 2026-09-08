@@ -164,18 +164,56 @@ function bcgh_ajax_rc() {
         wp_send_json_error(['message' => 'Security check failed.']);
     }
 
-    $category   = sanitize_text_field($_POST['category'] ?? 'residential');
-    $project    = sanitize_text_field($_POST['project'] ?? 'My Project');
-    $location   = sanitize_text_field($_POST['location'] ?? 'other-urban');
-    $building   = sanitize_text_field($_POST['building'] ?? 'single-storey');
-    $area       = max(10, (float)($_POST['area'] ?? 250));
-    $floors     = max(1, (int)($_POST['floors'] ?? 1));
-    $height     = (float)($_POST['height'] ?? 2.7);
-    $finish     = sanitize_text_field($_POST['finish'] ?? 'standard');
-    $roof       = sanitize_text_field($_POST['roof'] ?? 'tile');
-    $extras     = !empty($_POST['extras']) ? array_map('sanitize_text_field', (array)$_POST['extras']) : [];
-    $pro        = sanitize_text_field($_POST['professional'] ?? 'all');
-    $contingency = max(0, (int)($_POST['contingency'] ?? 10));
+    $args = [
+        'category'    => sanitize_text_field($_POST['category'] ?? 'residential'),
+        'project'     => sanitize_text_field($_POST['project'] ?? 'My Project'),
+        'location'    => sanitize_text_field($_POST['location'] ?? 'other-urban'),
+        'building'    => sanitize_text_field($_POST['building'] ?? 'single-storey'),
+        'area'        => max(10, (float)($_POST['area'] ?? 250)),
+        'floors'      => max(1, (int)($_POST['floors'] ?? 1)),
+        'height'      => (float)($_POST['height'] ?? 2.7),
+        'finish'      => sanitize_text_field($_POST['finish'] ?? 'standard'),
+        'roof'        => sanitize_text_field($_POST['roof'] ?? 'tile'),
+        'extras'      => !empty($_POST['extras']) ? array_map('sanitize_text_field', (array) $_POST['extras']) : [],
+        'professional'=> sanitize_text_field($_POST['professional'] ?? 'all'),
+        'contingency' => max(0, (int)($_POST['contingency'] ?? 10)),
+    ];
+
+    wp_send_json_success(bcgh_estimate($args));
+}
+
+/**
+ * Programmatic construction-cost estimator (shared by the calculator AJAX
+ * handler and the Gabochie marketplace intelligence engine).
+ *
+ * @param array $args {
+ *     @type string $category    residential|non-residential
+ *     @type string $location    accra|tema|kumasi|takoradi|cape-coast|tamale|other-urban|rural
+ *     @type string $building    building-type key (per category)
+ *     @type float  $area        floor area in m2
+ *     @type int    $floors      storeys
+ *     @type float  $height      storey height (m)
+ *     @type string $finish      budget|standard|premium|luxury (res) / basic|standard|premium|high-spec (non-res)
+ *     @type string $roof        metal|tile|slate|green (res) / metal|tile|flat|green (non-res)
+ *     @type array  $extras      amenity keys
+ *     @type string $professional all|basic|full|none
+ *     @type int    $contingency percent
+ * }
+ * @return array
+ */
+function bcgh_estimate(array $args) {
+    $category    = $args['category'] ?? 'residential';
+    $project     = $args['project'] ?? 'My Project';
+    $location    = $args['location'] ?? 'other-urban';
+    $building    = $args['building'] ?? 'single-storey';
+    $area        = max(10, (float) ($args['area'] ?? 250));
+    $floors      = max(1, (int) ($args['floors'] ?? 1));
+    $height      = (float) ($args['height'] ?? 2.7);
+    $finish      = $args['finish'] ?? 'standard';
+    $roof        = $args['roof'] ?? 'tile';
+    $extras      = !empty($args['extras']) ? array_map('sanitize_text_field', (array) $args['extras']) : [];
+    $pro         = $args['professional'] ?? 'all';
+    $contingency = max(0, (int) ($args['contingency'] ?? 10));
 
     $loc_mult = [
         'accra' => 1.20, 'tema' => 1.10, 'kumasi' => 1.05, 'takoradi' => 1.05,
@@ -304,7 +342,7 @@ function bcgh_ajax_rc() {
     $grand_total = $construction_cost + $fees_total + $extras_total + $contingency_amount;
     $usd_total = round($grand_total / 15.5);
 
-    wp_send_json_success([
+    return [
         'project'           => $project,
         'location'          => $loc_labels[$location] ?? $location,
         'location_factor'   => $location_factor,
@@ -323,11 +361,11 @@ function bcgh_ajax_rc() {
         'fees'              => $fees_list,
         'fees_total'        => $fees_total,
         'contingency_pct'   => $contingency,
-        'contingency_amount'=> $contingency_amount,
+        'contingency_amount' => $contingency_amount,
         'grand_total'       => $grand_total,
         'usd_total'         => $usd_total,
         'cost_per_sqm'      => round($grand_total / $area),
-    ]);
+    ];
 }
 
 // -----------------------------------------------------------------

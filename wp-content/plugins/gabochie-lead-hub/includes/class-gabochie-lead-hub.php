@@ -92,6 +92,7 @@ class Gabochie_Lead_Hub {
 			'community'     => 'Community Ask',
 			'register'      => 'New Registration',
 			'voice'         => 'Voice Agent Call',
+			'property'      => 'Property Enquiry',
 		);
 	}
 

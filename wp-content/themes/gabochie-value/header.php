@@ -94,7 +94,7 @@ if ( ! defined( 'WPSEO_VERSION' ) ) :
 	<li><a href="<?php echo esc_url( home_url( '/about/' ) ); ?>">About</a></li>
 	<li><a href="<?php echo esc_url( home_url( '/thesis/' ) ); ?>">Thesis</a></li>
 	<li><a href="<?php echo esc_url( home_url( '/news/' ) ); ?>">News</a></li>
-	<li><a href="<?php echo esc_url( home_url( '/blog/' ) ); ?>">Blog</a></li>
+	<li><a href="<?php echo esc_url( home_url( '/marketplace/' ) ); ?>">Marketplace</a></li>
 	</ul>
 	<?php endif; ?>
 	<div class="nav-right">
@@ -117,7 +117,7 @@ if ( ! defined( 'WPSEO_VERSION' ) ) :
 	<a href="<?php echo esc_url( home_url( '/about/' ) ); ?>">About</a>
 	<a href="<?php echo esc_url( home_url( '/thesis/' ) ); ?>">Thesis</a>
 	<a href="<?php echo esc_url( home_url( '/news/' ) ); ?>">News</a>
-	<a href="<?php echo esc_url( home_url( '/blog/' ) ); ?>">Blog</a>
+	<a href="<?php echo esc_url( home_url( '/marketplace/' ) ); ?>">Marketplace</a>
 	<div class="mobile-divider"></div>
 	<?php if ( is_user_logged_in() ) : ?>
 	<a href="<?php echo esc_url( home_url( '/dashboard/' ) ); ?>">My Dashboard</a>
