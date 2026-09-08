@@ -264,16 +264,17 @@ function gabochie_value_toc_content( $content ) {
 add_filter( 'the_content', 'gabochie_value_toc_content', 20 );
 
 /* ============================================
-   AdSense: restrict to blog posts only
+   AdSense: restrict to single content posts
    ============================================ */
 
 /**
- * Restrict AdSense to single blog posts only. On every other context (home,
- * pages, archives, search, 404) the AdSense loader, auto-ads push scripts and
- * platform meta tags are stripped from the rendered output — nothing can fire.
+ * Restrict AdSense to single blog/news posts only. On every other context
+ * (home, pages, archives, search, 404) the AdSense loader, auto-ads push
+ * scripts and platform meta tags are stripped from the rendered output —
+ * nothing can fire.
  */
 function gabochie_value_restrict_adsense() {
-	$ads_allowed = is_singular( 'post' );
+	$ads_allowed = is_singular( 'post' ) || is_singular( 'news' );
 
 	if ( ! $ads_allowed ) {
 		ob_start( 'gabochie_value_strip_adsense' );

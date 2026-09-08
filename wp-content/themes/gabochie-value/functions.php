@@ -3,14 +3,14 @@
  * Gabochie Value Theme Functions
  *
  * @package Gabochie_Value
- * @version 1.9.7
+ * @version 1.10.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GABOCHIE_VALUE_VERSION', '1.9.7' );
+define( 'GABOCHIE_VALUE_VERSION', '1.10.0' );
 define( 'GABOCHIE_VALUE_DIR', get_template_directory() );
 define( 'GABOCHIE_VALUE_URI', get_template_directory_uri() );
 

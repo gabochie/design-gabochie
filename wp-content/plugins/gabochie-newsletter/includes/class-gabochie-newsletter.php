@@ -28,6 +28,10 @@ class Gabochie_Newsletter {
 	const OPT_UNSUBS  = 'gabochie_newsletter_unsubs';
 	const OPT_LOG     = 'gabochie_newsletter_log';
 	const OPT_USAGE   = 'gabochie_newsletter_usage';
+	const OPT_DIGEST  = 'gabochie_newsletter_digest';
+	const OPT_DIGEST_TOP  = 'gabochie_newsletter_digest_top';
+	const OPT_DIGEST_LAST = 'gabochie_newsletter_digest_last';
+	const HOOK_DIGEST = 'gab_nl_digest';
 	const META_SENT   = '_gab_nl_sent';
 	const LOG_LIMIT   = 20;
 
@@ -54,6 +58,8 @@ class Gabochie_Newsletter {
 		add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_post_gabochie_nl_test', array( $this, 'handle_test_send' ) );
+		add_action( 'init', array( $this, 'ensure_digest_cron' ) );
+		add_action( self::HOOK_DIGEST, array( $this, 'on_digest_cron' ) );
 	}
 
 	/**
@@ -83,6 +89,15 @@ class Gabochie_Newsletter {
 		}
 		if ( false === get_option( self::OPT_USAGE, false ) ) {
 			add_option( self::OPT_USAGE, array() );
+		}
+		if ( false === get_option( self::OPT_DIGEST, false ) ) {
+			add_option( self::OPT_DIGEST, '0' );
+		}
+		if ( false === get_option( self::OPT_DIGEST_TOP, false ) ) {
+			add_option( self::OPT_DIGEST_TOP, 5 );
+		}
+		if ( false === get_option( self::OPT_DIGEST_LAST, false ) ) {
+			add_option( self::OPT_DIGEST_LAST, '' );
 		}
 	}
 
@@ -173,6 +188,222 @@ class Gabochie_Newsletter {
 			);
 		}
 		return $out;
+	}
+
+	/**
+	 * Ensure the daily digest cron is armed for 06:00 (UTC; Accra is UTC+0).
+	 */
+	public function ensure_digest_cron() {
+		if ( false === get_option( self::OPT_DIGEST, false ) ) {
+			add_option( self::OPT_DIGEST, '0' );
+		}
+		if ( false === get_option( self::OPT_DIGEST_TOP, false ) ) {
+			add_option( self::OPT_DIGEST_TOP, 5 );
+		}
+		if ( false === get_option( self::OPT_DIGEST_LAST, false ) ) {
+			add_option( self::OPT_DIGEST_LAST, '' );
+		}
+		if ( wp_next_scheduled( self::HOOK_DIGEST ) ) {
+			return;
+		}
+		$when = strtotime( gmdate( 'Y-m-d' ) . ' 06:00:00' );
+		if ( $when < time() ) {
+			$when += DAY_IN_SECONDS;
+		}
+		wp_schedule_event( (int) $when, 'daily', self::HOOK_DIGEST );
+	}
+
+	/**
+	 * Cron wrapper.
+	 */
+	public function on_digest_cron() {
+		$this->send_digest();
+	}
+
+	/**
+	 * News items for the digest window (published since the last digest, bounded
+	 * by the configured top-N). Requires the news portal plugin.
+	 *
+	 * @return WP_Post[]
+	 */
+	private function digest_items() {
+		if ( ! class_exists( 'Gabochie_News_Portal' ) ) {
+			return array();
+		}
+		$from = (int) strtotime( (string) get_option( self::OPT_DIGEST_LAST, '' ) );
+		if ( $from <= 0 ) {
+			$from = time() - DAY_IN_SECONDS;
+		}
+		return Gabochie_News_Portal::instance()->published_since( $from, max( 1, (int) get_option( self::OPT_DIGEST_TOP, 5 ) ) );
+	}
+
+	/**
+	 * Send (or dry-run) the daily news digest to all subscribed contacts.
+	 *
+	 * @param bool $dry_run When true, compute receivers/items but send nothing.
+	 * @return array
+	 */
+	public function send_digest( $dry_run = false ) {
+		$res = array(
+			'subscribers' => 0,
+			'items'       => 0,
+			'sent'        => false,
+			'errors'      => 0,
+		);
+
+		$items = $this->digest_items();
+		$res['items'] = count( $items );
+		if ( empty( $items ) ) {
+			if ( ! $dry_run ) {
+				$this->log_digest( 0, 0, 'no-items' );
+			}
+			return $res;
+		}
+		if ( ! $dry_run && '1' !== get_option( self::OPT_DIGEST, '0' ) ) {
+			return $res;
+		}
+
+		$receivers = $this->subscribers();
+		$res['subscribers'] = count( $receivers );
+		if ( empty( $receivers ) ) {
+			if ( ! $dry_run ) {
+				$this->log_digest( 0, 0, 'no-subscribers' );
+			}
+			return $res;
+		}
+		if ( $dry_run ) {
+			return $res;
+		}
+
+		$run_cap = max( 1, (int) get_option( self::OPT_RUN_CAP, 200 ) );
+		$subject = $this->digest_subject( $items );
+		$sent    = 0;
+		$errors  = 0;
+
+		foreach ( $receivers as $r ) {
+			if ( $sent >= $run_cap ) {
+				break;
+			}
+			$email = strtolower( trim( sanitize_email( (string) $r['email'] ) ) );
+			if ( '' === $email || ! is_email( $email ) || $this->is_unsubscribed( $email ) ) {
+				continue;
+			}
+			if ( ! $this->tick_usage() ) {
+				break;
+			}
+			$name = ( isset( $r['name'] ) && '' !== trim( (string) $r['name'] ) ) ? trim( (string) $r['name'] ) : '';
+			$body = $this->digest_html( $items, $email );
+			$ok   = $this->deliver( $email, $name, $subject, $body );
+			if ( $ok ) {
+				++$sent;
+			} else {
+				++$errors;
+			}
+		}
+
+		update_option( self::OPT_DIGEST_LAST, current_time( 'mysql' ) );
+		$this->log_digest( $sent, $errors );
+		$res['sent']   = $sent > 0;
+		$res['errors'] = $errors;
+		return $res;
+	}
+
+	/**
+	 * Branded digest HTML for one recipient (item cards + Gabochie take).
+	 *
+	 * @param WP_Post[] $items
+	 * @param string    $email
+	 * @return string
+	 */
+	private function digest_html( array $items, $email ) {
+		$track = $this->tracking_enabled();
+		$pixel = $track ? $this->open_pixel( $email ) : '';
+
+		$cards = '';
+		foreach ( $items as $item ) {
+			$perma = get_permalink( $item );
+			$perma = $perma ? $perma : home_url( '/' );
+			$title = htmlspecialchars( get_the_title( $item ), ENT_QUOTES, 'UTF-8' );
+			$name  = htmlspecialchars( (string) get_post_meta( (int) $item->ID, Gabochie_News_Portal::META_SOURCE_TXT, true ), ENT_QUOTES, 'UTF-8' );
+			$click = $track ? $this->click_url( $perma, $email ) : $perma;
+
+			$excerpt = trim( (string) $item->post_excerpt );
+			if ( '' === $excerpt ) {
+				$excerpt = wp_strip_all_tags( (string) $item->post_content );
+			}
+			$excerpt = htmlspecialchars( wp_html_excerpt( $excerpt, 160 ), ENT_QUOTES, 'UTF-8' );
+
+			$take = '';
+			if ( class_exists( 'Gabochie_News_AI' ) ) {
+				$take_raw = Gabochie_News_AI::instance()->approved_take( (int) $item->ID );
+				if ( '' !== $take_raw ) {
+					$take = '<p style="margin:10px 0 0 0;padding:10px 12px;background:#eef4f2;border-left:3px solid #0e4d45;border-radius:6px;font-size:13px;line-height:1.55;color:#2a3a35;">' . wp_kses_post( $take_raw ) . '</p>';
+				}
+			}
+
+			$cards .= '<div style="background:#ffffff;border:1px solid #e4e0d8;border-radius:12px;padding:20px 22px;margin:0 0 14px 0;">'
+				. '<p style="margin:0 0 6px 0;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#a8843c;">' . $name . '</p>'
+				. '<h2 style="margin:0 0 8px 0;font-size:17px;line-height:1.35;color:#16232e;"><a href="' . esc_url( $click ) . '" style="color:#0e4d45;text-decoration:none;">' . $title . '</a></h2>'
+				. '<p style="margin:0;font-size:14px;line-height:1.55;color:#3a4652;">' . $excerpt . '&hellip;</p>'
+				. $take
+				. '<p style="margin:12px 0 0 0;"><a href="' . esc_url( $click ) . '" style="color:#0e4d45;font-size:13px;">Read the full story &rarr;</a></p>'
+				. '</div>';
+		}
+
+		$unsub = esc_url(
+			add_query_arg(
+				array(
+					'gabochie-nl' => 'unsub',
+					'e'           => rawurlencode( $email ),
+					'k'           => $this->unsub_hash( $email ),
+					'n'           => wp_create_nonce( 'gab-nl-unsub-' . $email ),
+				),
+				home_url( '/' )
+			)
+		);
+
+		return '<div style="margin:0;padding:0;background:#f4f2ee;">
+<div style="max-width:600px;margin:0 auto;padding:24px;font-family:Helvetica,Arial,sans-serif;color:#16232e;">
+<p style="margin:0 0 18px 0;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#a8843c;">Daily brief from Gabochie Design</p>
+' . $cards . '
+<p style="margin:0 0 26px 0;"><a href="' . esc_url( home_url( '/news/' ) ) . '" style="color:#0e4d45;font-size:13px;">Open the full News Portal &rarr;</a></p>
+<p style="margin:0 0 0 0;font-size:11px;line-height:1.5;color:#8a929b;">Gabochie Design &middot; Development made understandable, measurable, investable. &middot; <a href="' . esc_url( home_url( '/' ) ) . '" style="color:#8a929b;">gabochiedesign.com</a></p>
+<p style="margin:0 0 26px 0;font-size:11px;color:#8a929b;"><a href="' . $unsub . '" style="color:#8a929b;">Unsubscribe from future updates</a></p>
+</div>
+' . $pixel . '
+</div>';
+	}
+
+	/**
+	 * Digest subject line.
+	 *
+	 * @param WP_Post[] $items
+	 * @return string
+	 */
+	private function digest_subject( array $items ) {
+		$n = count( $items );
+		return 'Gabochie News: ' . (int) $n . ' Ghana built-environment headline' . ( 1 === $n ? '' : 's' );
+	}
+
+	/**
+	 * Append a digest entry to the send log (id 0 = digest run).
+	 *
+	 * @param int    $sent
+	 * @param int    $errors
+	 * @param string $note
+	 */
+	private function log_digest( $sent, $errors, $note = '' ) {
+		$log   = (array) get_option( self::OPT_LOG, array() );
+		$entry = array(
+			'time'  => current_time( 'mysql' ),
+			'id'    => 0,
+			'title' => 'Daily news digest',
+			'sent'  => (int) $sent,
+			'errs'  => (int) $errors,
+			'note'  => $note,
+		);
+		array_unshift( $log, $entry );
+		update_option( self::OPT_LOG, array_slice( $log, 0, self::LOG_LIMIT ) );
 	}
 
 	/**
@@ -605,6 +836,22 @@ class Gabochie_Newsletter {
 				'sanitize_callback' => array( $this, 'sanitize_enabled' ),
 			)
 		);
+		register_setting(
+			'gabochie-newsletter',
+			self::OPT_DIGEST,
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => array( $this, 'sanitize_enabled' ),
+			)
+		);
+		register_setting(
+			'gabochie-newsletter',
+			self::OPT_DIGEST_TOP,
+			array(
+				'type'              => 'integer',
+				'sanitize_callback' => 'absint',
+			)
+		);
 	}
 
 	/**
@@ -655,6 +902,14 @@ class Gabochie_Newsletter {
 						<td>
 							<input type="checkbox" id="gabochie-nl-track" name="<?php echo esc_attr( self::OPT_TRACKING ); ?>" value="1" <?php checked( get_option( self::OPT_TRACKING, '1' ), '1' ); ?>>
 							<p class="description">Adds an open-tracking pixel and click-tracking redirect to every newsletter email. Each open/click stamps <code>last_engaged_at</code> on the contact (<code>gab_contacts</code>) — this is what feeds the Command Center <em>engaged_30d</em> KPI.</p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row">Daily news digest</th>
+						<td>
+							<input type="checkbox" id="gabochie-nl-digest" name="<?php echo esc_attr( self::OPT_DIGEST ); ?>" value="1" <?php checked( get_option( self::OPT_DIGEST, '0' ), '1' ); ?>>
+							<input type="number" id="gabochie-nl-digest-top" name="<?php echo esc_attr( self::OPT_DIGEST_TOP ); ?>" min="1" max="10" value="<?php echo esc_attr( (string) get_option( self::OPT_DIGEST_TOP, 5 ) ); ?>" style="width:70px;">
+							<p class="description">Sends the top news items that went live on the <a href="<?php echo esc_url( admin_url( 'admin.php?page=gabochie-news-portal' ) ); ?>">News Portal</a> each morning at 06:00 UTC (requires <em>gabochie-news-portal</em>). The number sets the maximum items included; the slot re-uses the run/send caps above.</p>
 						</td>
 					</tr>
 				</table>

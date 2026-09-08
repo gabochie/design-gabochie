@@ -1,0 +1,60 @@
+{
+  "sources": [
+    {
+      "slug": "gbc-news",
+      "name": "GBC Ghana Online",
+      "url": "https://www.gbcghanaonline.com/feed/",
+      "trusted": false,
+      "ai_take": true
+    },
+    {
+      "slug": "ghana-business-news",
+      "name": "Ghana Business News",
+      "url": "https://www.ghanabusinessnews.com/feed/",
+      "trusted": true,
+      "ai_take": true
+    },
+    {
+      "slug": "myjoy-business",
+      "name": "MyJoyOnline",
+      "url": "https://www.myjoyonline.com/feed/",
+      "trusted": false,
+      "ai_take": true
+    },
+    {
+      "slug": "construction-review",
+      "name": "Construction Review Online",
+      "url": "https://constructionreviewonline.com/feed/",
+      "trusted": true,
+      "ai_take": true
+    },
+    {
+      "slug": "bank-of-ghana",
+      "name": "Bank of Ghana",
+      "url": "https://www.bog.gov.gh/feed/",
+      "trusted": true,
+      "ai_take": true
+    },
+    {
+      "slug": "daily-guide",
+      "name": "Daily Guide Network",
+      "url": "https://dailyguidenetwork.com/feed/",
+      "trusted": false,
+      "ai_take": true
+    },
+    {
+      "slug": "3news",
+      "name": "3News",
+      "url": "https://3news.com/feed.xml",
+      "trusted": false,
+      "ai_take": true
+    },
+    {
+      "slug": "gna",
+      "name": "Ghana News Agency",
+      "url": "https://gna.org.gh/politics/feed/",
+      "trusted": true,
+      "ai_take": true
+    }
+  ]
+}
