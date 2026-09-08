@@ -66,6 +66,24 @@ class Gabochie_News_Portal {
 		add_action( self::HOOK_FETCH, array( $this, 'run_fetch' ) );
 		add_action( 'init', array( $this, 'maybe_install' ) );
 		add_action( 'after_plugin_row_' . plugin_basename( GABOCHIE_NEWS_FILE ), array( $this, 'render_activation_notice' ) );
+		add_filter( 'rewrite_rules_array', array( $this, 'trim_news_attachment_rules' ) );
+	}
+
+	/**
+	 * Drop the CPT's leaked trailing-attachment rules that shadow the nested
+	 * `news/category/<term>` taxonomy rewrites (news/<slug>/<any> resolved as
+	 * attachment= before the taxonomy rule ever ran).
+	 *
+	 * @param array $rules
+	 * @return array
+	 */
+	public function trim_news_attachment_rules( $rules ) {
+		foreach ( (array) $rules as $regex => $query ) {
+			if ( 0 === strpos( $regex, 'news/[^/]+/([^/]+)' ) && false !== strpos( (string) $query, 'attachment=' ) ) {
+				unset( $rules[ $regex ] );
+			}
+		}
+		return $rules;
 	}
 
 	/**
