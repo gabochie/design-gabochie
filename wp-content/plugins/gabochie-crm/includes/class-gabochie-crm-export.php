@@ -201,11 +201,18 @@ class Gabochie_Crm_Export {
 	 * @return never
 	 */
 	public static function admin_export() {
+		// The newsletter tab lists status=subscribed by default even without an
+		// explicit status filter — mirror that so "Export CSV" there exports
+		// exactly what the tab shows.
+		$status = isset( $_GET['status'] ) ? sanitize_key( wp_unslash( $_GET['status'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( '' === $status && isset( $_GET['tab'] ) && 'newsletter' === sanitize_key( wp_unslash( $_GET['tab'] ) ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$status = 'subscribed';
+		}
 		self::stream_csv(
 			self::rows_for_filters(
 				array(
 					'search'   => isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '',
-					'status'   => isset( $_GET['status'] ) ? sanitize_key( wp_unslash( $_GET['status'] ) ) : '',
+					'status'   => $status,
 					'source'   => isset( $_GET['source'] ) ? sanitize_key( wp_unslash( $_GET['source'] ) ) : '',
 					'list_key' => isset( $_GET['list_key'] ) ? sanitize_key( wp_unslash( $_GET['list_key'] ) ) : '',
 					'tag'      => isset( $_GET['tag'] ) ? sanitize_text_field( wp_unslash( $_GET['tag'] ) ) : '',

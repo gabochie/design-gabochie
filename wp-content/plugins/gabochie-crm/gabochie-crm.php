@@ -2,8 +2,8 @@
 /**
  * Plugin Name: Gabochie CRM
  * Plugin URI:  https://gabochiedesign.com
- * Description: In-house contact store for gabochiedesign.com. Owns the gab_contacts table: the single subscriber/lead source for the newsletter, lead hub and command center. Replaces FluentCRM as the audience store with a tiny first-party table. Ships a Contacts admin (list table, edit, bulk actions), CSV export and GDPR export/erase.
- * Version:     1.1.0
+ * Description: In-house contact store for gabochiedesign.com. Owns the gab_contacts table: the single subscriber/lead source for the newsletter, lead hub and command center. Replaces FluentCRM as the audience store with a tiny first-party table. Ships a Contacts admin (Contacts + Newsletter tabs: list table, edit, bulk actions, add-to-newsletter), CSV export and GDPR export/erase.
+ * Version:     1.2.0
  * Requires PHP: 8.0
  * Author:      Gabochie Design Studio
  * Author URI:  https://gabochiedesign.com
@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'GABOCHIE_CRM_VERSION', '1.1.0' );
+define( 'GABOCHIE_CRM_VERSION', '1.2.0' );
 define( 'GABOCHIE_CRM_PATH', plugin_dir_path( __FILE__ ) );
 
 require_once GABOCHIE_CRM_PATH . 'includes/class-gabochie-crm.php';

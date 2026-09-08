@@ -469,6 +469,54 @@ class Gabochie_Newsletter {
 	}
 
 	/**
+	 * Addresses on the reader-side do-not-email map (for the CRM admin).
+	 *
+	 * @return array<string,string> email => timestamp.
+	 */
+	public static function do_not_email_map() {
+		$map = get_option( self::OPT_UNSUBS, array() );
+		return is_array( $map ) ? $map : array();
+	}
+
+	/**
+	 * Admin-side re-subscribe: clears the do-not-email map entry and flips the
+	 * CRM status back to subscribed so the next publish emails the address.
+	 *
+	 * @param string $email
+	 * @return bool
+	 */
+	public function admin_subscribe( $email ) {
+		$email = strtolower( trim( sanitize_email( (string) $email ) ) );
+		if ( '' === $email || ! is_email( $email ) ) {
+			return false;
+		}
+		$unsubs = get_option( self::OPT_UNSUBS, array() );
+		if ( is_array( $unsubs ) && isset( $unsubs[ $email ] ) ) {
+			unset( $unsubs[ $email ] );
+			update_option( self::OPT_UNSUBS, $unsubs );
+		}
+		if ( class_exists( 'Gabochie_Crm' ) ) {
+			Gabochie_Crm::set_status( $email, Gabochie_Crm::STATUS_SUBSCRIBED );
+		}
+		return true;
+	}
+
+	/**
+	 * Admin-side unsubscribe (same effect as the reader-facing one-click link).
+	 *
+	 * @param string $email
+	 * @return bool
+	 */
+	public function admin_unsubscribe( $email ) {
+		$email = strtolower( trim( sanitize_email( (string) $email ) ) );
+		if ( '' === $email || ! is_email( $email ) ) {
+			return false;
+		}
+		$this->mark_unsubscribed( $email );
+		return true;
+	}
+
+	/**
 	 * Consume one unit of the daily send budget. False when the cap is hit.
 	 *
 	 * @return bool
