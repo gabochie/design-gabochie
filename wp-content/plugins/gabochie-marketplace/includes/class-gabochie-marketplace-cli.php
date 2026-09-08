@@ -69,7 +69,7 @@ class Gabochie_Marketplace_Cli
             'intel'  => Gabochie_Marketplace::has_intelligence($p->ID) ? 'yes' : 'no',
             );
         }
-        \WP_CLI\Utils\format_items('table', $rows, array( 'ID', 'title', 'type', 'status', 'price', 'intel' ));
+        \WP_CLI::log( $this->render_table( array( 'ID', 'title', 'type', 'status', 'price', 'intel' ), $rows ) );
     }
 
     /**
@@ -198,6 +198,44 @@ class Gabochie_Marketplace_Cli
         foreach ( Gabochie_Marketplace::type_terms() as $term ) {
             $types[] = array( 'type' => $term->name, 'count' => $term->count );
         }
-        \WP_CLI\Utils\format_items('table', $types, array( 'type', 'count' ));
+        \WP_CLI::log( $this->render_table( array( 'type', 'count' ), $types ) );
+    }
+
+    /**
+     * Render rows as a simple aligned table (no WP_CLI\Utils dependency).
+     *
+     * @param array $headers Column labels.
+     * @param array $rows    Associative rows keyed by header.
+     * @return string
+     */
+    private function render_table( $headers, $rows )
+    {
+        $widths = array();
+        foreach ( $headers as $h ) {
+        $widths[ $h ] = strlen((string) $h);
+        }
+        foreach ( $rows as $row ) {
+        foreach ( $headers as $h ) {
+        $widths[ $h ] = max($widths[ $h ], strlen((string) $row[ $h ]));
+        }
+        }
+        if ( ! $rows ) {
+        return 'No rows.';
+        }
+        $cells = array();
+        foreach ( $rows as $row ) {
+        $line = array();
+        foreach ( $headers as $h ) {
+        $line[] = str_pad((string) $row[ $h ], $widths[ $h ]);
+        }
+        $cells[] = implode('  ', $line);
+        }
+        $head = implode('  ', array_map(
+            function ( $h ) use ( $widths ) {
+                return str_pad($h, $widths[ $h ]);
+            },
+            $headers
+        ));
+        return $head . PHP_EOL . str_repeat('-', strlen($head)) . PHP_EOL . implode(PHP_EOL, $cells);
     }
 }
