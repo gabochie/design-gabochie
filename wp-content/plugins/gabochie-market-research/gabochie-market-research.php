@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name:       Gabochie Market Intelligence
+ * Plugin Name:       Gabochie Market Research
  * Plugin URI:        https://gabochiedesign.com
- * Description:       Autonomous market research + human-in-the-loop approval inbox. Collects demand signals (site search, community questions, captured enquiries, content pulse, audience engagement), scores opportunity niches weekly, drafts a market memo via the shared AI chain, and holds proposed products/offers for sign-off.
+ * Description:       Demand intelligence + human-in-the-loop approval inbox. Collects on-site demand signals (site search, community questions, CRM sources, marketplace enquiries, RSS pulse), scores opportunity niches, drafts a weekly Market Memo via the AI chain, and stages product/offer proposals for owner approval.
  * Version:           1.0.0
  * Author:            Gabochie Design
  * Text Domain:       gabochie-market-research
@@ -24,12 +24,13 @@ require_once GABOCHIE_MARKET_RESEARCH_PATH . 'includes/class-gabochie-market-res
 require_once GABOCHIE_MARKET_RESEARCH_PATH . 'includes/class-gabochie-market-research-cli.php';
 
 /**
- * Activation: create tables, schedule the collectors + memo cron, flush
- * rewrite rules (all idempotent).
+ * Activation: create the schema + schedule the signal collector + the weekly
+ * market memo (all idempotent).
  */
 function gmr_activate() {
-	Gabochie_Market_Research::instance()->maybe_install();
-	flush_rewrite_rules();
+	$core = Gabochie_Market_Research::instance();
+	$core->ensure_schema();
+	$core->ensure_crons();
 }
 register_activation_hook( __FILE__, 'gmr_activate' );
 
