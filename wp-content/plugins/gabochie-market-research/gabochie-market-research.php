@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Gabochie Market Research
  * Plugin URI:        https://gabochiedesign.com
- * Description:       Autonomous demand intelligence: aggregates first-party demand signals, scores opportunity niches, drafts a weekly market memo and stages product ideas in an approval inbox.
+ * Description:       Autonomous demand intelligence for Gabochie Design: collects internal demand signals (site search, community questions, CRM/enquiry volume, engagement), scores opportunity niches, generates a weekly AI market memo with ranked product-revenue proposals, and surfaces them in an approval inbox for human sign-off.
  * Version:           1.0.0
  * Author:            Gabochie Design
  * Text Domain:       gabochie-market-research
@@ -24,11 +24,11 @@ require_once GABOCHIE_MARKET_RESEARCH_PATH . 'includes/class-gabochie-market-res
 require_once GABOCHIE_MARKET_RESEARCH_PATH . 'includes/class-gabochie-market-research-cli.php';
 
 /**
- * Activation: create tables + schedule collectors/memo (idempotent).
+ * Activation: ensure tables + schedule the signal collector + weekly memo
+ * (all idempotent).
  */
 function gmr_activate() {
 	Gabochie_Market_Research::instance()->maybe_install();
-	flush_rewrite_rules();
 }
 register_activation_hook( __FILE__, 'gmr_activate' );
 
