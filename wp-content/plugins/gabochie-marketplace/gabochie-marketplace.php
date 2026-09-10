@@ -30,7 +30,10 @@ require_once GABOCHIE_MARKETPLACE_PATH . 'includes/class-gabochie-marketplace-cl
  * refresh + create the /marketplace/ page (all idempotent).
  */
 function gmp_activate() {
-	Gabochie_Marketplace::instance()->maybe_install();
+	$core = Gabochie_Marketplace::instance();
+	$core->register_cpt();
+	$core->maybe_install();
+	flush_rewrite_rules();
 }
 register_activation_hook( __FILE__, 'gmp_activate' );
 

@@ -72,3 +72,6 @@ delete_option( 'gmp_page_created' );
 delete_option( 'gmp_seeded' );
 delete_option( 'gmp_ai_model' );
 delete_option( 'gmp_errors' );
+
+// Drop the CPT/taxonomy rewrite rules we registered.
+flush_rewrite_rules();
