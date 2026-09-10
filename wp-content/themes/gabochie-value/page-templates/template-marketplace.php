@@ -9,33 +9,33 @@
  * @package Gabochie_Value
  */
 
-if (! defined('ABSPATH') ) {
-    exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
 }
 
 $marketplace = Gabochie_Marketplace::instance();
 
 $featured = new WP_Query(
-    array(
-        'post_type'      => Gabochie_Marketplace::CPT,
-        'post_status'    => 'publish',
-        'posts_per_page' => 6,
-        'no_found_rows'  => true,
-        'meta_key'       => Gabochie_Marketplace::META_FEATURED, // phpcs:ignore WordPress.DB.SlowDBQuery
-        'meta_value'     => '1', // phpcs:ignore WordPress.DB.SlowDBQuery
-    )
+	array(
+		'post_type'      => Gabochie_Marketplace::CPT,
+		'post_status'    => 'publish',
+		'posts_per_page' => 6,
+		'no_found_rows'  => true,
+		'meta_key'       => Gabochie_Marketplace::META_FEATURED, // phpcs:ignore WordPress.DB.SlowDBQuery
+		'meta_value'     => '1', // phpcs:ignore WordPress.DB.SlowDBQuery
+	)
 );
 
 $latest = new WP_Query(
-    array(
-        'post_type'      => Gabochie_Marketplace::CPT,
-        'post_status'    => 'publish',
-        'posts_per_page' => 12,
-        'no_found_rows'  => true,
-    )
+	array(
+		'post_type'      => Gabochie_Marketplace::CPT,
+		'post_status'    => 'publish',
+		'posts_per_page' => 12,
+		'no_found_rows'  => true,
+	)
 );
 
-$types   = Gabochie_Marketplace::type_terms();
+$types    = Gabochie_Marketplace::type_terms();
 $statuses = Gabochie_Marketplace::status_terms();
 
 get_header();
@@ -86,96 +86,106 @@ get_header();
 
 <!-- ========== HERO ========== -->
 <section class="page-hero" style="background:var(--gmp-teal-deep);color:#fff;">
-    <div class="container gmp-const" style="padding:56px 22px;">
-        <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gmp-gold);margin:0 0 12px 0;">Gabochie Marketplace</div>
-        <h1 class="gmp-h1">Find property. Know its potential. Make it happen.</h1>
-        <p class="gmp-sub">Curated Ghana property and development opportunities, each with a fully automated AI intelligence report — location, comparables, build feasibility and the honest risk picture — before you ever pick up the phone.</p>
-    </div>
+	<div class="container gmp-const" style="padding:56px 22px;">
+		<div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gmp-gold);margin:0 0 12px 0;">Gabochie Marketplace</div>
+		<h1 class="gmp-h1">Find property. Know its potential. Make it happen.</h1>
+		<p class="gmp-sub">Curated Ghana property and development opportunities, each with a fully automated AI intelligence report — location, comparables, build feasibility and the honest risk picture — before you ever pick up the phone.</p>
+	</div>
 </section>
 
 <section class="gmp-mp" style="padding:34px 0 10px 0;">
-    <div class="gmp-const">
+	<div class="gmp-const">
 
-        <div class="gmp-lanes">
-            <span style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#7a857f;padding:8px 6px 0 0;">Type</span>
-            <a class="gmp-lane act" href="<?php echo esc_url(home_url('/marketplace/')); ?>">All</a>
-            <?php foreach ( (array) $types as $term ) : ?>
-                <?php if (! is_wp_error($term) ) : ?>
-                <a class="gmp-lane" href="<?php echo esc_url(get_term_link($term)); ?>"><?php echo esc_html($term->name); ?></a>
-                <?php endif; ?>
-            <?php endforeach; ?>
-        </div>
+		<div class="gmp-lanes">
+			<span style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#7a857f;padding:8px 6px 0 0;">Type</span>
+			<a class="gmp-lane act" href="<?php echo esc_url( home_url( '/marketplace/' ) ); ?>">All</a>
+			<?php foreach ( (array) $types as $type_term ) : ?>
+				<?php if ( ! is_wp_error( $type_term ) ) : ?>
+				<a class="gmp-lane" href="<?php echo esc_url( get_term_link( $type_term ) ); ?>"><?php echo esc_html( $type_term->name ); ?></a>
+				<?php endif; ?>
+			<?php endforeach; ?>
+		</div>
 
-        <div class="gmp-ey">Hand-picked opportunities</div>
-        <h2 class="gmp-h2">Featured listings</h2>
+		<div class="gmp-ey">Hand-picked opportunities</div>
+		<h2 class="gmp-h2">Featured listings</h2>
 
-        <?php if ($featured->have_posts() ) : ?>
-        <div class="gmp-grid">
-            <?php
-            while ( $featured->have_posts() ) :
-                $featured->the_post();
-                $loc   = (string) get_post_meta(get_the_ID(), Gabochie_Marketplace::META_LOCATION, true);
-                $type  = ucwords(str_replace('-', ' ', Gabochie_Marketplace::get_type_slug(get_the_ID())));
-                $has_i = Gabochie_Marketplace::has_intelligence(get_the_ID());
-                ?>
-            <a class="gmp-card" href="<?php the_permalink(); ?>">
-                <span class="gmp-badge feat">Featured</span>
-                <div class="gmp-thumb">◆</div>
-                <div class="gmp-body">
-                    <p class="gmp-loc"><?php echo esc_html($loc); ?><?php echo '' !== $type ? ' &middot; ' . esc_html($type) : ''; ?></p>
-                    <h3><?php the_title(); ?></h3>
-                    <p class="gmp-price"><?php echo esc_html(Gabochie_Marketplace::price_label(get_the_ID())); ?><small><?php echo esc_html(wp_trim_words(get_the_excerpt(), 14, '…')); ?></small></p>
-                <?php if ($has_i ) : ?><p class="gmp-intel">Intelligence report included</p><?php 
-                endif; ?>
-                    <span class="gmp-arr">View intelligence &rsaquo;</span>
-                </div>
-            </a>
-            <?php endwhile; ?>
-        </div>
-            <?php wp_reset_postdata(); ?>
-        <?php else : ?>
-        <p style="color:#40504b;font-size:15px;">Featured opportunities will appear here as the marketplace fills.</p>
-        <?php endif; ?>
+		<?php if ( $featured->have_posts() ) : ?>
+		<div class="gmp-grid">
+			<?php
+			while ( $featured->have_posts() ) :
+				$featured->the_post();
+				$loc         = (string) get_post_meta( get_the_ID(), Gabochie_Marketplace::META_LOCATION, true );
+				$type_label  = ucwords( str_replace( '-', ' ', Gabochie_Marketplace::get_type_slug( get_the_ID() ) ) );
+				$has_i       = Gabochie_Marketplace::has_intelligence( get_the_ID() );
+				?>
+			<a class="gmp-card" href="<?php the_permalink(); ?>">
+				<span class="gmp-badge feat">Featured</span>
+				<div class="gmp-thumb">◆</div>
+				<div class="gmp-body">
+					<p class="gmp-loc"><?php echo esc_html( $loc ); ?><?php echo '' !== $type_label ? ' &middot; ' . esc_html( $type_label ) : ''; ?></p>
+					<h3><?php the_title(); ?></h3>
+					<p class="gmp-price"><?php echo esc_html( Gabochie_Marketplace::price_label( get_the_ID() ) ); ?><small><?php echo esc_html( wp_trim_words( get_the_excerpt(), 14, '…' ) ); ?></small></p>
+				<?php
+				if ( $has_i ) :
+					?>
+					<p class="gmp-intel">Intelligence report included</p>
+					<?php
+				endif;
+				?>
+					<span class="gmp-arr">View intelligence &rsaquo;</span>
+				</div>
+			</a>
+			<?php endwhile; ?>
+		</div>
+			<?php wp_reset_postdata(); ?>
+		<?php else : ?>
+		<p style="color:#40504b;font-size:15px;">Featured opportunities will appear here as the marketplace fills.</p>
+		<?php endif; ?>
 
-        <div class="gmp-ey">All opportunities</div>
-        <h2 class="gmp-h2">Latest listings</h2>
+		<div class="gmp-ey">All opportunities</div>
+		<h2 class="gmp-h2">Latest listings</h2>
 
-        <?php if ($latest->have_posts() ) : ?>
-        <div class="gmp-grid">
-            <?php
-            while ( $latest->have_posts() ) :
-                $latest->the_post();
-                $loc   = (string) get_post_meta(get_the_ID(), Gabochie_Marketplace::META_LOCATION, true);
-                $type  = ucwords(str_replace('-', ' ', Gabochie_Marketplace::get_type_slug(get_the_ID())));
-                $has_i = Gabochie_Marketplace::has_intelligence(get_the_ID());
-                ?>
-            <a class="gmp-card" href="<?php the_permalink(); ?>">
-                <span class="gmp-badge"><?php echo esc_html($type); ?></span>
-                <div class="gmp-thumb">◆</div>
-                <div class="gmp-body">
-                    <p class="gmp-loc"><?php echo esc_html($loc); ?></p>
-                    <h3><?php the_title(); ?></h3>
-                    <p class="gmp-price"><?php echo esc_html(Gabochie_Marketplace::price_label(get_the_ID())); ?></p>
-                <?php if ($has_i ) : ?><p class="gmp-intel">Intelligence report included</p><?php 
-                endif; ?>
-                    <span class="gmp-arr">View intelligence &rsaquo;</span>
-                </div>
-            </a>
-            <?php endwhile; ?>
-        </div>
-            <?php wp_reset_postdata(); ?>
-        <?php else : ?>
-        <p style="color:#40504b;font-size:15px;">The marketplace is being stocked — listings land here shortly.</p>
-        <?php endif; ?>
+		<?php if ( $latest->have_posts() ) : ?>
+		<div class="gmp-grid">
+			<?php
+			while ( $latest->have_posts() ) :
+				$latest->the_post();
+				$loc         = (string) get_post_meta( get_the_ID(), Gabochie_Marketplace::META_LOCATION, true );
+				$type_label  = ucwords( str_replace( '-', ' ', Gabochie_Marketplace::get_type_slug( get_the_ID() ) ) );
+				$has_i       = Gabochie_Marketplace::has_intelligence( get_the_ID() );
+				?>
+			<a class="gmp-card" href="<?php the_permalink(); ?>">
+				<span class="gmp-badge"><?php echo esc_html( $type_label ); ?></span>
+				<div class="gmp-thumb">◆</div>
+				<div class="gmp-body">
+					<p class="gmp-loc"><?php echo esc_html( $loc ); ?></p>
+					<h3><?php the_title(); ?></h3>
+					<p class="gmp-price"><?php echo esc_html( Gabochie_Marketplace::price_label( get_the_ID() ) ); ?></p>
+				<?php
+				if ( $has_i ) :
+					?>
+					<p class="gmp-intel">Intelligence report included</p>
+					<?php
+				endif;
+				?>
+					<span class="gmp-arr">View intelligence &rsaquo;</span>
+				</div>
+			</a>
+			<?php endwhile; ?>
+		</div>
+			<?php wp_reset_postdata(); ?>
+		<?php else : ?>
+		<p style="color:#40504b;font-size:15px;">The marketplace is being stocked — listings land here shortly.</p>
+		<?php endif; ?>
 
-        <div class="gmp-rec">
-            <div>
-                <h3>Falling for a listing? Price is only half the story.</h3>
-                <p>Every Gabochie listing comes with an AI intelligence report. If you are buying to develop, verify the build maths, the comparables and the risks before you commit — or book the GHS 1,500 Recovery Diagnostic for a deeper verdict.</p>
-            </div>
-            <a href="<?php echo esc_url(gabochie_value_recovery_product_url()); ?>">Book the Diagnostic</a>
-        </div>
-    </div>
+		<div class="gmp-rec">
+			<div>
+				<h3>Falling for a listing? Price is only half the story.</h3>
+				<p>Every Gabochie listing comes with an AI intelligence report. If you are buying to develop, verify the build maths, the comparables and the risks before you commit — or book the GHS 1,500 Recovery Diagnostic for a deeper verdict.</p>
+			</div>
+			<a href="<?php echo esc_url( gabochie_value_recovery_product_url() ); ?>">Book the Diagnostic</a>
+		</div>
+	</div>
 </section>
 
 </main>

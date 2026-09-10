@@ -8,11 +8,11 @@
  * @package Gabochie_Value
  */
 
-if (! defined('ABSPATH') ) {
-    exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
 }
 
-$term = get_queried_object();
+$queried_term = get_queried_object();
 
 get_header();
 ?>
@@ -46,42 +46,47 @@ get_header();
 </style>
 
 <section class="page-hero" style="background:var(--gmp-teal-deep);color:#fff;">
-    <div class="container gmp-const" style="padding:50px 22px;">
-        <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gmp-gold);margin:0 0 12px 0;">Gabochie Marketplace</div>
-        <h1 class="gmp-h1"><?php echo esc_html($term instanceof WP_Term ? $term->name : ''); ?> opportunities</h1>
-        <p class="gmp-sub"><?php echo esc_html($term instanceof WP_Term ? wp_strip_all_tags(term_description($term->term_id)) : ''); ?></p>
-    </div>
+	<div class="container gmp-const" style="padding:50px 22px;">
+		<div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gmp-gold);margin:0 0 12px 0;">Gabochie Marketplace</div>
+		<h1 class="gmp-h1"><?php echo esc_html( $queried_term instanceof WP_Term ? $queried_term->name : '' ); ?> opportunities</h1>
+		<p class="gmp-sub"><?php echo esc_html( $queried_term instanceof WP_Term ? wp_strip_all_tags( term_description( $queried_term->term_id ) ) : '' ); ?></p>
+	</div>
 </section>
 
 <section class="gmp-mp" style="padding:0 0 10px 0;">
-    <div class="gmp-const">
-        <a class="gmp-back" href="<?php echo esc_url(home_url('/marketplace/')); ?>">&larr; All marketplace listings</a>
+	<div class="gmp-const">
+		<a class="gmp-back" href="<?php echo esc_url( home_url( '/marketplace/' ) ); ?>">&larr; All marketplace listings</a>
 
-        <?php if (have_posts() ) : ?>
-        <div class="gmp-grid">
-            <?php
-            while ( have_posts() ) :
-                the_post();
-                $loc = (string) get_post_meta(get_the_ID(), Gabochie_Marketplace::META_LOCATION, true);
-                $has_i = Gabochie_Marketplace::has_intelligence(get_the_ID());
-                ?>
-            <a class="gmp-card" href="<?php the_permalink(); ?>">
-                <div class="gmp-thumb">◆</div>
-                <div class="gmp-body">
-                    <p class="gmp-loc"><?php echo esc_html($loc); ?></p>
-                    <h3><?php the_title(); ?></h3>
-                    <p class="gmp-price"><?php echo esc_html(Gabochie_Marketplace::price_label(get_the_ID())); ?></p>
-                <?php if ($has_i ) : ?><p class="gmp-intel">Intelligence report included</p><?php 
-                endif; ?>
-                    <span class="gmp-arr">View intelligence &rsaquo;</span>
-                </div>
-            </a>
-            <?php endwhile; ?>
-        </div>
-        <?php else : ?>
-        <p style="color:#40504b;font-size:15px;margin:0 0 40px 0;">No listings in this category yet — check back soon.</p>
-        <?php endif; ?>
-    </div>
+		<?php if ( have_posts() ) : ?>
+		<div class="gmp-grid">
+			<?php
+			while ( have_posts() ) :
+				the_post();
+				$loc   = (string) get_post_meta( get_the_ID(), Gabochie_Marketplace::META_LOCATION, true );
+				$has_i = Gabochie_Marketplace::has_intelligence( get_the_ID() );
+				?>
+			<a class="gmp-card" href="<?php the_permalink(); ?>">
+				<div class="gmp-thumb">◆</div>
+				<div class="gmp-body">
+					<p class="gmp-loc"><?php echo esc_html( $loc ); ?></p>
+					<h3><?php the_title(); ?></h3>
+					<p class="gmp-price"><?php echo esc_html( Gabochie_Marketplace::price_label( get_the_ID() ) ); ?></p>
+				<?php
+				if ( $has_i ) :
+					?>
+					<p class="gmp-intel">Intelligence report included</p>
+					<?php
+				endif;
+				?>
+					<span class="gmp-arr">View intelligence &rsaquo;</span>
+				</div>
+			</a>
+			<?php endwhile; ?>
+		</div>
+		<?php else : ?>
+		<p style="color:#40504b;font-size:15px;margin:0 0 40px 0;">No listings in this category yet — check back soon.</p>
+		<?php endif; ?>
+	</div>
 </section>
 
 </main>

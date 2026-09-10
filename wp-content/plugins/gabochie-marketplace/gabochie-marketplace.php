@@ -12,11 +12,11 @@
  * @package Gabochie_Marketplace
  */
 
-defined('ABSPATH') || exit;
+defined( 'ABSPATH' ) || exit;
 
-define('GABOCHIE_MARKETPLACE_VERSION', '1.0.0');
-define('GABOCHIE_MARKETPLACE_FILE', __FILE__);
-define('GABOCHIE_MARKETPLACE_PATH', plugin_dir_path(__FILE__));
+define( 'GABOCHIE_MARKETPLACE_VERSION', '1.0.0' );
+define( 'GABOCHIE_MARKETPLACE_FILE', __FILE__ );
+define( 'GABOCHIE_MARKETPLACE_PATH', plugin_dir_path( __FILE__ ) );
 
 require_once GABOCHIE_MARKETPLACE_PATH . 'includes/class-gabochie-marketplace.php';
 require_once GABOCHIE_MARKETPLACE_PATH . 'includes/class-gabochie-marketplace-ai.php';
@@ -29,25 +29,24 @@ require_once GABOCHIE_MARKETPLACE_PATH . 'includes/class-gabochie-marketplace-cl
  * Activation: seed taxonomies + sample listings + schedule the intelligence
  * refresh + create the /marketplace/ page (all idempotent).
  */
-function gmp_activate()
-{
-    Gabochie_Marketplace::instance()->maybe_install();
+function gmp_activate() {
+	Gabochie_Marketplace::instance()->maybe_install();
 }
-register_activation_hook(__FILE__, 'gmp_activate');
+register_activation_hook( __FILE__, 'gmp_activate' );
 
 /**
  * Wire the singletons.
  */
 add_action(
-    'plugins_loaded',
-    static function () {
-        Gabochie_Marketplace::instance();
-        Gabochie_Marketplace_AI::instance();
-        Gabochie_Marketplace_Admin::instance();
-        Gabochie_Marketplace_Enquiry::instance();
-        if (defined('WP_CLI') ) {
-            Gabochie_Marketplace_Cli::register();
-        }
-    },
-    20
+	'plugins_loaded',
+	static function () {
+		Gabochie_Marketplace::instance();
+		Gabochie_Marketplace_AI::instance();
+		Gabochie_Marketplace_Admin::instance();
+		Gabochie_Marketplace_Enquiry::instance();
+		if ( defined( 'WP_CLI' ) ) {
+			Gabochie_Marketplace_Cli::register();
+		}
+	},
+	20
 );
