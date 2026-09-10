@@ -2,12 +2,16 @@
 /**
  * Gabochie Market Research core.
  *
- * The demand-intelligence layer for the autonomy stack. Collects first-party
- * demand signals (site search, community questions, marketplace enquiries,
- * newsletter engagement, news-portal pulse, content coverage), scores a fixed
- * niche dictionary against them, snapshots the result, and feeds a weekly
- * AI-written market memo that proposes new products/content into the approval
- * inbox ({prefix}gmr_proposals).
+ * Collects demand signals (community questions, site-search log, CRM
+ * engagement/enquiries, external RSS pulse) into a per-niche opportunity
+ * matrix, scores each niche 0-100, and feeds the top opportunities to the
+ * LLM memo generator (see class-gabochie-market-research-ai.php). The memo's
+ * concrete opportunities are upserted into {prefix}gmr_proposals for the
+ * human-in-the-loop approval inbox.
+ *
+ * Tables owned (created via dbDelta on activation):
+ *   {prefix}gmr_proposals — pending/approved/rejected opportunities
+ *   {prefix}gmr_search_log — anonymised internal site-search terms
  *
  * @package Gabochie_Market_Research
  */
@@ -15,24 +19,32 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Market research engine.
+ * Demand intelligence core.
  */
 class Gabochie_Market_Research {
 
 
-	const TABLE_SEARCH  = 'gmr_search_log';
-	const TABLE_PROP    = 'gmr_proposals';
+	const TABLE_PROPOSALS = 'gmr_proposals';
+	const TABLE_SEARCH    = 'gmr_search_log';
 
 	const HOOK_COLLECT = 'gmr_collect';
-	const HOOK_MEMO    = 'gmr_market_memo';
+	const HOOK_MEMO    = 'gmr_weekly_memo';
 
-	const OPT_COLLECT_AT = 'gmr_last_collect';
-	const OPT_SNAPSHOT   = 'gmr_snapshot';
-	const OPT_MEMO       = 'gmr_last_memo';
-	const OPT_MEMO_AT    = 'gmr_last_memo_at';
-	const OPT_MODEL      = 'gmr_ai_model';
-	const OPT_ENABLED    = 'gmr_enabled';
-	const OPT_ERRORS     = 'gmr_errors';
+	const OPT_ENABLED      = 'gmr_enabled';
+	const OPT_AI_MODEL     = 'gmr_ai_model';
+	const OPT_FEEDS        = 'gmr_feeds';
+	const OPT_DIGEST_EMAIL = 'gmr_digest_email';
+	const OPT_LAST_SIGNALS = 'gmr_last_signals';
+	const OPT_LAST_MEMO    = 'gmr_last_memo';
+	const OPT_MEMO_AT      = 'gmr_last_memo_at';
+	const OPT_ERRORS       = 'gmr_errors';
+
+	const STATUS_PENDING  = 'pending';
+	const STATUS_APPROVED = 'approved';
+	const STATUS_REJECTED = 'rejected';
+	const STATUS_DEFERRED = 'deferred';
+
+	const RECENT_DAYS = 30;
 
 	/**
 	 * @var Gabochie_Market_Research|null
@@ -51,39 +63,50 @@ class Gabochie_Market_Research {
 
 	private function __construct() {
 		add_action( 'init', array( $this, 'maybe_install' ) );
-		add_action( 'template_redirect', array( $this, 'maybe_log_search' ) );
-		add_action( self::HOOK_COLLECT, array( $this, 'run_collect' ) );
-		add_action( self::HOOK_MEMO, array( $this, 'run_memo' ) );
+		add_action( 'template_redirect', array( $this, 'log_search' ) );
+		add_action( self::HOOK_COLLECT, array( $this, 'on_collect' ) );
+		add_action( self::HOOK_MEMO, array( $this, 'on_memo' ) );
 	}
 
 	/**
-	 * Identify the search-log table name.
+	 * Cron-safe void wrapper around run_collect().
 	 *
+	 * @return void
+	 */
+	public function on_collect() {
+		$this->run_collect();
+	}
+
+	/**
+	 * Cron-safe void wrapper around run_memo().
+	 *
+	 * @return void
+	 */
+	public function on_memo() {
+		$this->run_memo();
+	}
+
+	/**
+	 * Fully-qualified table name.
+	 *
+	 * @param  string $which TABLE_PROPOSALS or TABLE_SEARCH.
 	 * @return string
 	 */
-	public static function search_table() {
+	public static function table( $which ) {
 		global $wpdb;
-		return $wpdb->prefix . self::TABLE_SEARCH;
+		return $wpdb->prefix . $which;
 	}
 
 	/**
-	 * Identify the proposals table name.
+	 * Does a table exist?
 	 *
-	 * @return string
-	 */
-	public static function proposals_table() {
-		global $wpdb;
-		return $wpdb->prefix . self::TABLE_PROP;
-	}
-
-	/**
-	 * Does the schema exist?
-	 *
+	 * @param  string $which TABLE_PROPOSALS or TABLE_SEARCH.
 	 * @return bool
 	 */
-	public static function ready() {
+	public static function ready( $which ) {
 		global $wpdb;
-		$table = self::search_table();
+		$table = self::table( $which );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
 		return $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) === $table;
 	}
 
@@ -92,551 +115,646 @@ class Gabochie_Market_Research {
 	 */
 	public static function ensure_schema() {
 		global $wpdb;
-		if ( self::ready() ) {
+		if ( self::ready( self::TABLE_PROPOSALS ) && self::ready( self::TABLE_SEARCH ) ) {
 			return;
 		}
 		include_once ABSPATH . 'wp-admin/includes/upgrade.php';
-		$collate = $wpdb->get_charset_collate();
-
-		$search_table = self::search_table();
-		$sql_search   = "CREATE TABLE {$search_table} (
+		$proposals = self::table( self::TABLE_PROPOSALS );
+		$search    = self::table( self::TABLE_SEARCH );
+		$collate   = $wpdb->get_charset_collate();
+		$sql       = "CREATE TABLE {$proposals} (
 			id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-			term VARCHAR(190) NOT NULL,
-			hits INT(10) UNSIGNED NOT NULL DEFAULT 0,
-			ip VARCHAR(45) NOT NULL DEFAULT '',
-			created_at DATETIME NOT NULL,
-			PRIMARY KEY  (id),
-			KEY idx_created (created_at),
-			KEY idx_term (term)
-		) {$collate};";
-		dbDelta( $sql_search );
-
-		$prop_table = self::proposals_table();
-		$sql_prop   = "CREATE TABLE {$prop_table} (
-			id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-			niche VARCHAR(60) NOT NULL,
-			title VARCHAR(200) NOT NULL,
-			product_type VARCHAR(40) NOT NULL DEFAULT '',
-			price_ghes DECIMAL(12,2) NOT NULL DEFAULT 0,
-			opportunity_score TINYINT UNSIGNED NOT NULL DEFAULT 0,
-			audience VARCHAR(160) NOT NULL DEFAULT '',
+			niche VARCHAR(80) NOT NULL DEFAULT '',
+			title VARCHAR(255) NOT NULL DEFAULT '',
+			product_type VARCHAR(40) NOT NULL DEFAULT 'guide',
 			evidence TEXT NULL,
-			rationale TEXT NULL,
+			summary TEXT NULL,
+			price_hint VARCHAR(120) NOT NULL DEFAULT '',
+			opportunity_score INT(11) NOT NULL DEFAULT 0,
 			status VARCHAR(20) NOT NULL DEFAULT 'pending',
+			source VARCHAR(80) NOT NULL DEFAULT 'ai-memo',
 			created_at DATETIME NOT NULL,
 			reviewed_at DATETIME NULL,
 			PRIMARY KEY  (id),
-			UNIQUE KEY uq_niche (niche),
 			KEY idx_status (status),
-			KEY idx_score (opportunity_score)
+			KEY idx_niche (niche),
+			KEY idx_created (created_at)
+		) {$collate};
+		CREATE TABLE {$search} (
+			id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+			term VARCHAR(190) NOT NULL DEFAULT '',
+			ip_hash VARCHAR(64) NOT NULL DEFAULT '',
+			hits INT(11) NOT NULL DEFAULT 0,
+			created_at DATETIME NOT NULL,
+			PRIMARY KEY  (id),
+			KEY idx_term (term),
+			KEY idx_created (created_at)
 		) {$collate};";
-		dbDelta( $sql_prop );
+		dbDelta( $sql );
 	}
 
 	/**
-	 * Activation + first-load bootstrap (idempotent): create tables, schedule
-	 * the daily collector + weekly memo, seed defaults.
+	 * Activation + first-load bootstrap (idempotent).
 	 */
 	public function maybe_install() {
 		self::ensure_schema();
+		if ( ! get_option( self::OPT_ENABLED ) ) {
+			add_option( self::OPT_ENABLED, '1' );
+		}
+		if ( ! get_option( self::OPT_AI_MODEL ) ) {
+			add_option( self::OPT_AI_MODEL, 'gemini-3.5-flash' );
+		}
+		if ( ! get_option( self::OPT_DIGEST_EMAIL ) ) {
+			add_option( self::OPT_DIGEST_EMAIL, get_option( 'admin_email' ) );
+		}
+		$this->ensure_crons();
+	}
+
+	/**
+	 * Schedule the daily collect + weekly memo crons (idempotent).
+	 */
+	public function ensure_crons() {
 		if ( ! wp_next_scheduled( self::HOOK_COLLECT ) ) {
 			wp_schedule_event( time() + HOUR_IN_SECONDS, 'daily', self::HOOK_COLLECT );
 		}
 		if ( ! wp_next_scheduled( self::HOOK_MEMO ) ) {
-			wp_schedule_event( time() + DAY_IN_SECONDS, 'weekly', self::HOOK_MEMO );
-		}
-		if ( false === get_option( self::OPT_ENABLED ) ) {
-			update_option( self::OPT_ENABLED, '1' );
-		}
-		if ( false === get_option( self::OPT_MODEL ) ) {
-			update_option( self::OPT_MODEL, 'gemini-3.5-flash' );
+			// Next Monday 06:00 local; guard against weekday drift by just +6 days.
+			wp_schedule_event( strtotime( 'next monday 06:00' ), 'weekly', self::HOOK_MEMO );
 		}
 	}
 
 	/**
-	 * Record every on-site search term (debounced) so search demand accrues.
+	 * Anonymised internal site-search logging (one row + hit counter per term,
+	 * debounced per IP+term for an hour).
 	 */
-	public function maybe_log_search() {
-		if ( ! is_search() ) {
+	public function log_search() {
+		if ( is_admin() || ! is_search() ) {
 			return;
 		}
-		$term = get_search_query();
+		$term = trim( (string) get_search_query() );
 		if ( '' === $term ) {
 			return;
-		}
-		$this->log_search( $term, (int) $GLOBALS['wp_query']->found_posts );
-	}
-
-	/**
-	 * Insert one search-log row unless the same term was logged recently.
-	 *
-	 * @param string $term
-	 * @param int    $hits
-	 * @return bool
-	 */
-	public function log_search( $term, $hits = 0 ) {
-		global $wpdb;
-		if ( ! self::ready() ) {
-			self::ensure_schema();
-		}
-		$term = trim( mb_substr( sanitize_text_field( (string) $term ), 0, 190 ) );
-		if ( '' === $term ) {
-			return false;
 		}
 		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
-
-		$recent = $wpdb->get_var(
-			$wpdb->prepare(
-				'SELECT id FROM %i WHERE term = %s AND created_at > DATE_SUB(NOW(), INTERVAL 10 MINUTE) ORDER BY id DESC LIMIT 1',
-				self::search_table(),
-				$term
-			)
-		);
-		if ( null !== $recent ) {
-			return true;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$hash = md5( strtolower( $term ) . '|' . $ip );
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions
+		$key = 'gmr_srch_' . substr( $hash, 0, 20 );
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions
+		if ( get_transient( $key ) ) {
+			return;
 		}
+		set_transient( $key, 1, HOUR_IN_SECONDS );
 
-		$rows = $wpdb->insert(
-			self::search_table(),
-			array(
-				'term'       => $term,
-				'hits'       => (int) $hits,
-				'ip'         => $ip,
-				'created_at' => current_time( 'mysql' ),
-			),
-			array( '%s', '%d', '%s', '%s' )
-		);
-		return (bool) $rows;
+		self::ensure_schema();
+		global $wpdb;
+		$table = self::table( self::TABLE_SEARCH );
+		$hits  = 0;
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery
+		$row = $wpdb->get_row( $wpdb->prepare( "SELECT id, hits FROM {$table} WHERE term = %s ORDER BY id DESC LIMIT 1", $term ) );
+		if ( $row ) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery
+			$wpdb->update( $table, array( 'hits' => (int) $row->hits + 1 ), array( 'id' => (int) $row->id ), array( '%d' ), array( '%d' ) );
+		} else {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery
+			$wpdb->insert(
+				$table,
+				array(
+					'term'       => $term,
+					'ip_hash'    => $hash,
+					'hits'       => 1,
+					'created_at' => current_time( 'mysql' ),
+				),
+				array( '%s', '%s', '%d', '%s' )
+			);
+		}
 	}
 
 	/**
-	 * The fixed opportunity dictionary the engine scores against.
+	 * The opportunity niche dictionary. Each niche carries a keyword set used
+	 * to match signals, a product-type default and a GHS price hint for the
+	 * memo writer.
 	 *
-	 * @return array<string,array>
+	 * @return array
 	 */
 	public function niches() {
 		return array(
-			'land-title-verification' => array(
-				'label'    => 'Land title & document verification',
-				'keywords' => array( 'title', 'document', 'fraud', 'scam', 'verify', 'deed', 'stamp duty', 'registration', 'land dispute' ),
+			'stalled-recovery' => array(
+				'label'        => 'Stalled build recovery',
+				'keywords'     => array( 'stalled', 'unfinished', 'uncompleted', 'abandoned', 'restart build', 'finish build' ),
+				'product_type' => 'diagnostic',
+				'price_hint'   => 'GHS 1,500',
 			),
-			'stalled-recovery'        => array(
-				'label'    => 'Stalled build recovery',
-				'keywords' => array( 'stalled', 'uncompleted', 'finish or restart', 'incomplete', 'abandoned', 'recovery', 'completion' ),
+			'land-acquisition' => array(
+				'label'        => 'Land & plot acquisition',
+				'keywords'     => array( 'land', 'plot', 'acre', 'acquisition', 'title' ),
+				'product_type' => 'service',
+				'price_hint'   => 'GHS 1,000',
 			),
-			'diaspora-buying'         => array(
-				'label'    => 'Diaspora remote buying',
-				'keywords' => array( 'diaspora', 'uk', 'usa', 'canada', 'abroad', 'remotely', 'remittances', 'buy land from abroad' ),
+			'verification'     => array(
+				'label'        => 'Document & title verification',
+				'keywords'     => array( 'scam', 'fraud', 'fake title', 'verification', 'affidavit', 'document' ),
+				'product_type' => 'service',
+				'price_hint'   => 'GHS 750',
 			),
-			'build-cost'              => array(
-				'label'    => 'Build cost & budget intelligence',
-				'keywords' => array( 'cost', 'price', 'budget', 'estimate', 'material', 'cement', 'per m2', 'quote', 'build' ),
+			'diaspora'         => array(
+				'label'        => 'Diaspora remote building',
+				'keywords'     => array( 'diaspora', 'remote', 'abroad', 'from uk', 'from usa', 'remittance' ),
+				'product_type' => 'guide',
+				'price_hint'   => 'GHS 1,000',
 			),
-			'rental-yield'            => array(
-				'label'    => 'Rental yield & short lets',
-				'keywords' => array( 'rent', 'yield', 'airbnb', 'short let', 'income', 'passive income', 'lease' ),
+			'financing'        => array(
+				'label'        => 'Build financing & payment plans',
+				'keywords'     => array( 'mortgage', 'loan', 'financing', 'payment plan', 'instalment', 'salary' ),
+				'product_type' => 'guide',
+				'price_hint'   => 'GHS 500',
 			),
-			'financing'               => array(
-				'label'    => 'Financing & payment plans',
-				'keywords' => array( 'mortgage', 'loan', 'financing', 'payment plan', 'installment', 'payment' ),
+			'price-intel'      => array(
+				'label'        => 'Costs, materials & price board',
+				'keywords'     => array( 'cost', 'price board', 'material', 'rebar', 'cement', 'quote', 'estimate' ),
+				'product_type' => 'tool',
+				'price_hint'   => 'Free',
 			),
-			'off-plan'                => array(
-				'label'    => 'Off-plan & pre-sale units',
-				'keywords' => array( 'off-plan', 'presale', 'pre-sale', 'under construction', 'units', 'developer' ),
+			'rental-yield'     => array(
+				'label'        => 'Rental yield & short lets',
+				'keywords'     => array( 'rent', 'rental', 'airbnb', 'yield', 'short let', 'investment return' ),
+				'product_type' => 'guide',
+				'price_hint'   => 'GHS 750',
 			),
-			'commercial'              => array(
-				'label'    => 'Commercial & shop space',
-				'keywords' => array( 'commercial', 'shop', 'office', 'retail', 'warehouse', 'workspace' ),
+			'off-plan'         => array(
+				'label'        => 'Off-plan & joint ventures',
+				'keywords'     => array( 'off-plan', 'pre-sale', 'forward fund', 'joint venture', 'jv', 'partner' ),
+				'product_type' => 'service',
+				'price_hint'   => 'GHS 2,000',
 			),
-			'renovation'              => array(
-				'label'    => 'Renovation & turnaround',
-				'keywords' => array( 'renovate', 'renovation', 'turnaround', 'refurbish', 'upgrade', 'remodel' ),
+			'commercial'       => array(
+				'label'        => 'Commercial development',
+				'keywords'     => array( 'commercial', 'office', 'shop', 'warehouse', 'retail', 'showroom' ),
+				'product_type' => 'service',
+				'price_hint'   => 'GHS 5,000',
 			),
-			'permits'                 => array(
-				'label'    => 'Permits & planning approvals',
-				'keywords' => array( 'permit', 'approval', 'planning', 'district assembly', 'legalise', 'zoning' ),
+			'gated-estate'     => array(
+				'label'        => 'Gated estates & communities',
+				'keywords'     => array( 'gated', 'estate', 'community', 'serviced', 'compound' ),
+				'product_type' => 'service',
+				'price_hint'   => 'GHS 3,000',
 			),
-			'eco-build'               => array(
-				'label'    => 'Eco & sustainable build',
-				'keywords' => array( 'eco', 'sustainable', 'green', 'energy', 'solar', 'locally sourced' ),
+			'renovation'       => array(
+				'label'        => 'Renovation & turnaround',
+				'keywords'     => array( 'renovation', 'refurbish', 'remodel', 'finish work', 'extension', 'turnaround' ),
+				'product_type' => 'tool',
+				'price_hint'   => 'GHS 500',
 			),
-			'prefab-modular'          => array(
-				'label'    => 'Prefab & modular construction',
-				'keywords' => array( 'prefab', 'modular', 'precast', 'container', 'panelised' ),
+			'prefab'           => array(
+				'label'        => 'Prefab & modular methods',
+				'keywords'     => array( 'prefab', 'modular', 'container', 'steel frame', 'precast' ),
+				'product_type' => 'guide',
+				'price_hint'   => 'GHS 750',
 			),
-			'land-banking'            => array(
-				'label'    => 'Land investment & banking',
-				'keywords' => array( 'land', 'plot', 'investment', 'appreciation', 'buy land', 'resale', 'acquisition' ),
+			'green-build'      => array(
+				'label'        => 'Green & solar building',
+				'keywords'     => array( 'solar', 'eco', 'sustainable', 'green', 'energy' ),
+				'product_type' => 'guide',
+				'price_hint'   => 'GHS 500',
 			),
-			'gated-community'         => array(
-				'label'    => 'Gated community development',
-				'keywords' => array( 'gated', 'estate', 'community 25', 'compound', 'serviced plot' ),
-			),
-			'student-housing'         => array(
-				'label'    => 'Student & HMO housing',
-				'keywords' => array( 'student', 'hostel', 'hmo', 'dormitory', 'campus' ),
+			'purpose-built'    => array(
+				'label'        => 'Purpose-built housing (student/senior)',
+				'keywords'     => array( 'student housing', 'hostel', 'senior housing', 'care home', 'rental blocks' ),
+				'product_type' => 'service',
+				'price_hint'   => 'GHS 5,000',
 			),
 		);
 	}
 
 	/**
-	 * Run the daily collector: gather every signal source, score the niches,
-	 * persist the snapshot. Safe to call repeatedly (idempotent).
-	 *
-	 * @return array Snapshot persisted.
-	 */
-	public function run_collect() {
-		self::ensure_schema();
-		$signals = $this->collect_signals();
-		$scores  = $this->score_niches( $signals );
-		$snap    = array(
-			'collected_at' => current_time( 'mysql' ),
-			'signals'      => $signals,
-			'scores'       => $scores,
-		);
-		update_option( self::OPT_SNAPSHOT, $snap );
-		update_option( self::OPT_COLLECT_AT, $snap['collected_at'] );
-		return $snap;
-	}
-
-	/**
-	 * Gather raw demand signals from first-party sources.
+	 * Niche opportunity matrix from current signals. Each row returns the raw
+	 * counts per signal source plus a weighted 0-100 score.
 	 *
 	 * @return array
 	 */
-	private function collect_signals() {
-		global $wpdb;
+	public function collect() {
+		self::ensure_schema();
+		$signals = $this->raw_signals();
+		$out     = array();
 
-		$signals = array(
-			'search'    => $this->search_signal(),
-			'community' => $this->community_signal(),
-			'enquiries' => $this->enquiry_signal(),
-			'newsletter'=> $this->newsletter_signal(),
-			'feed'      => $this->feed_signal(),
-			'coverage'  => $this->coverage_signal(),
-		);
-		return $signals;
-	}
+		foreach ( $this->niches() as $slug => $niche ) {
+			$counts = $this->counts_for( $slug, $niche['keywords'], $signals );
 
-	/**
-	 * Site-search terms from the last 30 days.
-	 *
-	 * @return array{terms:array,total:int,days:int}
-	 */
-	private function search_signal() {
-		global $wpdb;
-		$rows = $wpdb->get_results(
-			$wpdb->prepare(
-				'SELECT term, SUM(hits) AS hits, COUNT(*) AS cnt FROM %i WHERE created_at > DATE_SUB(NOW(), INTERVAL 30 DAY) GROUP BY term ORDER BY cnt DESC LIMIT 60',
-				self::search_table()
-			),
-			ARRAY_A
-		);
-		$terms = array();
-		$total = 0;
-		foreach ( (array) $rows as $row ) {
-			$terms[] = array(
-				'term' => (string) $row['term'],
-				'hits' => (int) $row['hits'],
-				'cnt'  => (int) $row['cnt'],
+			// Weights: questions are the strongest voiced demand.
+			$score = (int) round(
+				$counts['questions'] * 30
+				+ $counts['searches'] * 20
+				+ $counts['enquiries'] * 25
+				+ $counts['engaged'] * 12
+				+ $counts['rss'] * 5
+				+ $this->coverage_gap( $counts['coverage'] ) * 12
 			);
-			$total += (int) $row['cnt'];
-		}
-		return array( 'terms' => $terms, 'total' => $total, 'days' => 30 );
-	}
+			$score = min( 100, $score );
 
-	/**
-	 * Community questions: count by niche keyword match over title + content.
-	 *
-	 * @return array{total:int, by_niche:array}
-	 */
-	private function community_signal() {
-		if ( ! post_type_exists( 'gabochie_question' ) ) {
-			return array( 'total' => 0, 'by_niche' => array() );
+			$out[ $slug ] = array(
+				'label'        => $niche['label'],
+				'product_type' => $niche['product_type'],
+				'price_hint'   => $niche['price_hint'],
+				'questions'    => $counts['questions'],
+				'searches'     => $counts['searches'],
+				'enquiries'    => $counts['enquiries'],
+				'engaged'      => $counts['engaged'],
+				'rss'          => $counts['rss'],
+				'coverage'     => $counts['coverage'],
+				'score'        => $score,
+			);
 		}
-		$posts = get_posts(
+
+		// Sort by score, keeping the array keyed by slug.
+		uasort(
+			$out,
+			static function ( $a, $b ) {
+				return (int) $b['score'] <=> (int) $a['score'];
+			}
+		);
+
+		update_option(
+			self::OPT_LAST_SIGNALS,
 			array(
-				'post_type'      => 'gabochie_question',
-				'post_status'    => 'publish',
-				'posts_per_page' => 100,
-				'fields'         => 'ids',
-				'date_query'     => array(
-					array( 'after' => '30 days ago' ),
-				),
+				'generated_at' => gmdate( 'Y-m-d H:i:s' ),
+				'window_days'  => self::RECENT_DAYS,
+				'niches'       => $out,
 			)
 		);
-		$by_niche = array();
-		foreach ( (array) $posts as $id ) {
-			$text = strtolower( (string) get_the_title( $id ) . ' ' . wp_strip_all_tags( (string) get_post_field( 'post_content', $id ) ) );
-			foreach ( $this->niches() as $slug => $n ) {
-				foreach ( $n['keywords'] as $kw ) {
-					if ( false !== strpos( $text, $kw ) ) {
-						$by_niche[ $slug ] = (int) ( $by_niche[ $slug ] ?? 0 ) + 1;
-						break;
-					}
-				}
-			}
-		}
-		return array( 'total' => count( (array) $posts ), 'by_niche' => $by_niche );
+		return $out;
 	}
 
 	/**
-	 * Marketplace + lead-hub enquiries in the CRM (list_key=leadhub-property).
+	 * Gather raw cross-source data buckets used by everything below.
 	 *
-	 * @return array{total:int, by_niche:array}
+	 * @return array
 	 */
-	private function enquiry_signal() {
+	private function raw_signals() {
 		global $wpdb;
-		if ( ! function_exists( 'gabochie_crm_ready' ) || ! gabochie_crm_ready() ) {
-			return array( 'total' => 0, 'by_niche' => array() );
-		}
-		$table = $wpdb->prefix . 'gab_contacts';
-		$rows  = $wpdb->get_results(
-			$wpdb->prepare(
-				'SELECT source, tags, list_key FROM %i WHERE list_key = %s AND created_at > DATE_SUB(NOW(), INTERVAL 30 DAY)',
-				$table,
-				'leadhub-property'
-			),
-			ARRAY_A
-		);
-		$by_niche = array();
-		foreach ( (array) $rows as $row ) {
-			$text = strtolower( (string) $row['source'] . ' ' . (string) $row['tags'] );
-			foreach ( $this->niches() as $slug => $n ) {
-				foreach ( $n['keywords'] as $kw ) {
-					if ( false !== strpos( $text, $kw ) ) {
-						$by_niche[ $slug ] = (int) ( $by_niche[ $slug ] ?? 0 ) + 1;
-						break;
-					}
-				}
-			}
-		}
-		return array( 'total' => count( (array) $rows ), 'by_niche' => $by_niche );
-	}
 
-	/**
-	 * Newsletter audience health: subscribed count, engaged-30d, unsub map size.
-	 *
-	 * @return array{subscribed:int, engaged_30d:int, unsubs:int}
-	 */
-	private function newsletter_signal() {
-		$subscribed = 0;
-		$engaged    = 0;
-		$unsubs     = 0;
-		if ( function_exists( 'gabochie_crm_subscribers' ) && function_exists( 'gabochie_crm_ready' ) && gabochie_crm_ready() ) {
-			$subscribed = count( gabochie_crm_subscribers() );
-			global $wpdb;
-			$table = $wpdb->prefix . 'gab_contacts';
-			$engaged = (int) $wpdb->get_var(
-				$wpdb->prepare(
-					'SELECT COUNT(*) FROM %i WHERE last_engaged_at > DATE_SUB(NOW(), INTERVAL 30 DAY)',
-					$table
+		$since = gmdate( 'Y-m-d H:i:s', time() - self::RECENT_DAYS * DAY_IN_SECONDS );
+
+		// Community questions (CPT 'gabochie_question') in the window, as IDs.
+		$question_ids = array();
+		if ( post_type_exists( 'gabochie_question' ) ) {
+			$question_ids = get_posts(
+				array(
+					'post_type'      => 'gabochie_question',
+					'post_status'    => 'publish',
+					'posts_per_page' => 200,
+					'fields'         => 'ids',
+					'date_query'     => array( array( 'after' => $since ) ),
 				)
 			);
 		}
-		if ( function_exists( 'gabochie_newsletter_unsubs' ) ) {
-			$unsubs = count( gabochie_newsletter_unsubs() );
-		}
-		return array( 'subscribed' => (int) $subscribed, 'engaged_30d' => (int) $engaged, 'unsubs' => (int) $unsubs );
-	}
 
-	/**
-	 * News-portal feed pulse: how many headlines matched each niche recently.
-	 *
-	 * @return array{total:int, by_niche:array}
-	 */
-	private function feed_signal() {
-		if ( ! class_exists( 'Gabochie_News_Portal' ) ) {
-			return array( 'total' => 0, 'by_niche' => array() );
+		// Site-search terms in the window.
+		$searches = array();
+		if ( self::ready( self::TABLE_SEARCH ) ) {
+			$table = self::table( self::TABLE_SEARCH );
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery
+			$rows = $wpdb->get_results( $wpdb->prepare( "SELECT term FROM {$table} WHERE created_at >= %s", $since ) );
+			foreach ( (array) $rows as $row ) {
+				$searches[] = strtolower( (string) $row->term );
+			}
 		}
-		$posts = get_posts(
-			array(
-				'post_type'      => 'gd_news',
-				'post_status'    => 'publish',
-				'posts_per_page' => 200,
-				'fields'         => 'ids',
-				'date_query'     => array(
-					array( 'after' => '14 days ago' ),
-				),
-			)
+
+		// CRM signal: recent engagements + property/enquiry leads (when the CRM exists).
+		$engaged   = 0;
+		$enquiries = 0;
+		if ( class_exists( 'Gabochie_Crm' ) && Gabochie_Crm::ready() ) {
+			$engaged   = $this->crm_count_where( 'last_engaged_at', '>=', $since );
+			$enquiries = $this->crm_count_where( 'source', '=', 'property-listing' );
+		}
+
+		return array(
+			'since'      => $since,
+			'questions'  => $question_ids,
+			'searches'   => $searches,
+			'engaged'    => (int) $engaged,
+			'enquiries'  => (int) $enquiries,
+			'rss_titles' => $this->rss_titles(),
 		);
-		$by_niche = array();
-		foreach ( (array) $posts as $id ) {
-			$text = strtolower( (string) get_the_title( $id ) . ' ' . wp_strip_all_tags( (string) get_post_field( 'post_content', $id ) ) );
-			foreach ( $this->niches() as $slug => $n ) {
-				foreach ( $n['keywords'] as $kw ) {
-					if ( false !== strpos( $text, $kw ) ) {
-						$by_niche[ $slug ] = (int) ( $by_niche[ $slug ] ?? 0 ) + 1;
-						break;
-					}
-				}
-			}
-		}
-		return array( 'total' => count( (array) $posts ), 'by_niche' => $by_niche );
 	}
 
 	/**
-	 * Content coverage: published posts + listings + questions mentioning each
-	 * niche — the "gap" side of the opportunity (low coverage = more room).
+	 * Count CRM rows matching a column/value predicate safely.
 	 *
-	 * @return array{by_niche:array}
-	 */
-	private function coverage_signal() {
-		$posts = get_posts(
-			array(
-				'post_type'      => array( 'post', Gabochie_Market_Research::post_types() ),
-				'post_status'    => 'publish',
-				'posts_per_page' => 200,
-				'fields'         => 'ids',
-			)
-		);
-		$by_niche = array();
-		foreach ( (array) $posts as $id ) {
-			$text = strtolower( (string) get_the_title( $id ) . ' ' . wp_strip_all_tags( (string) get_post_field( 'post_content', $id ) ) );
-			foreach ( $this->niches() as $slug => $n ) {
-				foreach ( $n['keywords'] as $kw ) {
-					if ( false !== strpos( $text, $kw ) ) {
-						$by_niche[ $slug ] = (int) ( $by_niche[ $slug ] ?? 0 ) + 1;
-						break;
-					}
-				}
-			}
-		}
-		return array( 'by_niche' => $by_niche );
-	}
-
-	/**
-	 * Post types to include in the coverage probe (own CPTs when registered).
-	 *
-	 * @return array
-	 */
-	public static function post_types() {
-		$types = array();
-		foreach ( array( 'gd_property', 'gabochie_question', 'gd_news' ) as $type ) {
-			if ( post_type_exists( $type ) ) {
-				$types[] = $type;
-			}
-		}
-		return $types;
-	}
-
-	/**
-	 * Score every niche from the signals. Higher = more unmet, monetizable need.
-	 *
-	 * @param  array $signals
-	 * @return array<string,array{score:int,search:int,community:int,enquiries:int,feed:int,gap:int}> Sorted.
-	 */
-	public function score_niches( array $signals ) {
-		$raw = array();
-
-		foreach ( $this->niches() as $slug => $n ) {
-			$search    = $this->niche_search_count( $slug, $signals['search']['terms'] ?? array() );
-			$community = (int) ( $signals['community']['by_niche'][ $slug ] ?? 0 );
-			$enq       = (int) ( $signals['enquiries']['by_niche'][ $slug ] ?? 0 );
-			$feed      = (int) ( $signals['feed']['by_niche'][ $slug ] ?? 0 );
-			$coverage  = (int) ( $signals['coverage']['by_niche'][ $slug ] ?? 0 );
-
-			$raw[ $slug ] = array(
-				'search'    => $search,
-				'community' => $community,
-				'enquiries' => $enq,
-				'feed'      => $feed,
-				'coverage'  => $coverage,
-			);
-		}
-
-		$max_search    = max( array_column( $raw, 'search' ) ) ?: 1;
-		$max_community = max( array_column( $raw, 'community' ) ) ?: 1;
-		$max_enq       = max( array_column( $raw, 'enquiries' ) ) ?: 1;
-		$max_feed      = max( array_column( $raw, 'feed' ) ) ?: 1;
-
-		$scores = array();
-		foreach ( $raw as $slug => $r ) {
-			$gap = $r['coverage'] <= 2 ? 10 : ( $r['coverage'] <= 6 ? 5 : 0 );
-			$score = (int) round(
-				( 40 * ( $r['search'] / $max_search ) )
-				+ ( 25 * ( $r['community'] / $max_community ) )
-				+ ( 15 * ( $r['enquiries'] / $max_enq ) )
-				+ ( 10 * ( $r['feed'] / $max_feed ) )
-				+ $gap
-			);
-			$scores[ $slug ] = array(
-				'score'     => min( 100, $score ),
-				'search'    => $r['search'],
-				'community' => $r['community'],
-				'enquiries' => $r['enquiries'],
-				'feed'      => $r['feed'],
-				'coverage'  => $r['coverage'],
-				'gap'       => $gap,
-			);
-		}
-
-		uasort(
-			$scores,
-			static function ( $a, $b ) {
-				return (int) $b['score'] - (int) $a['score'];
-			}
-		);
-		return $scores;
-	}
-
-	/**
-	 * Sum 30-day site-search frequency for a niche's keywords.
-	 *
-	 * @param  string $slug
-	 * @param  array  $terms
+	 * @param  string $col
+	 * @param  string $op
+	 * @param  string $value
 	 * @return int
 	 */
-	private function niche_search_count( $slug, array $terms ) {
-		$n        = $this->niches()[ $slug ] ?? array( 'keywords' => array() );
-		$keywords = array_map( 'strtolower', (array) $n['keywords'] );
-		$count    = 0;
-		foreach ( $terms as $row ) {
-			$term = strtolower( (string) $row['term'] );
-			foreach ( $keywords as $kw ) {
-				if ( false !== strpos( $term, $kw ) ) {
-					$count += (int) $row['cnt'];
+	private function crm_count_where( $col, $op, $value ) {
+		global $wpdb;
+		static $allowed = array( 'last_engaged_at', 'source' );
+		if ( ! in_array( $col, $allowed, true ) ) {
+			return 0;
+		}
+		$table = Gabochie_Crm::table();
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		return (int) $wpdb->get_var(
+			$wpdb->prepare(
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				"SELECT COUNT(*) FROM {$table} WHERE {$col} {$op} %s",
+				$value
+			)
+		);
+	}
+
+	/**
+	 * Fetch latest RSS headlines from configured feeds for keyword matching.
+	 *
+	 * @return array List of lowercase titles.
+	 */
+	private function rss_titles() {
+		$feeds  = array_map( 'esc_url_raw', (array) get_option( self::OPT_FEEDS, array() ) );
+		$titles = array();
+		foreach ( $feeds as $feed ) {
+			if ( '' === $feed ) {
+				continue;
+			}
+			$rss = fetch_feed( $feed );
+			if ( is_wp_error( $rss ) ) {
+				continue;
+			}
+			$items = $rss->get_items( 0, 20 );
+			foreach ( $items as $item ) {
+				$title = trim( (string) $item->get_title() );
+				if ( '' !== $title ) {
+					$titles[] = strtolower( $title );
+				}
+			}
+		}
+		return $titles;
+	}
+
+	/**
+	 * Count signal hits + existing coverage per niche.
+	 *
+	 * @param  string $slug
+	 * @param  array  $keywords
+	 * @param  array  $signals
+	 * @return array
+	 */
+	private function counts_for( $slug, $keywords, $signals ) {
+		$questions = 0;
+		$searches  = 0;
+		$rss       = 0;
+
+		foreach ( (array) $signals['questions'] as $qid ) {
+			$hay = strtolower( (string) get_the_title( $qid ) . ' ' . (string) get_the_excerpt( $qid ) );
+			foreach ( $keywords as $k ) {
+				if ( false !== strpos( $hay, $k ) ) {
+					++$questions;
 					break;
 				}
 			}
 		}
-		return $count;
-	}
-
-	/**
-	 * Trigger a memo generation (cron + admin + CLI entry point).
-	 *
-	 * @return array|null Memo data, or null on failure.
-	 */
-	public function run_memo() {
-		$snap = get_option( self::OPT_SNAPSHOT, array() );
-		if ( empty( $snap ) || empty( $snap['scores'] ) ) {
-			$snap = $this->run_collect();
+		foreach ( (array) $signals['searches'] as $term ) {
+			foreach ( $keywords as $k ) {
+				if ( false !== strpos( $term, $k ) ) {
+					++$searches;
+					break;
+				}
+			}
 		}
-		return Gabochie_Market_Research_AI::instance()->generate_memo( $snap );
+		foreach ( (array) $signals['rss_titles'] as $title ) {
+			foreach ( $keywords as $k ) {
+				if ( false !== strpos( $title, $k ) ) {
+					++$rss;
+					break;
+				}
+			}
+		}
+
+		return array(
+			'questions' => (int) $questions,
+			'searches'  => (int) $searches,
+			'enquiries' => (int) $signals['enquiries'],
+			'engaged'   => (int) $signals['engaged'],
+			'rss'       => (int) $rss,
+			'coverage'  => $this->coverage_count( $keywords ),
+		);
 	}
 
 	/**
-	 * Append an entry to the rolling error log (last 10).
+	 * Published posts whose title mentions any keyword (coverage baseline).
+	 *
+	 * @param  array $keywords
+	 * @return int
+	 */
+	private function coverage_count( $keywords ) {
+		global $wpdb;
+		$like = array();
+		foreach ( $keywords as $k ) {
+			$like[] = $wpdb->esc_like( $k );
+		}
+		$counts = 0;
+		foreach ( $like as $term ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$counts += (int) $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_status = 'publish' AND post_type = 'post' AND post_title LIKE %s",
+					'%' . $term . '%'
+				)
+			);
+		}
+		return (int) $counts;
+	}
+
+	/**
+	 * Coverage gap bonus: under-covered niches rank higher (room to grow),
+	 * flat at 2+ posts.
+	 *
+	 * @param  int $coverage
+	 * @return int
+	 */
+	private function coverage_gap( $coverage ) {
+		return max( 0, 2 - $coverage );
+	}
+
+	/**
+	 * Collect now (cron + CLI + admin) — returns the new matrix.
+	 *
+	 * @return array
+	 */
+	public function run_collect() {
+		return $this->collect();
+	}
+
+	/**
+	 * Generate the weekly market memo: LLM turns the scored matrix into 3-5
+	 * concrete product opportunities, upserted as pending proposals.
+	 *
+	 * @param  array $niches Optional pre-collected matrix (defaults to fresh collect).
+	 * @return array {summary, opportunities} or {error}
+	 */
+	public function run_memo( array $niches = array() ) {
+		self::ensure_schema();
+		$matrix = empty( $niches ) ? $this->collect() : $niches;
+
+		$summarize = array();
+		foreach ( $matrix as $slug => $row ) {
+			$summarize[] = $slug . '|' . $row['label'] . '|score:' . $row['score'] . '|q:' . $row['questions'] . '|s:' . $row['searches'] . '|e:' . $row['enquiries'] . '|eng:' . $row['engaged'] . '|rss:' . $row['rss'] . '|cov:' . $row['coverage'] . '|product:' . $row['product_type'] . '|price:' . $row['price_hint'];
+		}
+
+		$ai   = Gabochie_Market_Research_AI::instance();
+		$json = $ai->generate_memo( $summarize );
+		$data = json_decode( (string) $json, true );
+		if ( ! is_array( $data ) || empty( $data['summary'] ) ) {
+			$msg = 'memo: LLM returned invalid JSON';
+			$this->log_error( $msg );
+			return array( 'error' => $msg );
+		}
+
+		$upserted = $this->apply_proposals( $data );
+
+		update_option( self::OPT_LAST_MEMO, $data );
+		update_option( self::OPT_MEMO_AT, current_time( 'mysql' ) );
+		unset( $data['opportunities'] );
+		$data['upserted'] = $upserted;
+
+		$this->send_digest( $data );
+		return $data;
+	}
+
+	/**
+	 * Validate + upsert the memo's proposals (dedupe on niche+title).
+	 *
+	 * @param  array $data
+	 * @return int Number created.
+	 */
+	private function apply_proposals( $data ) {
+		global $wpdb;
+		$table         = self::table( self::TABLE_PROPOSALS );
+		$created       = 0;
+		$allow_product = array( 'guide', 'diagnostic', 'tool', 'service', 'membership' );
+
+		foreach ( (array) $data['opportunities'] as $op ) {
+			$niche = isset( $op['niche'] ) ? sanitize_key( (string) $op['niche'] ) : '';
+			$title = isset( $op['title'] ) ? sanitize_text_field( (string) $op['title'] ) : '';
+			if ( '' === $niche || '' === $title ) {
+				continue;
+			}
+			$product_type = isset( $op['product_type'] ) ? sanitize_key( (string) $op['product_type'] ) : 'guide';
+			if ( ! in_array( $product_type, $allow_product, true ) ) {
+				$product_type = 'guide';
+			}
+			$score = isset( $op['opportunity_score'] ) ? max( 0, min( 100, (int) $op['opportunity_score'] ) ) : 0;
+
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery
+			$exists = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$table} WHERE niche = %s AND title = %s LIMIT 1", $niche, $title ) );
+			if ( $exists ) {
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery
+				$wpdb->update(
+					$table,
+					array(
+						'product_type'      => $product_type,
+						'opportunity_score' => $score,
+						'summary'           => isset( $op['rationale'] ) ? sanitize_textarea_field( (string) $op['rationale'] ) : '',
+						'price_hint'        => isset( $op['pricing_hint'] ) ? sanitize_text_field( (string) $op['pricing_hint'] ) : '',
+						'evidence'          => wp_json_encode( $op ),
+					),
+					array( 'id' => (int) $exists ),
+					array( '%s', '%d', '%s', '%s', '%s' ),
+					array( '%d' )
+				);
+				continue;
+			}
+
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery
+			$wpdb->insert(
+				$table,
+				array(
+					'niche'             => $niche,
+					'title'             => $title,
+					'product_type'      => $product_type,
+					'evidence'          => wp_json_encode( $op ),
+					'summary'           => isset( $op['rationale'] ) ? sanitize_textarea_field( (string) $op['rationale'] ) : '',
+					'price_hint'        => isset( $op['pricing_hint'] ) ? sanitize_text_field( (string) $op['pricing_hint'] ) : '',
+					'opportunity_score' => $score,
+					'status'            => self::STATUS_PENDING,
+					'source'            => 'ai-memo',
+					'created_at'        => current_time( 'mysql' ),
+				),
+				array( '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s' )
+			);
+			++$created;
+		}
+		return $created;
+	}
+
+	/**
+	 * Email the memo digest to the configured address via wp_mail
+	 * (gabochie-email → Brevo).
+	 *
+	 * @param  array $data Memo summary (opportunities stripped).
+	 * @return void
+	 */
+	private function send_digest( $data ) {
+		$to = (string) get_option( self::OPT_DIGEST_EMAIL, get_option( 'admin_email' ) );
+		if ( '' === $to || ! is_email( $to ) ) {
+			return;
+		}
+		$subject = '[Gabochie Market Research] Weekly opportunity memo';
+		$body    = '<h2>Weekly market memo</h2>'
+			. '<p>' . esc_html( (string) $data['summary'] ) . '</p>'
+			. '<p>Review pending proposals in WP Admin → Market Research → Inbox.</p>';
+		$headers = array( 'Content-Type: text/html; charset=UTF-8' );
+		wp_mail( $to, $subject, $body, $headers );
+	}
+
+	/**
+	 * Proposal status mutation with review timestamp.
+	 *
+	 * @param  int    $id
+	 * @param  string $status
+	 * @return bool
+	 */
+	public function set_proposal_status( $id, $status ) {
+		global $wpdb;
+		$allow = array( self::STATUS_PENDING, self::STATUS_APPROVED, self::STATUS_REJECTED, self::STATUS_DEFERRED );
+		if ( ! in_array( $status, $allow, true ) ) {
+			return false;
+		}
+		$table = self::table( self::TABLE_PROPOSALS );
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery
+		return (bool) $wpdb->update(
+			$table,
+			array(
+				'status'      => $status,
+				'reviewed_at' => current_time( 'mysql' ),
+			),
+			array( 'id' => (int) $id ),
+			array( '%s', '%s' ),
+			array( '%d' )
+		);
+	}
+
+	/**
+	 * @param int $id
+	 * @return bool
+	 */
+	public function delete_proposal( $id ) {
+		global $wpdb;
+		$table = self::table( self::TABLE_PROPOSALS );
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery
+		return (bool) $wpdb->delete( $table, array( 'id' => (int) $id ), array( '%d' ) );
+	}
+
+	/**
+	 * Append to the rolling error log (last N=20).
 	 *
 	 * @param string $message
 	 */
 	public static function log_error( $message ) {
-		$log   = (array) get_option( self::OPT_ERRORS, array() );
+		$log   = get_option( self::OPT_ERRORS, array() );
 		$log[] = array(
-			'time'  => current_time( 'mysql' ),
+			'time'  => gmdate( 'Y-m-d H:i:s' ),
 			'error' => (string) $message,
 		);
-		$log = array_slice( $log, -10 );
+		$log   = array_slice( $log, -20 );
 		update_option( self::OPT_ERRORS, $log );
-	}
-
-	/**
-	 * Read the current snapshot with defaults.
-	 *
-	 * @return array
-	 */
-	public static function snapshot() {
-		return (array) get_option( self::OPT_SNAPSHOT, array() );
 	}
 }
