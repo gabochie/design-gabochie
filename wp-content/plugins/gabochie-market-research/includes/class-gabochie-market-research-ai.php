@@ -54,20 +54,22 @@ class Gabochie_Market_Research_AI {
 	/**
 	 * Generate the memo JSON for the given scored matrix.
 	 *
-	 * @param  array $rows Summarized niche lines.
+	 * @param  array  $rows       Summarized niche lines.
+	 * @param  bool   $json_forced Skip the prose-capable chain and call the
+	 *                             JSON-mime provider directly.
 	 * @return string
 	 */
-	public function generate_memo( array $rows ) {
+	public function generate_memo( array $rows, $json_forced = false ) {
 		$system = 'You are the market-research strategist for Gabochie Design, a Ghana '
 			. 'development intelligence platform (property + construction). Each week you turn a '
 			. 'scored opportunity matrix into a decision-useful memo for the founder. '
 			. 'Doctrine: use ONLY the provided signal counts. Never invent demand data, market '
 			. 'sizes or revenue figures. Price hints come from the matrix. '
-			. 'Return STRICT JSON (no markdown fences, no commentary).';
+			. 'Return STRICT JSON only — no markdown code fences, no commentary outside the object.';
 
 		$prompt = "Weekly opportunity matrix (window: 30 days):\n\n"
 			. implode( "\n", $rows ) . "\n\n"
-			. "Return a JSON object with exactly:\n"
+			. "Return exactly one raw JSON object with this shape and nothing else:\n"
 			. '{"summary": "one paragraph, top 3 insights + recommended focus for the week", '
 			. '"opportunities": [{"niche": "<slug from above>", "title": "<product/offer title>", '
 			. '"product_type": "guide|diagnostic|tool|service|membership", '
@@ -76,7 +78,12 @@ class Gabochie_Market_Research_AI {
 			. '"rationale": "<2-3 sentences using the signal counts>"}]}. '
 			. 'Pick the 3-5 highest-signal niches; prefer ones with questions or enquiries over '
 			. 'empty ones. Under-developed (low coverage) but high-signal niches get bonus '
-			. 'weight. Each opportunity title must be a sellable offer, not a topic.';
+			. 'weight. Each opportunity title must be a sellable offer, not a topic. '
+			. 'Do not wrap the object in markdown; do not add any text before or after it.';
+
+		if ( $json_forced ) {
+			return $this->gemini_direct( $system, $prompt );
+		}
 
 		return $this->complete( $system, $prompt );
 	}

@@ -617,18 +617,23 @@ class Gabochie_Market_Research {
 			$summarize[] = $slug . '|' . $row['label'] . '|score:' . $row['score'] . '|q:' . $row['questions'] . '|s:' . $row['searches'] . '|e:' . $row['enquiries'] . '|eng:' . $row['engaged'] . '|rss:' . $row['rss'] . '|cov:' . $row['coverage'] . '|product:' . $row['product_type'] . '|price:' . $row['price_hint'];
 		}
 
-		$ai    = Gabochie_Market_Research_AI::instance();
-		$json  = $ai->generate_memo( $summarize );
-		$raw   = trim( (string) $json );
-		$start = strpos( $raw, '{' );
-		$end   = strrpos( $raw, '}' );
-		if ( false !== $start && false !== $end && $end > $start ) {
-			$raw = substr( $raw, $start, ( $end - $start ) + 1 );
+		$ai       = Gabochie_Market_Research_AI::instance();
+		$data     = null;
+		$attempts = 3;
+		for ( $i = 1; $i <= $attempts; $i++ ) {
+			$json = $ai->generate_memo( $summarize, $i > 1 );
+			$data = $this->parse_memo_json( $json );
+			if ( is_array( $data ) && ! empty( $data['summary'] ) ) {
+				break;
+			}
+			$this->log_error( 'memo: invalid LLM JSON (attempt ' . $i . ', source ' . $ai->last_source() . ') · ' . substr( (string) $json, 0, 120 ) );
+			if ( $i < $attempts ) {
+				sleep( 2 * $i );
+			}
 		}
-		$data = json_decode( $raw, true );
 		if ( ! is_array( $data ) || empty( $data['summary'] ) ) {
-			$msg = 'memo: LLM returned invalid JSON';
-			$this->log_error( $msg . ' · ' . substr( (string) $json, 0, 200 ) );
+			$msg = 'memo: LLM returned invalid JSON after ' . $attempts . ' attempts';
+			$this->log_error( $msg );
 			return array( 'error' => $msg );
 		}
 
@@ -640,6 +645,28 @@ class Gabochie_Market_Research {
 		$data['upserted'] = $upserted;
 
 		$this->send_digest( $data );
+		return $data;
+	}
+
+	/**
+	 * Tolerant memo-JSON parser: extracts the first { … } block and decodes it.
+	 * Returns null when the payload is empty, has no object, or the object lacks
+	 * a summary (so the caller can retry with a JSON-forced provider).
+	 *
+	 * @param  mixed $json
+	 * @return array|null
+	 */
+	private function parse_memo_json( $json ) {
+		$raw   = trim( (string) $json );
+		$start = strpos( $raw, '{' );
+		$end   = strrpos( $raw, '}' );
+		if ( false === $start || false === $end || $end <= $start ) {
+			return null;
+		}
+		$data = json_decode( substr( $raw, $start, ( $end - $start ) + 1 ), true );
+		if ( ! is_array( $data ) || empty( $data['summary'] ) ) {
+			return null;
+		}
 		return $data;
 	}
 
