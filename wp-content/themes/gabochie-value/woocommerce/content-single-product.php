@@ -154,7 +154,7 @@ if ( $is_member ) {
 				$feats = array();
 				if ( $is_member && $level && ! empty( $level->description ) ) {
 					foreach ( preg_split( '/[\r\n]+/', $level->description ) as $ln ) {
-						$ln = trim( (string) $ln );
+						$ln = ltrim( trim( (string) $ln ), '-*' );
 						if ( $ln !== '' ) {
 							$feats[] = $ln; }
 					}
