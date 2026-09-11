@@ -594,17 +594,41 @@ class Gabochie_Market_Research {
 		self::ensure_schema();
 		$matrix = empty( $niches ) ? $this->collect() : $niches;
 
+		$has_signal = 0;
+		foreach ( $matrix as $row ) {
+			$has_signal += (int) $row['questions'] + (int) $row['searches'] + (int) $row['enquiries'] + (int) $row['engaged'] + (int) $row['rss'];
+		}
+		if ( $has_signal <= 0 ) {
+			$data = array(
+				'summary'       => 'No meaningful demand signals recorded this window; no proposals generated.',
+				'opportunities' => array(),
+			);
+			update_option( self::OPT_LAST_MEMO, $data );
+			update_option( self::OPT_MEMO_AT, current_time( 'mysql' ) );
+			return array(
+				'summary'       => $data['summary'],
+				'opportunities' => array(),
+				'upserted'      => 0,
+			);
+		}
+
 		$summarize = array();
 		foreach ( $matrix as $slug => $row ) {
 			$summarize[] = $slug . '|' . $row['label'] . '|score:' . $row['score'] . '|q:' . $row['questions'] . '|s:' . $row['searches'] . '|e:' . $row['enquiries'] . '|eng:' . $row['engaged'] . '|rss:' . $row['rss'] . '|cov:' . $row['coverage'] . '|product:' . $row['product_type'] . '|price:' . $row['price_hint'];
 		}
 
-		$ai   = Gabochie_Market_Research_AI::instance();
-		$json = $ai->generate_memo( $summarize );
-		$data = json_decode( (string) $json, true );
+		$ai    = Gabochie_Market_Research_AI::instance();
+		$json  = $ai->generate_memo( $summarize );
+		$raw   = trim( (string) $json );
+		$start = strpos( $raw, '{' );
+		$end   = strrpos( $raw, '}' );
+		if ( false !== $start && false !== $end && $end > $start ) {
+			$raw = substr( $raw, $start, ( $end - $start ) + 1 );
+		}
+		$data = json_decode( $raw, true );
 		if ( ! is_array( $data ) || empty( $data['summary'] ) ) {
 			$msg = 'memo: LLM returned invalid JSON';
-			$this->log_error( $msg );
+			$this->log_error( $msg . ' · ' . substr( (string) $json, 0, 200 ) );
 			return array( 'error' => $msg );
 		}
 
