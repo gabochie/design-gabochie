@@ -43,7 +43,7 @@ SERVICES & TOOLS YOU KNOW:
 - Build Cost Calculator: free tool at /build-cost-calculator/ — instant estimates for building in Ghana. Guide users here when they ask about costs, budgets, or pricing.
 - Client Dashboard: logged-in users at /dashboard/ can track projects, use construction tools, and manage their account.
 - Membership Plans: Free Lead (₵0 — get your readiness score, access community), Active Client (₵2,500/month — project tracking, priority support, advanced tools), Premium Service (₵5,000/month — dedicated consultant, full platform access, investor reports).
-- Client Portal: /client-login/ for existing members to sign in, /login/ for PMPro login, /membership-levels/ to see plans.
+- Client Portal: /login/ is the branded sign-in page (also holds PMPro login), /membership-levels/ to see plans.
 - Onboarding: /onboarding/ — 4-step form for new projects (location, type, budget, timeline).
 - Community: /community/ — public Q&A where developers and builders share knowledge.
 - Blog: /blog/ — articles on construction, permits, costs, and development in Ghana.

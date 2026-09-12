@@ -166,7 +166,7 @@ add_action(
 			);
 		}
 
-		$login_slug = 'client-login';
+		$login_slug = 'login';
 		$login      = get_page_by_path( $login_slug, OBJECT, 'page' );
 		if ( ! $login || ! isset( $login->ID ) ) {
 			wp_insert_post(
@@ -327,13 +327,15 @@ add_filter(
 	}
 );
 
-// Redirect /login/ to /client-login/ (the actual login page)
+// Canonical login URL is /login/ (branded Client Portal). Back-compat redirects:
+// /client-login/, /log-in/, /log-in-2/ all land on the branded page.
 add_action(
 	'template_redirect',
 	function () {
-		if ( is_page( 'login' ) || ( isset( $_SERVER['REQUEST_URI'] ) && preg_match( '#/login/?$#', $_SERVER['REQUEST_URI'] ) ) ) {
-			$append = isset( $_GET['action'] ) ? '?' . http_build_query( $_GET ) : '';
-			wp_redirect( home_url( '/client-login/' . $append ) );
+		$path = isset( $_SERVER['REQUEST_URI'] ) ? wp_parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH ) : '';
+		if ( $path && preg_match( '#^/(client-login|log-in|log-in-2)(/.*)?$#', $path ) ) {
+			$qs = ( ! empty( $_SERVER['QUERY_STRING'] ) ) ? '?' . $_SERVER['QUERY_STRING'] : '';
+			wp_redirect( home_url( '/login/' . $qs ), 301 );
 			exit;
 		}
 	}
@@ -393,7 +395,7 @@ add_action(
 			return;
 		}
 		if ( ! is_user_logged_in() ) {
-			wp_redirect( home_url( '/client-login/' ) );
+			wp_redirect( home_url( '/login/' ) );
 			exit;
 		}
 		if ( function_exists( 'pmpro_hasMembershipLevel' ) && ! pmpro_hasMembershipLevel() ) {
