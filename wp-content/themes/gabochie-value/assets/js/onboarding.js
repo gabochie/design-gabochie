@@ -10,7 +10,7 @@
 
   var AJAX_URL = (window.gabochieOnb && window.gabochieOnb.ajaxUrl) || '/wp-admin/admin-ajax.php';
   var NONCE    = (window.gabochieOnb && window.gabochieOnb.nonce) || '';
-  var LOGIN_URL = (window.gabochieOnb && window.gabochieOnb.loginUrl) || '/client-login/';
+  var LOGIN_URL = (window.gabochieOnb && window.gabochieOnb.loginUrl) || '/login/';
 
   /* ---- Labels for display ---- */
   var GOAL_LABELS = {

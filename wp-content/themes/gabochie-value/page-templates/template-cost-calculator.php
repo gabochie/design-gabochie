@@ -250,7 +250,7 @@ get_header();
             <h3>What's Next for Your Project?</h3>
             <p>Your number is only the beginning. Take the readiness quiz or get a professional verified estimate — free.</p>
             <div class="gv-calc-cta-actions">
-                <a class="gv-calc-cta-btn" href="<?php echo esc_url(home_url('/client-login/?action=register')); ?>">Get A Verified Estimate — Free</a>
+                <a class="gv-calc-cta-btn" href="<?php echo esc_url(home_url('/login/?action=register')); ?>">Get A Verified Estimate — Free</a>
                 <a class="gv-calc-cta-btn gv-calc-cta-btn--ghost" href="<?php echo esc_url(home_url('/development-quiz/')); ?>">Take the Readiness Quiz</a>
             </div>
         </div>

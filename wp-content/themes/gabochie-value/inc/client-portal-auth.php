@@ -10,7 +10,7 @@ add_action('init', function () {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['gabochie_register'])) return;
 
     if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'gabochie_register')) {
-        wp_redirect(add_query_arg('register', 'nonce', wp_get_referer() ?: home_url('/client-login/')));
+        wp_redirect(add_query_arg('register', 'nonce', wp_get_referer() ?: home_url('/login/')));
         exit;
     }
 
@@ -25,7 +25,7 @@ add_action('init', function () {
     if (empty($name)) $errors[] = 'name_required';
 
     if (!empty($errors)) {
-        wp_redirect(add_query_arg('register', implode(',', $errors), wp_get_referer() ?: home_url('/client-login/')));
+        wp_redirect(add_query_arg('register', implode(',', $errors), wp_get_referer() ?: home_url('/login/')));
         exit;
     }
 
@@ -42,7 +42,7 @@ add_action('init', function () {
     ));
 
     if (is_wp_error($uid)) {
-        wp_redirect(add_query_arg('register', 'error', wp_get_referer() ?: home_url('/client-login/')));
+        wp_redirect(add_query_arg('register', 'error', wp_get_referer() ?: home_url('/login/')));
         exit;
     }
 
@@ -64,7 +64,7 @@ add_action('init', function () {
 	);
 
     $subject = 'Welcome to Gabochie Design';
-    $message = "Hi {$name},\n\nYour account has been created.\n\nLogin: " . home_url('/client-login/') . "\nEmail: {$email}\n\nYou now have access to your project dashboard and construction tools.\n\n– Gabochie Design Team";
+    $message = "Hi {$name},\n\nYour account has been created.\n\nLogin: " . home_url('/login/') . "\nEmail: {$email}\n\nYou now have access to your project dashboard and construction tools.\n\n– Gabochie Design Team";
     wp_mail($email, $subject, $message);
 
     wp_set_current_user($uid);
@@ -79,7 +79,7 @@ add_shortcode('gabochie_register_form', function () {
     $status = isset($_GET['register']) ? sanitize_text_field($_GET['register']) : '';
     $errors = array(
         'valid_email'    => 'Please enter a valid email address.',
-        'email_taken'    => 'An account with this email already exists. <a href="' . esc_url(home_url('/client-login/')) . '">Log in instead</a>.',
+        'email_taken'    => 'An account with this email already exists. <a href="' . esc_url(home_url('/login/')) . '">Log in instead</a>.',
         'short_password' => 'Password must be at least 8 characters.',
         'name_required'  => 'Please enter your name.',
         'nonce'          => 'Session expired. Please try again.',
@@ -120,7 +120,7 @@ add_shortcode('gabochie_register_form', function () {
 
         <button type="submit" style="width:100%;padding:0.9rem 2rem;background:var(--gold);color:var(--teal-dark);border:none;border-radius:6px;font-family:'Jost',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer">Create Free Account</button>
 
-        <p style="font-size:0.8rem;color:var(--mist);text-align:center;margin:0">Already have an account? <a href="<?php echo esc_url(home_url('/client-login/')); ?>" style="color:var(--teal);text-decoration:underline">Log in</a></p>
+        <p style="font-size:0.8rem;color:var(--mist);text-align:center;margin:0">Already have an account? <a href="<?php echo esc_url(home_url('/login/')); ?>" style="color:var(--teal);text-decoration:underline">Log in</a></p>
     </form>
     <?php
     return ob_get_clean();

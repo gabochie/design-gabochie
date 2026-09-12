@@ -72,7 +72,7 @@ $quiz_data = array(
 );
 
 $calculator_url = home_url( '/building-cost-calculator/' );
-$signup_url     = home_url( '/client-login/' );
+$signup_url     = home_url( '/login/' );
 ?>
 
 <style>

@@ -55,7 +55,7 @@ function gabochie_verify_tasks() {
     $results['phaseA-3'] = _verify_page_exists('/dashboard/', 'Client Dashboard');
     $results['phaseA-4'] = _verify_rest_route('gabochie/v1', '/workspace');
     $results['phaseA-5'] = _verify_page_template('template-dashboard.php');
-    $results['phaseA-6'] = _verify_page_exists('/client-login/', 'Client Login');
+    $results['phaseA-6'] = _verify_page_exists('/login/', 'Client Login');
     $results['phaseA-7'] = _verify_plugin_active('gabochie-voice-agent');
 
     // Phase B: Readiness Score
@@ -147,7 +147,7 @@ function gabochie_live_status() {
     // 5. Pages (key membership/portal pages)
     $key_pages = array(
         'dashboard' => '/dashboard/',
-        'login' => '/client-login/',
+        'login' => '/login/',
         'membership-levels' => '/membership-levels/',
         'membership-account' => '/membership-account/',
         'membership-checkout' => '/membership-checkout/',

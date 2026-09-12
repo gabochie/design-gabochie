@@ -179,7 +179,7 @@ if (!defined('ABSPATH')) exit;
             <h3>You're set.</h3>
             <p>We've received your consultation request. Our team will review your project details and reach out within one working day.</p>
             <div class="rec-ctas" style="justify-content:center;flex-wrap:wrap;gap:0.75rem">
-              <a class="btn-solid" href="<?php echo esc_url(home_url('/client-login/')); ?>" style="background:var(--teal);color:#FAF7F2">Create Free Account</a>
+              <a class="btn-solid" href="<?php echo esc_url(home_url('/login/')); ?>" style="background:var(--teal);color:#FAF7F2">Create Free Account</a>
               <a class="btn-ghost-w" href="<?php echo esc_url(gabochie_value_section_url('top')); ?>" style="margin-top:0.5rem">Back to top</a>
             </div>
             <p style="font-size:0.8rem;color:var(--mist);margin-top:1rem;text-align:center">Create your free portal account to track your project, message your team, and review designs — no card needed.</p>
