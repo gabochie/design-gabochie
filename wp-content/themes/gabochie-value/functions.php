@@ -357,6 +357,10 @@ add_action(
 			wp_safe_redirect( home_url( '/login/' . $qs ), 301 );
 			exit;
 		}
+		if ( $path && preg_match( '#^/account(/.*)?$#i', $path ) ) {
+			wp_safe_redirect( home_url( '/dashboard/' ), 301 );
+			exit;
+		}
 	}
 );
 
