@@ -83,7 +83,7 @@ function gabochie_value_chat_build_response($message, $context) {
     }
 
     if (preg_match('/\b(pricing|price|cost|budget|how much)\b/', $msg)) {
-        return "Pricing is honest and simple, and it starts free:\n\n- Free — start with the readiness quiz and a build-cost estimate.\n- Active Client — ₵399/month.\n- Premium Service — ₵1,299/month.\n\nSee what each plan includes and upgrade at " . home_url('/membership-levels/') . " — or tell me what you're building and I'll point you to the right start!";
+        return "Pricing is honest and simple, and it starts free:\n\n- Free Discovery — start with the readiness quiz and a build-cost estimate.\n- Recovery Diagnostic — ₵1,500 one-time, or two ₵750 payments (talk to us first).\n- Annual Advisory — ₵2,000/year for full dashboard, design reviews and priority support.\n- Project Packages — fixed-fee quotes for a complete build scope, priced per project.\n\nSee what each plan includes and get started at " . home_url('/membership-levels/') . " — or tell me what you're building and I'll point you to the right start!";
     }
 
     if (preg_match('/\b(service|design|interior|build)\b/', $msg)) {

@@ -99,7 +99,7 @@ function gabochie_value_handle_thesis_download() {
 	/* Ensure the lead has Free Lead membership (they entered the funnel) */
 	if ( function_exists( 'pmpro_changeMembershipLevel' ) && ! pmpro_hasMembershipLevel( null, $uid ) ) {
 		global $wpdb;
-		$free = $wpdb->get_var( "SELECT id FROM {$wpdb->prefix}pmpro_membership_levels WHERE name = 'Free Lead' LIMIT 1" );
+		$free = $wpdb->get_var( "SELECT id FROM {$wpdb->prefix}pmpro_membership_levels WHERE name = 'Free Discovery' LIMIT 1" );
 		if ( $free ) {
 			pmpro_changeMembershipLevel( (int) $free, $uid );
 		}
@@ -151,7 +151,7 @@ function gabochie_value_handle_thesis_download() {
 		. $quiz_url . "\n"
 		. "2. Estimate your build cost, Ghana-adjusted:\n"
 		. $calc_url . "\n"
-		. "3. See the plans that fit your stage — Free Lead, Active Client, Premium:\n"
+		. "3. See the plans that fit your stage — Free Discovery, Annual Advisory:\n"
 		. $levels_url . "\n"
 		. "4. Ask the community building in Ghana right now:\n"
 		. $community_url . "\n\n"

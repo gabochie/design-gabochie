@@ -364,7 +364,7 @@ if ( $shop_loop->have_posts() ) {
 		<dt>What do I get with the Recovery Diagnostic?</dt>
 		<dd>A structured review of your drawings, contracts, site and spend, ending in a written report: what's wrong, what it costs to fix, and whether continuing beats starting over.</dd>
 		<dt>Can I upgrade or change plans later?</dt>
-		<dd>Yes. Start with the Free Lead membership, then upgrade to Active Client or Premium when your project needs deeper support.</dd>
+		<dd>Yes. Start with the Free Discovery membership, then step up to Annual Advisory when your project needs year-round support.</dd>
 		<dt>What payment methods are accepted?</dt>
 		<dd>Card and mobile money through our Ghana payment gateways (Moolre, ExpressPay and Paystack). More methods are added as they become available.</dd>
 	</dl>
@@ -375,7 +375,7 @@ if ( $shop_loop->have_posts() ) {
 	<h2>Not sure which offer fits? <em>Start free.</em></h2>
 	<p>Answer a few questions and get your Development Readiness Score — a free first step, no card required.</p>
 	<a class="btn-gold" href="<?php echo esc_url( home_url( '/onboarding/' ) ); ?>">Start Here — Free</a>
-	<span class="gv-shop-note">Free Lead · Active Client · Premium — upgrade any time, no lock-in.</span>
+	<span class="gv-shop-note">Free Discovery · Annual Advisory — upgrade any time, no lock-in.</span>
 </div></section>
 
 </main>

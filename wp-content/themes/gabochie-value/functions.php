@@ -271,7 +271,7 @@ add_action(
 			$wpdb->insert(
 				$levels_table,
 				array(
-					'name'              => 'Free Lead',
+					'name'              => 'Free Discovery',
 					'description'       => 'Free inquiry lead — access to project portal and initial consultation.',
 					'initial_payment'   => 0,
 					'billing_amount'    => 0,
@@ -284,25 +284,12 @@ add_action(
 			$wpdb->insert(
 				$levels_table,
 				array(
-					'name'              => 'Active Client',
-					'description'       => 'Full access to project dashboard, documents, messages, and design reviews.',
-					'initial_payment'   => 2500,
-					'billing_amount'    => 0,
-					'cycle_number'      => 0,
-					'cycle_period'      => 'Month',
-					'expiration_number' => 0,
-					'expiration_period' => '',
-				)
-			);
-			$wpdb->insert(
-				$levels_table,
-				array(
-					'name'              => 'Premium Service',
-					'description'       => 'Complete service package with interior design, project management, and priority support.',
-					'initial_payment'   => 5000,
-					'billing_amount'    => 0,
-					'cycle_number'      => 0,
-					'cycle_period'      => 'Month',
+					'name'              => 'Annual Advisory',
+					'description'       => 'Annual advisory retainership — dashboard, documents, design reviews, and priority consultant support.',
+					'initial_payment'   => 2000,
+					'billing_amount'    => 2000,
+					'cycle_number'      => 1,
+					'cycle_period'      => 'Year',
 					'expiration_number' => 0,
 					'expiration_period' => '',
 				)

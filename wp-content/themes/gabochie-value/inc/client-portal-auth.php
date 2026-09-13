@@ -48,7 +48,7 @@ add_action('init', function () {
 
     if (function_exists('pmpro_changeMembershipLevel')) {
         global $wpdb;
-        $free = $wpdb->get_var("SELECT id FROM {$wpdb->prefix}pmpro_membership_levels WHERE name = 'Free Lead' LIMIT 1");
+        $free = $wpdb->get_var("SELECT id FROM {$wpdb->prefix}pmpro_membership_levels WHERE name = 'Free Discovery' LIMIT 1");
         if ($free) pmpro_changeMembershipLevel((int) $free, $uid);
     }
 

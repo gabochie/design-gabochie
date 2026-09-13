@@ -21,7 +21,7 @@ get_header('shop');
             if (!empty($pmpro_levels)) :
                 $i = 0;
                 foreach ($pmpro_levels as $level) :
-                    $is_featured = ($level->id === 2); // Active Client is featured
+                    $is_featured = ($level->id === 2); // Annual Advisory is featured
                     $price = pmpro_formatPrice($level->initial_payment);
                     $features = array();
                     if (!empty($level->description)) {
@@ -59,13 +59,13 @@ get_header('shop');
                         <li>AI consultation tools</li>
                         <li>Community Q&A access</li>
                     <?php elseif ($level->id === 2) : ?>
-                        <li>Everything in Free Lead</li>
+                        <li>Everything in Free Discovery</li>
                         <li>Full project dashboard</li>
                         <li>Document vault & messaging</li>
                         <li>Design review & feedback</li>
                         <li>Priority support</li>
                     <?php else : ?>
-                        <li>Everything in Active Client</li>
+                        <li>Everything in Annual Advisory</li>
                         <li>Interior design concepts</li>
                         <li>Project management tools</li>
                         <li>Cost tracking & analytics</li>

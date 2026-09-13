@@ -107,10 +107,10 @@ function d2_cost_total($pid) {
 <?php
 $current_level = function_exists('pmpro_getMembershipLevelForUser') ? pmpro_getMembershipLevelForUser($user->ID) : null;
 $tier_class = 'free';
-$tier_label = 'Free Lead';
+$tier_label = 'Free Discovery';
 if ($current_level) {
     $tier_label = esc_html($current_level->name);
-    $tier_class = ($current_level->id === 1) ? 'free' : (($current_level->id === 2) ? 'active' : 'premium');
+    $tier_class = ($current_level->id === 1) ? 'free' : 'active';
 }
 ?>
 <div class="d2-member-tier">
@@ -119,7 +119,7 @@ if ($current_level) {
         <span class="d2-tier-name"><?php echo $tier_label; ?></span>
     </div>
     <div class="d2-tier-badge mem-tier-<?php echo esc_attr($tier_class); ?>"><?php echo $tier_label; ?></div>
-    <?php if ($current_level && $current_level->id < 3) : ?>
+    <?php if ($current_level && $current_level->id !== 2) : ?>
         <a href="<?php echo esc_url(home_url('/membership-levels/')); ?>" class="d2-tier-upgrade">Upgrade &rarr;</a>
     <?php endif; ?>
 </div>

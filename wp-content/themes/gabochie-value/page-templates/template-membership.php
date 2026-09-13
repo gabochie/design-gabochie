@@ -19,20 +19,17 @@ if (function_exists('pmpro_getAllLevels')) {
 /* Curated benefit lists (balanced with level descriptions) */
 $gv_benefits = array(
     1 => array('Private project portal & document vault', 'Development Readiness Score', 'AI consultation tools (Ama)', 'Community Q&A access', 'Free initial consultation'),
-    2 => array('Everything in Free Lead', 'Full project dashboard', 'Document vault & secure messaging', 'Design review & feedback rounds', 'Cost tracking & budget tools', 'Priority support'),
-    3 => array('Everything in Active Client', 'Interior design concepts', 'Dedicated project management', 'Cost analytics & reporting', 'Direct line to your account manager', 'Priority scheduling'),
+    2 => array('Everything in Free Discovery', 'Full project dashboard', 'Document vault & secure messaging', 'Design review & feedback rounds', 'Cost tracking & budget tools', 'Priority consultant support'),
 );
 
 $gv_icons = array(
     1 => '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><circle cx="24" cy="24" r="18"/><path d="M12 24h24M24 12v24"/></svg>',
     2 => '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="6" width="32" height="36" rx="3"/><line x1="14" y1="14" x2="34" y2="14"/><line x1="14" y1="22" x2="28" y2="22"/><path d="M14 30h20M14 36h12"/></svg>',
-    3 => '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><polygon points="24,4 44,18 44,40 4,40 4,18"/><circle cx="24" cy="24" r="8"/></svg>',
 );
 
 $gv_badges = array(
-    1 => 'Free Lead',
-    2 => 'Active Client',
-    3 => 'Premium Service',
+    1 => 'Free Discovery',
+    2 => 'Annual Advisory',
 );
 
 function gv_level_price($l) {
@@ -311,8 +308,8 @@ body.pmpro-levels { display: block; }
             foreach ($gv_levels as $gv_l) {
                 $gv_order[$gv_l->id] = $gv_l;
             }
-            /* Present 1, 2, 3 by id; 2 featured */
-            $gv_sequence = array(1, 2, 3);
+            /* Present levels by id; Annual Advisory (2) featured */
+            $gv_sequence = array(1, 2);
             foreach ($gv_sequence as $gv_lid) :
                 if (!isset($gv_order[$gv_lid])) continue;
                 $gv_l = $gv_order[$gv_lid];
@@ -322,7 +319,7 @@ body.pmpro-levels { display: block; }
             <div class="gv-mem-card<?php echo $gv_f ? ' gv-mem-card--featured' : ''; ?>">
                 <?php if ($gv_f) : ?><div class="gv-mem-ribbon">Most Popular</div><?php endif; ?>
 
-                <div class="gv-mem-tier"><span class="gv-mem-tier-<?php echo $gv_lid === 1 ? 'free' : ($gv_lid === 2 ? 'active' : 'premium'); ?>"><?php echo esc_html($gv_badges[$gv_lid] ?? $gv_l->name); ?></span></div>
+                <div class="gv-mem-tier"><span class="gv-mem-tier-<?php echo $gv_lid === 1 ? 'free' : 'active'; ?>"><?php echo esc_html($gv_badges[$gv_lid] ?? $gv_l->name); ?></span></div>
 
                 <div class="gv-mem-ico"><?php echo $gv_icons[$gv_lid] ?? $gv_icons[1]; ?></div>
 
@@ -384,7 +381,7 @@ body.pmpro-levels { display: block; }
 
             <div class="gv-faq-item">
                 <button class="gv-faq-q" type="button"><span>Which plan is right for me?</span><span class="gv-faq-chev">▾</span></button>
-                <div class="gv-faq-a"><div class="gv-faq-a-inner">Start with Free Lead — it gives you your private portal and Development Readiness Score at no cost. If you're actively building, Active Client unlocks the full dashboard, design collaboration, and budget tools. Premium Service is for clients who want managed delivery, interior concepts, and a dedicated account manager.</div></div>
+                <div class="gv-faq-a"><div class="gv-faq-a-inner">Start with Free Discovery — it gives you your private portal and Development Readiness Score at no cost. If you're building this year, Annual Advisory (₵2,000/year) unlocks the full dashboard, design collaboration, budget tools, and priority consultant support.</div></div>
             </div>
 
             <div class="gv-faq-item">
@@ -399,7 +396,7 @@ body.pmpro-levels { display: block; }
 
             <div class="gv-faq-item">
                 <button class="gv-faq-q" type="button"><span>Why do I need a membership for the portal?</span><span class="gv-faq-chev">▾</span></button>
-                <div class="gv-faq-a"><div class="gv-faq-a-inner">Your membership personalises your Portal — it tracks your readiness score, stores your project documents, and lets our team serve you faster. The Free Lead tier keeps all of that accessible with no cost barrier to starting.</div></div>
+                <div class="gv-faq-a"><div class="gv-faq-a-inner">Your membership personalises your Portal — it tracks your readiness score, stores your project documents, and lets our team serve you faster. The Free Discovery tier keeps all of that accessible with no cost barrier to starting.</div></div>
             </div>
         </div>
 

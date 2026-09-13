@@ -127,7 +127,7 @@ function gabochie_value_onboarding_create() {
 		/* Ensure existing user has Free Lead membership */
 		if ( function_exists( 'pmpro_changeMembershipLevel' ) && ! pmpro_hasMembershipLevel( null, $existing->ID ) ) {
 			global $wpdb;
-			$free_level = $wpdb->get_var( "SELECT id FROM {$wpdb->prefix}pmpro_membership_levels WHERE name = 'Free Lead' LIMIT 1" );
+			$free_level = $wpdb->get_var( "SELECT id FROM {$wpdb->prefix}pmpro_membership_levels WHERE name = 'Free Discovery' LIMIT 1" );
 			if ( $free_level ) {
 				pmpro_changeMembershipLevel( (int) $free_level, $existing->ID );
 			}
@@ -386,7 +386,7 @@ add_action(
 					/* Ensure Free Lead membership (CRM pipeline entry) */
 					if ( function_exists( 'pmpro_changeMembershipLevel' ) && ! pmpro_hasMembershipLevel( null, $uid ) ) {
 						global $wpdb;
-						$free_level = $wpdb->get_var( "SELECT id FROM {$wpdb->prefix}pmpro_membership_levels WHERE name = 'Free Lead' LIMIT 1" );
+						$free_level = $wpdb->get_var( "SELECT id FROM {$wpdb->prefix}pmpro_membership_levels WHERE name = 'Free Discovery' LIMIT 1" );
 						if ( $free_level ) {
 							pmpro_changeMembershipLevel( (int) $free_level, $uid );
 						}

@@ -76,7 +76,7 @@ $social_svgs = array(
 		<li><a href="<?php echo esc_url( home_url( '/news/' ) ); ?>">News</a></li>
 		<li><a href="<?php echo esc_url( home_url( '/community/' ) ); ?>">Community</a></li>
 		<li><a href="<?php echo esc_url( home_url( '/marketplace/' ) ); ?>">Marketplace</a></li>
-		<li><a href="<?php echo esc_url( home_url( '/membership-levels/' ) ); ?>">Membership &mdash; from &#8373;399/mo</a></li>
+		<li><a href="<?php echo esc_url( home_url( '/membership-levels/' ) ); ?>">Membership &mdash; from &#8373;2,000/yr</a></li>
 		<li><a href="<?php echo esc_url( home_url( '/login/' ) ); ?>">Client Portal</a></li>
 		<li class="foot-contact-sep" aria-hidden="true"></li>
 		<li class="foot-contact">

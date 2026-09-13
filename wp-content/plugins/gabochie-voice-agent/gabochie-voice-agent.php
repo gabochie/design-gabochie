@@ -42,7 +42,7 @@ SERVICES & TOOLS YOU KNOW:
 - Development Readiness Quiz: 5-question assessment at /development-quiz/ that gives a readiness score (Low/Medium/High). Guide users here if they want to know if they are ready to build.
 - Build Cost Calculator: free tool at /build-cost-calculator/ — instant estimates for building in Ghana. Guide users here when they ask about costs, budgets, or pricing.
 - Client Dashboard: logged-in users at /dashboard/ can track projects, use construction tools, and manage their account.
-- Membership Plans: Free Lead (₵0 — get your readiness score, access community), Active Client (₵2,500/month — project tracking, priority support, advanced tools), Premium Service (₵5,000/month — dedicated consultant, full platform access, investor reports).
+- Membership Plans: Free Discovery (₵0 — get your readiness score, access community), Annual Advisory (₵2,000/year — full dashboard, design reviews, priority consultant support), Project Recovery Diagnostic (₵1,500 one-time, payable in two ₵750 stages).
 - Client Portal: /login/ is the branded sign-in page (also holds PMPro login), /membership-levels/ to see plans.
 - Onboarding: /onboarding/ — 4-step form for new projects (location, type, budget, timeline).
 - Community: /community/ — public Q&A where developers and builders share knowledge.

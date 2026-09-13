@@ -1514,7 +1514,7 @@ function gabochie_value_thesis_pdf( $reader_number = 0 ) {
 		array(
 			'n' => '3',
 			't' => 'Choose the plan that fits your stage',
-			'd' => 'From Free Lead to the full Delivery System — pay to finish, not to feel good.',
+			'd' => 'From Free Discovery to the full Delivery System — pay to finish, not to feel good.',
 			'u' => '/membership-levels/',
 		),
 		array(

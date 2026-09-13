@@ -57,7 +57,7 @@ function gabochie_api_readiness_get($request) {
     /* Upgrade prompt for free users */
     $upgrade_prompt = '';
     if (function_exists('pmpro_hasMembershipLevel') && !pmpro_hasMembershipLevel()) {
-        $upgrade_prompt = 'Unlock detailed recommendations and cost analysis with Active Client (₵2,500)';
+        $upgrade_prompt = 'Unlock detailed recommendations and cost analysis with Annual Advisory (₵2,000/year)';
     }
 
     return wp_json_encode(array(
