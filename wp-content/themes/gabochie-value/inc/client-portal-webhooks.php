@@ -119,12 +119,12 @@ function gabochie_value_onboarding_create() {
 		exit;
 	}
 
-	/* Existing user → log them in, ensure they have Free Lead, redirect to dashboard */
+	/* Existing user → log them in, ensure they have Free Discovery, redirect to dashboard */
 	$existing = get_user_by( 'email', $email );
 	if ( $existing ) {
 		wp_set_current_user( $existing->ID );
 		wp_set_auth_cookie( $existing->ID, true );
-		/* Ensure existing user has Free Lead membership */
+		/* Ensure existing user has Free Discovery membership */
 		if ( function_exists( 'pmpro_changeMembershipLevel' ) && ! pmpro_hasMembershipLevel( null, $existing->ID ) ) {
 			global $wpdb;
 			$free_level = $wpdb->get_var( "SELECT id FROM {$wpdb->prefix}pmpro_membership_levels WHERE name = 'Free Discovery' LIMIT 1" );
@@ -383,7 +383,7 @@ add_action(
 						update_user_meta( $uid, 'gabochie_phone', $phone );
 					}
 
-					/* Ensure Free Lead membership (CRM pipeline entry) */
+					/* Ensure Free Discovery membership (CRM pipeline entry) */
 					if ( function_exists( 'pmpro_changeMembershipLevel' ) && ! pmpro_hasMembershipLevel( null, $uid ) ) {
 						global $wpdb;
 						$free_level = $wpdb->get_var( "SELECT id FROM {$wpdb->prefix}pmpro_membership_levels WHERE name = 'Free Discovery' LIMIT 1" );

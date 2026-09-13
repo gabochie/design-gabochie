@@ -319,9 +319,9 @@ body.pmpro-levels { display: block; }
             <div class="gv-mem-card<?php echo $gv_f ? ' gv-mem-card--featured' : ''; ?>">
                 <?php if ($gv_f) : ?><div class="gv-mem-ribbon">Most Popular</div><?php endif; ?>
 
-                <div class="gv-mem-tier"><span class="gv-mem-tier-<?php echo $gv_lid === 1 ? 'free' : 'active'; ?>"><?php echo esc_html($gv_badges[$gv_lid] ?? $gv_l->name); ?></span></div>
+                <div class="gv-mem-tier"><span class="gv-mem-tier-<?php echo $gv_lid === 1 ? 'free' : 'active'; ?>"><?php echo esc_html($gv_badges[$gv_lid]); ?></span></div>
 
-                <div class="gv-mem-ico"><?php echo $gv_icons[$gv_lid] ?? $gv_icons[1]; ?></div>
+                <div class="gv-mem-ico"><?php echo $gv_icons[$gv_lid]; ?></div>
 
                 <h2 class="gv-mem-name"><?php echo esc_html($gv_l->name); ?></h2>
                 <p class="gv-mem-desc"><?php echo esc_html($gv_l->description); ?></p>
@@ -333,7 +333,7 @@ body.pmpro-levels { display: block; }
 
                 <ul class="gv-mem-feats">
                     <?php
-                    $gv_fl = $gv_benefits[$gv_lid] ?? array();
+                    $gv_fl = $gv_benefits[$gv_lid];
                     if (empty($gv_fl)) {
                         $gv_fl = array_filter(array_map('trim', explode("\n", $gv_l->description)));
                     }

@@ -5,7 +5,7 @@
  * Dedicated recovery funnel: a short diagnostic mini-flow (blockers → stage →
  * spend → goal → contact) that returns an honest, deterministic readout of
  * whether a stuck project is worth finishing — then routes the lead into the
- * hub (user + client_project + Free Lead + gabochie/lead/captured event).
+ * hub (user + client_project + Free Discovery + gabochie/lead/captured event).
  *
  * @package Gabochie_Value
  */

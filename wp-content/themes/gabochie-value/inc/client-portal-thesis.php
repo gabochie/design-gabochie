@@ -96,7 +96,7 @@ function gabochie_value_handle_thesis_download() {
 		update_user_meta( $uid, 'gabochie_thesis_first_download', current_time( 'mysql' ) );
 	}
 
-	/* Ensure the lead has Free Lead membership (they entered the funnel) */
+	/* Ensure the lead has Free Discovery membership (they entered the funnel) */
 	if ( function_exists( 'pmpro_changeMembershipLevel' ) && ! pmpro_hasMembershipLevel( null, $uid ) ) {
 		global $wpdb;
 		$free = $wpdb->get_var( "SELECT id FROM {$wpdb->prefix}pmpro_membership_levels WHERE name = 'Free Discovery' LIMIT 1" );
