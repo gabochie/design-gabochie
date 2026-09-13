@@ -332,10 +332,14 @@ add_filter(
 add_action(
 	'template_redirect',
 	function () {
-		$path = isset( $_SERVER['REQUEST_URI'] ) ? wp_parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH ) : '';
+		if ( ! isset( $_SERVER['REQUEST_URI'] ) ) {
+			return;
+		}
+		$request_uri = sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) );
+		$path        = wp_parse_url( $request_uri, PHP_URL_PATH );
 		if ( $path && preg_match( '#^/(client-login|log-in|log-in-2)(/.*)?$#', $path ) ) {
-			$qs = ( ! empty( $_SERVER['QUERY_STRING'] ) ) ? '?' . $_SERVER['QUERY_STRING'] : '';
-			wp_redirect( home_url( '/login/' . $qs ), 301 );
+			$qs = isset( $_SERVER['QUERY_STRING'] ) ? '?' . sanitize_text_field( wp_unslash( $_SERVER['QUERY_STRING'] ) ) : '';
+			wp_safe_redirect( home_url( '/login/' . $qs ), 301 );
 			exit;
 		}
 	}
