@@ -317,13 +317,27 @@
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
       var hp = form.querySelector('[name=website]');
       var source = (form.querySelector('[name=source]') || {}).value || 'notify';
+      var payload = { email: email, source: source, website: hp ? hp.value : '' };
+      var endpoint = '/wp-json/gabochie/v1/guide-request';
+      var errEl = form.parentElement.querySelector('.foot-newsletter-err');
+      if (form.classList.contains('foot-newsletter-form')) {
+        if (!((form.querySelector('[name=consent]') || {}).checked)) {
+          if (errEl) errEl.style.display = 'block';
+          return;
+        }
+        if (errEl) errEl.style.display = 'none';
+        endpoint = '/wp-json/gabochie-newsletter/v1/subscribe';
+        payload.consent = '1';
+        payload._gab_nl_nonce = form.getAttribute('data-nonce') || '';
+        delete payload.source;
+      }
       var btn = form.querySelector('button[type=submit]');
       var btnText = btn ? btn.textContent : '';
       if (btn) { btn.disabled = true; btn.textContent = 'Sending\u2026'; }
-      fetch('/wp-json/gabochie/v1/guide-request', {
+      fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email, source: source, website: hp ? hp.value : '' })
+        body: JSON.stringify(payload)
       }).then(function (r) {
         return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, data: d }; });
       }).then(function (res) {

@@ -53,29 +53,31 @@ $social_svgs = array(
 		</ul>
 	</div>
 
-	<!-- Company -->
+	<!-- Explore -->
+	<div class="foot-col">
+		<p class="foot-heading">Explore</p>
+		<ul>
+		<li><a href="<?php echo esc_url( home_url( '/building-cost-board/' ) ); ?>">Ghana Build Price Board</a></li>
+		<li><a href="<?php echo esc_url( home_url( '/building-cost-calculator/' ) ); ?>">Build Cost Calculator</a></li>
+		<li><a href="<?php echo esc_url( home_url( '/development-quiz/' ) ); ?>">Development Readiness Quiz</a></li>
+		<li><a href="<?php echo esc_url( home_url( '/project-recovery/' ) ); ?>">Project Recovery Library</a></li>
+		<li><a href="<?php echo esc_url( home_url( '/product/project-recovery-diagnostic/' ) ); ?>">Recovery Diagnostic &mdash; &#8373;1,500</a></li>
+		<li><a href="<?php echo esc_url( home_url( '/thesis/' ) ); ?>">Thesis</a></li>
+		</ul>
+	</div>
+
+	<!-- Company + Contact -->
 	<div class="foot-col">
 		<p class="foot-heading">Company</p>
 		<ul>
 		<li><a href="<?php echo esc_url( home_url( '/about/' ) ); ?>">About Us</a></li>
-		<li><a href="<?php echo esc_url( home_url( '/development-quiz/' ) ); ?>">Development Readiness Quiz</a></li>
-		<li><a href="<?php echo esc_url( home_url( '/building-cost-calculator/' ) ); ?>">Build Cost Calculator</a></li>
-		<li><a href="<?php echo esc_url( home_url( '/thesis/' ) ); ?>">Thesis</a></li>
-		<li><a href="<?php echo esc_url( home_url( '/news/' ) ); ?>">News</a></li>
 		<li><a href="<?php echo esc_url( home_url( '/blog/' ) ); ?>">Blog</a></li>
+		<li><a href="<?php echo esc_url( home_url( '/news/' ) ); ?>">News</a></li>
 		<li><a href="<?php echo esc_url( home_url( '/community/' ) ); ?>">Community</a></li>
+		<li><a href="<?php echo esc_url( home_url( '/marketplace/' ) ); ?>">Marketplace</a></li>
+		<li><a href="<?php echo esc_url( home_url( '/membership-levels/' ) ); ?>">Membership &mdash; from &#8373;399/mo</a></li>
 		<li><a href="<?php echo esc_url( home_url( '/login/' ) ); ?>">Client Portal</a></li>
-		<li><a href="<?php echo esc_url( gabochie_value_section_url( 'projects' ) ); ?>">Projects</a></li>
-		<li><a href="<?php echo esc_url( gabochie_value_section_url( 'journey' ) ); ?>">Building Journey</a></li>
-		<li><a href="<?php echo esc_url( gabochie_value_section_url( 'diaspora' ) ); ?>">For Diaspora</a></li>
-		<li><a href="<?php echo esc_url( gabochie_value_section_url( 'resources' ) ); ?>">Resources</a></li>
-		</ul>
-	</div>
-
-	<!-- Contact -->
-	<div class="foot-col">
-		<p class="foot-heading">Contact</p>
-		<ul>
+		<li class="foot-contact-sep" aria-hidden="true"></li>
 		<li class="foot-contact">
 			<svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
 			<a href="tel:<?php echo esc_attr( $phone_tel ); ?>"><?php echo esc_html( $phone ); ?></a>
@@ -96,14 +98,16 @@ $social_svgs = array(
 	<!-- Newsletter signup -->
 	<div class="foot-newsletter">
 	<div class="foot-newsletter-inner">
-		<span class="foot-newsletter-label">Get practical building insights &mdash; no spam, unsubscribe anytime.</span>
-		<form class="foot-newsletter-form" novalidate>
+		<div class="foot-newsletter-label">Join the build brief &mdash; practical Ghana building insights in your inbox. No spam, unsubscribe anytime with one click.</div>
+		<form class="foot-newsletter-form" data-nonce="<?php echo esc_attr( wp_create_nonce( 'gab-nl-subscribe' ) ); ?>" novalidate>
 		<input type="email" placeholder="Your email" required aria-label="Email for newsletter">
 		<input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="gd-hp" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
 		<input type="hidden" name="source" value="footer-newsletter">
+		<label class="foot-newsletter-consent"><input type="checkbox" name="consent" value="1"> <span>Yes, send me practical building insights.</span></label>
 		<button type="submit">Subscribe</button>
 		</form>
 		<div class="foot-newsletter-ok" style="display:none">Subscribed &mdash; welcome aboard.</div>
+		<p class="foot-newsletter-err" style="display:none" role="alert">Please tick the consent box to subscribe.</p>
 	</div>
 	</div>
 
