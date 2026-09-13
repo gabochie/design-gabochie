@@ -322,9 +322,21 @@ add_action(
 // Redirect PMPro login to our custom login page
 add_filter(
 	'pmpro_login_url',
-	function ( $url ) {
+	function () {
 		return home_url( '/login/' );
 	}
+);
+
+// Keep the branded register form on /login/?action=register usable.
+// By default PMPro (pmpro_login_head) redirects any action=register on the
+// login page straight to the levels page; the theme has its own register
+// form ([gabochie_register_form]) that must render instead.
+add_filter(
+	'pmpro_register_redirect',
+	function () {
+		return '';
+	},
+	20
 );
 
 // Canonical login URL is /login/ (branded Client Portal). Back-compat redirects:
