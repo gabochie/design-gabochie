@@ -460,6 +460,19 @@ footer { background: var(--teal-dark); padding: 3.5rem 2.5rem 2rem; color: rgba(
 .whatsapp-fab { position: fixed; bottom: 2rem; left: 2rem; width: 60px; height: 60px; border-radius: 50%; background: #25D366; border: 2px solid rgba(255,255,255,0.4); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 32px rgba(18,140,62,0.4); transition: all 0.3s; z-index: 1000; }
 .whatsapp-fab:hover { transform: scale(1.08); }
 .whatsapp-fab svg { width: 30px; height: 30px; fill: #06350F; }
+.whatsapp-fab span {
+  position: absolute; right: 74px; top: 50%; transform: translateY(-50%);
+  background: var(--teal-dark); color: #FAF7F2; font-size: 0.7rem;
+  letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;
+  padding: 0.55rem 0.95rem; border-radius: 8px; white-space: nowrap;
+  opacity: 0; visibility: hidden; transition: all 0.25s ease;
+  box-shadow: 0 4px 14px rgba(7,46,40,0.25);
+}
+.whatsapp-fab:hover span { opacity: 1; visibility: visible; }
+.whatsapp-fab span::after {
+  content: ''; position: absolute; right: -5px; top: 50%; transform: translateY(-50%);
+  border: 5px solid transparent; border-left-color: var(--teal-dark);
+}
 
 /* ============ REVEAL ============ */
 /* Progressive enhancement: hidden only when JS is confirmed running (html.js).
