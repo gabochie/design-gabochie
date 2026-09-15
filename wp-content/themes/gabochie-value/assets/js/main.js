@@ -3,6 +3,16 @@
   var $ = function (s, c) { return (c || document).querySelector(s); };
   var $$ = function (s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); };
 
+  /* ---------- "call Gideon" CTA appended to success messages ---------- */
+  function gvCallFirst(parent) {
+    if (!parent || parent.querySelector('.gv-callfirst')) return;
+    var cl = document.createElement('a');
+    cl.className = 'gv-callfirst';
+    cl.href = 'tel:+233268248970';
+    cl.textContent = 'Questions? Call Gideon at +233 26 824 8970';
+    parent.appendChild(cl);
+  }
+
   /* ---------- analytics hook ---------- */
   window.Gabochie = window.Gabochie || {};
   window.Gabochie.track = function (evt, data) {
@@ -284,6 +294,7 @@
         } catch (e) {}
         window.Gabochie.track('gd_guide_request', { guide: 'readiness-checklist', source: source });
         if (ok) ok.classList.add('show');
+        gvCallFirst(ok);
         form.style.display = 'none';
       } else {
         fail();
@@ -344,7 +355,7 @@
         if (res.ok && res.data && res.data.success) {
           var ok = form.parentElement.querySelector('.guide-ok, .foot-newsletter-ok');
           form.style.display = 'none';
-          if (ok) ok.style.display = 'block';
+          if (ok) { ok.style.display = 'block'; gvCallFirst(ok); }
         } else {
           if (btn) { btn.disabled = false; btn.textContent = btnText; }
         }
@@ -377,7 +388,7 @@
       if (res.ok && res.data && res.data.success) {
         var ok = $('#pfOk');
         projectForm.style.display = 'none';
-        if (ok) ok.style.display = 'block';
+        if (ok) { ok.style.display = 'block'; gvCallFirst(ok); }
       } else {
         if (btn) { btn.disabled = false; btn.textContent = btnText; }
       }
@@ -408,7 +419,7 @@
         if (res.ok && res.data && res.data.success) {
           var ok = form.parentElement.querySelector('.guide-ok');
           form.style.display = 'none';
-          if (ok) ok.style.display = 'block';
+          if (ok) { ok.style.display = 'block'; gvCallFirst(ok); }
         } else {
           if (btn) { btn.disabled = false; btn.textContent = btnText; }
         }

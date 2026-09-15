@@ -239,6 +239,7 @@ $is_allowed = isset($_GET['dl'])
                 </form>
                 <p class="gv-thesis-gate-note">No spam. Unsubscribe anytime. Your Readiness Score stays free forever.</p>
                 <div class="gv-thesis-gate-msg" id="gvThesisMsg" role="status"></div>
+                <p class="gv-thesis-callfirst">Want to talk it through first? Call <a href="tel:<?php echo esc_attr( gabochie_value_phone_tel() ); ?>"><?php echo esc_html( gabochie_value_phone() ); ?></a> — Gideon answers questions about your specific project for free.</p>
             </div>
         <?php endif; ?>
 
@@ -263,6 +264,7 @@ $is_allowed = isset($_GET['dl'])
                 <a class="gv-thesis-cta-btn" href="<?php echo esc_url(home_url('/development-quiz/')); ?>">Get Your Free Readiness Score</a>
                 <a class="gv-thesis-cta-btn gv-thesis-cta-btn--ghost" href="<?php echo esc_url(home_url('/membership-levels/')); ?>">See the Membership Plans</a>
             </div>
+            <p class="gv-thesis-callfirst">Any questions on applying the thesis to your build? Call <a href="tel:<?php echo esc_attr( gabochie_value_phone_tel() ); ?>"><?php echo esc_html( gabochie_value_phone() ); ?></a> for free.</p>
         </div>
 
     </div>
@@ -315,7 +317,7 @@ $is_allowed = isset($_GET['dl'])
             .then(function (r) { return r.json(); })
             .then(function (res) {
                 if (res.success) {
-                    show('ok', res.data.message + ' Enjoy the thesis below.');
+                    show('ok', res.data.message + ' Enjoy the thesis below. Questions on applying it to your project? Call Gideon at +233 26 824 8970.');
                     reveal();
                 } else {
                     btn.textContent = 'Send Me the Thesis';

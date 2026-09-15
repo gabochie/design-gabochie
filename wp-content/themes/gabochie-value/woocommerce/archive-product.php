@@ -366,7 +366,7 @@ if ( $shop_loop->have_posts() ) {
 		<dt>Can I upgrade or change plans later?</dt>
 		<dd>Yes. Start with the Free Discovery membership, then step up to Annual Advisory when your project needs year-round support.</dd>
 		<dt>What payment methods are accepted?</dt>
-		<dd>Card and mobile money through our Ghana payment gateways (Moolre, ExpressPay and Paystack). More methods are added as they become available.</dd>
+		<dd>Payments are currently manual: Airtel Money to <strong>Gideon Borketey Abochie</strong> at <a href="tel:<?php echo esc_attr( gabochie_value_phone_tel() ); ?>"><?php echo esc_html( gabochie_value_phone() ); ?></a>. Call the same number before transacting so we can confirm your order. Online card and mobile-money checkout is being set up.</dd>
 	</dl>
 </div></section>
 
@@ -376,6 +376,7 @@ if ( $shop_loop->have_posts() ) {
 	<p>Answer a few questions and get your Development Readiness Score — a free first step, no card required.</p>
 	<a class="btn-gold" href="<?php echo esc_url( home_url( '/onboarding/' ) ); ?>">Start Here — Free</a>
 	<span class="gv-shop-note">Free Discovery · Annual Advisory — upgrade any time, no lock-in.</span>
+	<p class="gv-shop-callfirst">Want a human first? Call <a href="tel:<?php echo esc_attr( gabochie_value_phone_tel() ); ?>"><?php echo esc_html( gabochie_value_phone() ); ?></a> and talk your project through with Gideon before you pay.</p>
 </div></section>
 
 </main>

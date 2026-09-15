@@ -155,6 +155,7 @@ function gabochie_value_handle_thesis_download() {
 		. $levels_url . "\n"
 		. "4. Ask the community building in Ghana right now:\n"
 		. $community_url . "\n\n"
+		. "Got questions about applying any of this to your own project? Call Gideon directly at +233 26 824 8970 — it's free, and he'll point you to exactly what your build needs next.\n\n"
 		. '— The ' . $site_name . ' Team';
 
 	$attachments = array();

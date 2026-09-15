@@ -65,7 +65,7 @@
       </div>
       <div class="bcgh-rcv2-r-breakdown" id="rcv2-breakdown"></div>
       <div class="bcgh-rcv2-r-summary" id="rcv2-summary"></div>
-      <div class="bcgh-rcv2-r-foot"><strong>&#9432;</strong> Advisory estimate based on Ghana market rates. Verify with professionals.</div>
+      <div class="bcgh-rcv2-r-foot"><strong>&#9432;</strong> Advisory estimate based on Ghana market rates. Verify with professionals &mdash; questions? Call Gideon at <a href="tel:+233268248970">+233 26 824 8970</a>.</div>
     </div>
   </div>
 </div>

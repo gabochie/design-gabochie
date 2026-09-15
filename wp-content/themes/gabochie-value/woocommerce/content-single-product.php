@@ -183,9 +183,14 @@ if ( $is_member ) {
 
 			<div class="gv-sp-buy">
 				<?php woocommerce_template_single_add_to_cart(); ?>
+				<div class="gv-sp-manual">
+					<strong>Paying today? It&rsquo;s manual right now.</strong>
+					<p>Send Airtel Money to <strong>Gideon Borketey Abochie</strong> &mdash; <a href="tel:<?php echo esc_attr( gabochie_value_phone_tel() ); ?>"><?php echo esc_html( gabochie_value_phone() ); ?></a>.</p>
+					<p>Call <a href="tel:<?php echo esc_attr( gabochie_value_phone_tel() ); ?>"><?php echo esc_html( gabochie_value_phone() ); ?></a> before transacting so we can confirm your order and activate it.</p>
+				</div>
 				<div class="gv-sp-secure">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-					<span>Secure checkout via Ghana payment gateways</span>
+					<span>Online checkout is coming soon &mdash; manual Airtel Money today</span>
 				</div>
 			</div>
 
@@ -213,6 +218,7 @@ if ( $is_member ) {
 	<h2>Not sure this is for you? <em>Diagnose first — free.</em></h2>
 	<p>Answer a few questions and get an honest readout of whether your project is worth finishing. Free, no card required.</p>
 	<a class="btn-gold" href="<?php echo esc_url( gabochie_value_recovery_url() ); ?>">Diagnose My Project — Free</a>
+	<p class="gv-sp-callfirst">Prefer to talk it through first? Call <a href="tel:<?php echo esc_attr( gabochie_value_phone_tel() ); ?>"><?php echo esc_html( gabochie_value_phone() ); ?></a> and Gideon will walk you through your options.</p>
 </div></section>
 
 <?php do_action( 'woocommerce_after_single_product' ); ?>

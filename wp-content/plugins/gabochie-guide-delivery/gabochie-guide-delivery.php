@@ -250,6 +250,7 @@ final class Gabochie_Guide_Delivery {
       <p style="font-size:14px;color:#3a4a44;margin:0;line-height:1.6;">Not sure where your project stands? We take projects from the first question to the final snagging pass. Bring us your checklist — we will show you exactly what is ready and what is not.</p>
     </div>
     <a href="' . esc_url( home_url( '/contact/' ) ) . '" style="display:inline-block;background:#C9A96E;color:#072E28;text-decoration:none;font-weight:600;padding:12px 24px;border-radius:6px;margin:0 0 8px;">Talk to Us</a>
+    <p style="font-size:13px;color:#2c3a35;line-height:1.7;margin:8px 0 8px;">Or call <a href="tel:+233268248970" style="color:#072E28;font-weight:700;text-decoration:none;">Gideon at +233 26 824 8970</a> — free, and he will walk you through your checklist line by line.</p>
     <p style="font-size:12px;color:#7c8a84;margin:8px 0 0;">' . esc_html( $site ) . ' &middot; Sakumono &middot; Tema &middot; Ghana</p>
   </div>
   <div style="background:#0A4840;padding:16px 32px;font-size:11px;color:#d8d2c4;letter-spacing:1px;text-align:center;">GABOCHIE DESIGN &middot; DESIGN . VALUE . TRANSFORMATION</div>

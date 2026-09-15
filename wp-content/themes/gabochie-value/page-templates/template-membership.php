@@ -391,7 +391,7 @@ body.pmpro-levels { display: block; }
 
             <div class="gv-faq-item">
                 <button class="gv-faq-q" type="button"><span>What payment methods do you accept?</span><span class="gv-faq-chev">▾</span></button>
-                <div class="gv-faq-a"><div class="gv-faq-a-inner">We support secure online payments designed for Ghana — including mobile money and card payments. Your invoice is generated automatically and stored in your account.</div></div>
+                <div class="gv-faq-a"><div class="gv-faq-a-inner">Payments are currently manual: Airtel Money to <strong>Gideon Borketey Abochie</strong> at <a href="tel:<?php echo esc_attr( gabochie_value_phone_tel() ); ?>"><?php echo esc_html( gabochie_value_phone() ); ?></a>. Call before transacting so we can activate your plan. Online checkout is being set up and will be added shortly.</div></div>
             </div>
 
             <div class="gv-faq-item">
@@ -408,6 +408,7 @@ body.pmpro-levels { display: block; }
                 <a class="gv-mem-cta-btn" href="<?php echo esc_url(home_url('/development-quiz/')); ?>">Take the Readiness Quiz</a>
                 <a class="gv-mem-cta-btn gv-mem-cta-btn--ghost" href="<?php echo esc_url(home_url('/contact/')); ?>">Talk to Our Team</a>
             </div>
+            <p class="gv-mem-callfirst">Going paid? Payments are manual for now — Airtel Money to Gideon Borketey Abochie (<a href="tel:<?php echo esc_attr( gabochie_value_phone_tel() ); ?>"><?php echo esc_html( gabochie_value_phone() ); ?></a>). Call first and we'll set your plan up right away.</p>
         </div>
 
     </div>

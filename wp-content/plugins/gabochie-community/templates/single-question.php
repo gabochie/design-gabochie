@@ -75,7 +75,7 @@ $is_lead = (int) get_post_meta( get_the_ID(), '_gabochie_lead_score', true );
 				?>
 			</ol>
 		<?php else : ?>
-			<p class="gqc-no-answers">No answers yet &mdash; the Gabochie team usually replies within a day or two.</p>
+			<p class="gqc-no-answers">No answers yet &mdash; the Gabochie team usually replies within a day or two. Need it faster? Call Gideon at <a href="tel:+233268248970">+233 26 824 8970</a>.</p>
 		<?php endif; ?>
 
 		<?php

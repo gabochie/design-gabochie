@@ -1587,6 +1587,14 @@ function gabochie_value_thesis_pdf( $reader_number = 0 ) {
 	$y = $pdf->paragraph( $m, $y, $ps_line, $cw, 11.6 );
 	$y += 12;
 
+	// Call-first line: free to talk it through.
+	$call_now = 'Questions on applying this to your own project? Call Gideon free at +233 26 824 8970 before you spend a cedi.';
+	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_BOLD );
+	$pdf->set_size( 8.4 );
+	$pdf->set_color( 'teal' );
+	$y = $pdf->paragraph( $m, $y, $call_now, $cw, 11 );
+	$y += 6;
+
 	$pdf->hline( $m, $y, $page_w - $m, 0.8, 'line' );
 	$y += 12;
 	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
