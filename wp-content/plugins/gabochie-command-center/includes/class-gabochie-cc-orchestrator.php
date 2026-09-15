@@ -309,6 +309,8 @@ class Gabochie_CC_Orchestrator {
 			'Open tasks: ' . self::open_task_count() . '. Dashboard: ' . admin_url( 'admin.php?page=gabochie-command-center' ),
 		);
 
+		$lines = apply_filters( 'gabochie_cc_digest_lines', $lines, $kpi );
+
 		$subject = '[Gabochie Ops] Revenue digest — MRR ₵' . number_format( (float) $kpi['mrr'] );
 		wp_mail( $to, $subject, implode( "\n", $lines ) );
 	}

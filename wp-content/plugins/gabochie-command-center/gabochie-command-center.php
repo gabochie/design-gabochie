@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Gabochie Command Center
  * Description: Revenue Command Center v2 — coordinated crews (Marketing, Sales, After-Sales, RevenueOps), live funnel/KPI engine vs the GH₵1M/yr target, orchestrator task log + ops digest, and human-in-the-loop approvals.
- * Version: 2.0.3
+ * Version: 2.1.0
  * Author: Gabochie Design
  * License: GPL-2.0+
  * Text Domain: gabochie-command-center
@@ -15,6 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 require_once __DIR__ . '/includes/class-gabochie-cc-funnel.php';
 require_once __DIR__ . '/includes/class-gabochie-cc-agents.php';
 require_once __DIR__ . '/includes/class-gabochie-cc-orchestrator.php';
+require_once __DIR__ . '/includes/class-gabochie-cc-funding.php';
 
 /**
  * Gabochie Command Center core.
@@ -26,7 +27,7 @@ class Gabochie_Command_Center {
 	 *
 	 * @var string
 	 */
-	const VERSION = '2.0.0';
+	const VERSION = '2.1.0';
 
 	/**
 	 * Approvals option key.
@@ -811,6 +812,7 @@ class Gabochie_Command_Center {
 			'revenue'      => array( 'Revenue &amp; Funnel', array( 'Gabochie_CC_Funnel', 'render_revenue_tab' ) ),
 			'agents'       => array( 'Crews &amp; Agents', array( __CLASS__, 'render_agents_tab' ) ),
 			'orchestrator' => array( 'Orchestrator &amp; Tasks', array( 'Gabochie_CC_Orchestrator', 'render_orchestrator_tab' ) ),
+			'funding'      => array( 'Funding Agent', array( 'Gabochie_CC_Funding', 'render_funding_tab' ) ),
 		);
 	}
 
