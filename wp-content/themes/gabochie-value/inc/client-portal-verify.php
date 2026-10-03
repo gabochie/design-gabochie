@@ -428,7 +428,24 @@ function gabochie_live_status() {
 
 /* ─── Deploy Status Endpoint ─── */
 
+/**
+ * Keep deploy-status reads out of every page cache.
+ *
+ * LiteSpeed heuristically caches this JSON GET (it ships no Cache-Control and
+ * only an ETag), so without this the voice widget can be served a pre-deploy
+ * banner long after a deploy. Same pattern the newsletter tracking pixels use.
+ */
+function gabochie_deploy_status_no_cache() {
+	if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+		define( 'DONOTCACHEPAGE', true );
+	}
+	do_action( 'litespeed_control_set_nocache', 'gabochie-deploy-status' );
+	nocache_headers();
+}
+
 function gabochie_deploy_status($request) {
+	gabochie_deploy_status_no_cache();
+
 	if ('POST' === strtoupper($request->get_method())) {
 		// Defence in depth: permission_callback already gates this; re-check so a
 		// future refactor that loosens the route cannot silently reopen the write.
