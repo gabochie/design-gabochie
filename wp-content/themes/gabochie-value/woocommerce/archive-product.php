@@ -366,7 +366,7 @@ if ( $shop_loop->have_posts() ) {
 		<dt>Can I upgrade or change plans later?</dt>
 		<dd>Yes. Start with the Free Discovery membership, then step up to Annual Advisory when your project needs year-round support.</dd>
 		<dt>What payment methods are accepted?</dt>
-		<dd>Payments are currently manual: Airtel Money to <strong>Gideon Borketey Abochie</strong> at <a href="tel:<?php echo esc_attr( gabochie_value_phone_tel() ); ?>"><?php echo esc_html( gabochie_value_phone() ); ?></a>. Call the same number before transacting so we can confirm your order. Online card and mobile-money checkout is being set up.</dd>
+		<dd>Mobile money via <strong>Moolre Payments</strong> &mdash; MTN MoMo, Telecel Cash and AT Money &mdash; paid directly at checkout, with no account needed. Would rather settle by hand? Call <a href="tel:<?php echo esc_attr( gabochie_value_phone_tel() ); ?>"><?php echo esc_html( gabochie_value_phone() ); ?></a> and we&rsquo;ll confirm your order before you pay.</dd>
 	</dl>
 </div></section>
 
