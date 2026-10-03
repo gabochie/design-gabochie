@@ -3,14 +3,14 @@
  * Gabochie Value Theme Functions
  *
  * @package Gabochie_Value
- * @version 1.11.1
+ * @version 1.11.2
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GABOCHIE_VALUE_VERSION', '1.11.1' );
+define( 'GABOCHIE_VALUE_VERSION', '1.11.2' );
 define( 'GABOCHIE_VALUE_DIR', get_template_directory() );
 define( 'GABOCHIE_VALUE_URI', get_template_directory_uri() );
 
@@ -208,6 +208,55 @@ add_action(
 				'meta_input'   => array( '_wp_page_template' => 'page-templates/template-project-recovery.php' ),
 			)
 		);
+	}
+);
+
+/* ============================================
+	WOOCOMMERCE CART / CHECKOUT — self-healing
+	This theme forces classic WooCommerce templates
+	(see inc/setup.php), so Woo's default Cart and
+	Checkout BLOCK pages render an empty document.
+	Force them back to the classic shortcodes if they
+	ever revert to blocks (DB restore, re-import,
+	fresh install).
+	============================================ */
+add_action(
+	'init',
+	function () {
+		if ( ! class_exists( 'WooCommerce' ) ) {
+			return;
+		}
+		if ( get_option( 'gabochie_value_woo_pages_version' ) === GABOCHIE_VALUE_VERSION ) {
+			return;
+		}
+
+		$pages = array(
+			'woocommerce_cart_page_id'     => 'woocommerce_cart',
+			'woocommerce_checkout_page_id' => 'woocommerce_checkout',
+		);
+
+		foreach ( $pages as $option => $shortcode ) {
+			$page_id = (int) get_option( $option );
+			if ( ! $page_id ) {
+				continue;
+			}
+			$post = get_post( $page_id );
+			if ( ! $post || 'page' !== $post->post_type ) {
+				continue;
+			}
+			$content = (string) $post->post_content;
+			if ( '' === trim( $content ) || false === strpos( $content, 'wp:woocommerce/' ) ) {
+				continue;
+			}
+			wp_update_post(
+				array(
+					'ID'           => $page_id,
+					'post_content' => '[' . $shortcode . ']',
+				)
+			);
+		}
+
+		update_option( 'gabochie_value_woo_pages_version', GABOCHIE_VALUE_VERSION );
 	}
 );
 
