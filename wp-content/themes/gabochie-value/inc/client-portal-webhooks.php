@@ -271,6 +271,10 @@ function gabochie_value_ajax_agent_update() {
 		wp_send_json_error( array( 'message' => 'Unauthorized' ), 403 );
 	}
 
+	// Capability alone does not stop CSRF: an admin can be made to POST here from
+	// any origin. Require a nonce as well.
+	check_ajax_referer( 'gabochie_agent_update', 'nonce' );
+
 	$action = sanitize_text_field( $_POST['agent_action'] ?? '' );
 	$pid    = (int) ( $_POST['project_id'] ?? 0 );
 	$value  = sanitize_text_field( $_POST['value'] ?? '' );
@@ -337,7 +341,12 @@ add_action(
 					}
 					return array( 'log' => get_option( 'gabochie_agent_log', array() ) );
 				},
-				'permission_callback' => '__return_true',
+				'permission_callback' => function () {
+					if ( ! current_user_can( 'manage_options' ) ) {
+						return new WP_Error( 'forbidden', 'Admins only', array( 'status' => 403 ) );
+					}
+					return true;
+				},
 			)
 		);
 

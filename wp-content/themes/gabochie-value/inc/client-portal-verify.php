@@ -5,45 +5,163 @@
  * 
  * GET /wp-json/gabochie/v1/verify-tasks
  *   Returns verification status for all phase checklist tasks.
+ *   ADMIN ONLY — discloses internal component/plugin state.
  * GET /wp-json/gabochie/v1/live-status
  *   Returns comprehensive site status (core, theme, plugins, pages, content, etc.)
- * No auth required (read-only checks).
+ *   ADMIN ONLY — discloses plugin inventory, PHP version, member counts, filesystem state.
+ * GET/POST /wp-json/gabochie/v1/deploy-status
+ *   GET  returns the last deploy banner (consumed same-origin by the voice widget).
+ *   POST stores a deploy banner and REQUIRES a shared secret (see gabochie_deploy_status_secret()).
  */
 
-if (!defined('ABSPATH')) exit;
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 
-add_action('rest_api_init', function () {
-    // CORS for verify endpoints
-    $uri = $_SERVER['REQUEST_URI'] ?? '';
-    if (strpos($uri, '/gabochie/v1/verify') !== false || strpos($uri, '/gabochie/v1/live-status') !== false || strpos($uri, '/gabochie/v1/deploy-status') !== false) {
-        header('Access-Control-Allow-Origin: *');
-        header('Access-Control-Allow-Methods: GET, OPTIONS');
-        header('Access-Control-Allow-Headers: Content-Type');
-        if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-            status_header(200);
-            exit();
-        }
-    }
+add_action(
+	'rest_api_init',
+	function () {
+		register_rest_route(
+			'gabochie/v1',
+			'/verify-tasks',
+			array(
+				'methods'             => 'GET',
+				'callback'            => 'gabochie_verify_tasks',
+				'permission_callback' => 'gabochie_verify_require_admin',
+			)
+		);
 
-    register_rest_route('gabochie/v1', '/verify-tasks', array(
-        'methods'             => 'GET',
-        'callback'            => 'gabochie_verify_tasks',
-        'permission_callback' => '__return_true',
-    ));
+		register_rest_route(
+			'gabochie/v1',
+			'/live-status',
+			array(
+				'methods'             => 'GET',
+				'callback'            => 'gabochie_live_status',
+				'permission_callback' => 'gabochie_verify_require_admin',
+			)
+		);
 
-    register_rest_route('gabochie/v1', '/live-status', array(
-        'methods'             => 'GET',
-        'callback'            => 'gabochie_live_status',
-        'permission_callback' => '__return_true',
-    ));
+		// Deploy notification endpoint — POST from deploy scripts (secret-gated),
+		// GET from the same-origin voice widget.
+		register_rest_route(
+			'gabochie/v1',
+			'/deploy-status',
+			array(
+				'methods'             => 'GET,POST',
+				'callback'            => 'gabochie_deploy_status',
+				'permission_callback' => 'gabochie_deploy_status_permissions',
+			)
+		);
+	}
+);
 
-    // Deploy notification endpoint — POST from deploy scripts, GET from voice widget
-    register_rest_route('gabochie/v1', '/deploy-status', array(
-        'methods'             => 'GET,POST,OPTIONS',
-        'callback'            => 'gabochie_deploy_status',
-        'permission_callback' => '__return_true',
-    ));
-});
+/**
+ * Admin-only gate for the internal diagnostics endpoints.
+ *
+ * These are development/infrastructure probes with no front-end consumer: they
+ * expose the active plugin list, PHP version, membership totals, filesystem
+ * writability and post IDs, so they must never be readable anonymously.
+ * Wildcard CORS was removed entirely (no consumer is cross-origin).
+ *
+ * @return true|WP_Error
+ */
+function gabochie_verify_require_admin() {
+	if ( current_user_can( 'manage_options' ) ) {
+		return true;
+	}
+	return new WP_Error( 'forbidden', 'Admins only.', array( 'status' => 403 ) );
+}
+
+/**
+ * Shared secret for the deploy-status write path.
+ *
+ * Configured out of band, never in the repository:
+ *   1. GABOCHIE_DEPLOY_SECRET constant in wp-config.php (preferred), or
+ *   2. the gabochie_deploy_status_secret option (provisioned via WP-CLI).
+ *
+ * Fails closed: if neither is configured, POSTs are refused rather than
+ * silently allowed.
+ *
+ * @return string
+ */
+function gabochie_deploy_status_secret() {
+	if ( defined( 'GABOCHIE_DEPLOY_SECRET' ) && is_string( GABOCHIE_DEPLOY_SECRET ) ) {
+		$constant = trim( GABOCHIE_DEPLOY_SECRET );
+		if ( '' !== $constant ) {
+			return $constant;
+		}
+	}
+	$option = get_option( 'gabochie_deploy_status_secret', '' );
+	return is_string( $option ) ? trim( $option ) : '';
+}
+
+/**
+ * Read the presented secret from the header (preferred) or the request body.
+ *
+ * @param WP_REST_Request $request Current request.
+ * @return string
+ */
+function gabochie_deploy_status_presented_secret( $request ) {
+	$header = $request->get_header( 'x-gabochie-deploy-secret' );
+	if ( is_string( $header ) && '' !== trim( $header ) ) {
+		return trim( $header );
+	}
+	$body = $request->get_json_params();
+	if ( is_array( $body ) && isset( $body['secret'] ) && is_string( $body['secret'] ) ) {
+		return trim( $body['secret'] );
+	}
+	$form = $request->get_body_params();
+	if ( is_array( $form ) && isset( $form['secret'] ) && is_string( $form['secret'] ) ) {
+		return trim( sanitize_text_field( $form['secret'] ) );
+	}
+	return '';
+}
+
+/**
+ * GET stays public (the voice widget reads the banner same-origin).
+ * POST mutates stored state, so it requires the shared secret.
+ *
+ * @param WP_REST_Request $request Current request.
+ * @return true|WP_Error
+ */
+function gabochie_deploy_status_permissions( $request ) {
+	if ( 'POST' !== strtoupper( $request->get_method() ) ) {
+		return true;
+	}
+
+	$expected = gabochie_deploy_status_secret();
+	if ( '' === $expected ) {
+		return new WP_Error(
+			'deploy_secret_missing',
+			'Deploy status writes are disabled until a shared secret is configured.',
+			array( 'status' => 503 )
+		);
+	}
+
+	$presented = gabochie_deploy_status_presented_secret( $request );
+	if ( '' === $presented || ! hash_equals( $expected, $presented ) ) {
+		return new WP_Error( 'deploy_forbidden', 'Invalid deploy secret.', array( 'status' => 403 ) );
+	}
+
+	return true;
+}
+
+/**
+ * Clamp a stored deploy string: sanitize, drop control characters and bound the
+ * length so a compromised writer can never bloat the option or inject escapes.
+ *
+ * @param mixed $value      Raw value.
+ * @param int   $max_length Maximum characters to keep.
+ * @return string
+ */
+function gabochie_deploy_status_clean_string( $value, $max_length ) {
+	$clean    = sanitize_text_field( (string) $value );
+	$stripped = preg_replace( '/[\x00-\x1F\x7F]/u', '', $clean );
+	if ( is_string( $stripped ) ) {
+		$clean = $stripped;
+	}
+	return substr( $clean, 0, (int) $max_length );
+}
 
 function gabochie_verify_tasks() {
     $results = array();
@@ -311,24 +429,32 @@ function gabochie_live_status() {
 /* ─── Deploy Status Endpoint ─── */
 
 function gabochie_deploy_status($request) {
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        // Store deploy notification (called by deploy scripts)
-        $body = json_decode(file_get_contents('php://input'), true);
-        if (!$body || !isset($body['version'])) {
-            return new WP_Error('missing_version', 'version required', array('status' => 400));
-        }
-        $notification = array(
-            'version'   => sanitize_text_field($body['version']),
-            'tag'       => isset($body['tag']) ? sanitize_text_field($body['tag']) : '',
-            'message'   => isset($body['message']) ? sanitize_text_field($body['message']) : '',
-            'timestamp' => current_time('mysql'),
-            'seen'      => false,
-        );
-        update_option('gabochie_last_deploy', $notification);
-        // Also store in a transient for the voice widget (expires after 1 hour)
-        set_transient('gabochie_deploy_notification', $notification, HOUR_IN_SECONDS);
-        return rest_ensure_response(array('ok' => true, 'deploy' => $notification));
-    }
+	if ('POST' === strtoupper($request->get_method())) {
+		// Defence in depth: permission_callback already gates this; re-check so a
+		// future refactor that loosens the route cannot silently reopen the write.
+		$gate = gabochie_deploy_status_permissions($request);
+		if (is_wp_error($gate)) {
+			return $gate;
+		}
+
+		// Store deploy notification (called by deploy scripts)
+		$body = $request->get_json_params();
+		if (!is_array($body) || empty($body['version'])) {
+			return new WP_Error('missing_version', 'version required', array('status' => 400));
+		}
+
+		$notification = array(
+			'version'   => gabochie_deploy_status_clean_string( $body['version'], 40 ),
+			'tag'       => isset($body['tag'] ) ? gabochie_deploy_status_clean_string( $body['tag'], 40 ) : '',
+			'message'   => isset($body['message'] ) ? gabochie_deploy_status_clean_string( $body['message'], 200 ) : '',
+			'timestamp' => current_time( 'mysql' ),
+			'seen'      => false,
+		);
+		update_option( 'gabochie_last_deploy', $notification );
+		// Also store in a transient for the voice widget (expires after 1 hour)
+		set_transient( 'gabochie_deploy_notification', $notification, HOUR_IN_SECONDS );
+		return rest_ensure_response( array( 'ok' => true, 'deploy' => $notification ) );
+	}
 
     // GET: Return last deploy notification
     $deploy = get_option('gabochie_last_deploy', array());
