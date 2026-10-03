@@ -3,14 +3,14 @@
  * Gabochie Value Theme Functions
  *
  * @package Gabochie_Value
- * @version 1.11.2
+ * @version 1.11.3
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GABOCHIE_VALUE_VERSION', '1.11.2' );
+define( 'GABOCHIE_VALUE_VERSION', '1.11.3' );
 define( 'GABOCHIE_VALUE_DIR', get_template_directory() );
 define( 'GABOCHIE_VALUE_URI', get_template_directory_uri() );
 
@@ -219,6 +219,13 @@ add_action(
 	Force them back to the classic shortcodes if they
 	ever revert to blocks (DB restore, re-import,
 	fresh install).
+
+	The check is time-based rather than one-shot: a DB
+	restore brings the stale timestamp back together
+	with the block content, so the verification has to
+	re-run periodically to catch that case. It costs one
+	autoloaded option read plus an int compare on every
+	request, and two get_post() reads at most once a day.
 	============================================ */
 add_action(
 	'init',
@@ -226,7 +233,9 @@ add_action(
 		if ( ! class_exists( 'WooCommerce' ) ) {
 			return;
 		}
-		if ( get_option( 'gabochie_value_woo_pages_version' ) === GABOCHIE_VALUE_VERSION ) {
+
+		$checked = (int) get_option( 'gabochie_value_woo_pages_checked', 0 );
+		if ( $checked && $checked > ( time() - DAY_IN_SECONDS ) ) {
 			return;
 		}
 
@@ -256,8 +265,9 @@ add_action(
 			);
 		}
 
-		update_option( 'gabochie_value_woo_pages_version', GABOCHIE_VALUE_VERSION );
-	}
+		update_option( 'gabochie_value_woo_pages_checked', time() );
+	},
+	5
 );
 
 add_shortcode(
