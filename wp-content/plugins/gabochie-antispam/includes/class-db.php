@@ -47,6 +47,7 @@ final class Gabochie_Antispam_DB {
             'ai_cap_hour' => 30,
             'honeypot'    => 1,
             'retention'   => 30,
+            'log_cap_hour' => 20,
         );
     }
 
@@ -134,13 +135,59 @@ final class Gabochie_Antispam_DB {
         return $wpdb->delete( self::table(), array( 'id' => (int) $id ), array( '%d' ) );
     }
 
-    public function prune() {
+    /**
+     * Count rows logged from one IP inside a time window.
+     *
+     * Used as a storage-abuse guard: these rows are written from
+     * unauthenticated endpoints, so the volume per IP has to be bounded.
+     *
+     * @param string $ip IP address.
+     * @param int $hours Window size in hours.
+     * @return int
+     */
+    public function count_recent_by_ip( $ip, $hours = 1 ) {
         global $wpdb;
+
+        $ip = (string) $ip;
+        if ( '' === $ip ) {
+            return 0;
+        }
+
+        $table = self::table();
+
+        return (int) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*) FROM {$table} WHERE ip = %s AND created >= %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+                $ip,
+                gmdate( 'Y-m-d H:i:s', time() - (int) $hours * HOUR_IN_SECONDS )
+            )
+        );
+    }
+
+    /**
+     * Delete log rows older than the configured retention window.
+     *
+     * Invoked from WP-Cron (gabochie_antispam_prune, daily) as a static
+     * callable, so it must stay static: registering a non-static method that
+     * way is a TypeError on PHP 8, which fatals the cron request and leaves
+     * the log growing forever with submitters' emails and IPs in it.
+     *
+     * @return int|false Rows deleted, or false if the table is not installed.
+     */
+    public static function prune() {
+        global $wpdb;
+
+        if ( ! self::instance()->table_exists() ) {
+            return false;
+        }
+
         $settings = gabochie_antispam_settings();
         $days = max( 7, (int) ( $settings['retention'] ?? 30 ) );
+        $table = self::table();
+
         return $wpdb->query(
             $wpdb->prepare(
-                "DELETE FROM {$wpdb->prefix}gabochie_antispam WHERE created < %s",
+                "DELETE FROM {$table} WHERE created < %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
                 gmdate( 'Y-m-d H:i:s', time() - $days * DAY_IN_SECONDS )
             )
         );

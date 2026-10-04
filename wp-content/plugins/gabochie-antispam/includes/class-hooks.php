@@ -110,26 +110,48 @@ final class Gabochie_Antispam_Hooks {
     /*  AJAX interception                                                 */
     /* ================================================================== */
 
+    /**
+     * Read one POST field as a plain, unslashed string.
+     *
+     * The guarded actions are reachable without authentication and a visitor
+     * can send name[]=x. sanitize_email() and wp_kses_post() both raise a
+     * TypeError on an array in PHP 8, which would turn a junk field into a
+     * fatal on every guarded form, so the type is forced before sanitizing.
+     *
+     * @param string $key POST key.
+     * @return string Field value, or '' when absent or not scalar.
+     */
+    private static function post_scalar( $key ) {
+        // phpcs:disable WordPress.Security.NonceVerification.Missing
+        if ( ! isset( $_POST[ $key ] ) || ! is_scalar( $_POST[ $key ] ) ) {
+            return '';
+        }
+        return (string) wp_unslash( $_POST[ $key ] );
+        // phpcs:enable WordPress.Security.NonceVerification.Missing
+    }
+
     public function guard_ajax() {
-        $action = isset( $_POST['action'] ) ? sanitize_text_field( wp_unslash( $_POST['action'] ) ) : '';
+        $action = sanitize_text_field( self::post_scalar( 'action' ) );
         $source = self::$ajax_actions[ $action ] ?? 'unknown';
         $settings = gabochie_antispam_settings();
 
         $data = array(
             'source'  => $source,
-            'name'    => sanitize_text_field( wp_unslash( $_POST['name'] ?? '' ) ),
-            'email'   => sanitize_email( $_POST['email'] ?? '' ),
-            'content' => wp_kses_post( $_POST['service'] ?? '' ),
+            'name'    => sanitize_text_field( self::post_scalar( 'name' ) ),
+            'email'   => sanitize_email( self::post_scalar( 'email' ) ),
+            'content' => wp_kses_post( self::post_scalar( 'service' ) ),
             'url'     => '',
-            'ip'      => $_SERVER['REMOTE_ADDR'] ?? '',
+            'ip'      => isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '',
         );
 
         /* merge extra context for richer scoring */
-        if ( ! empty( $_POST['phone'] ) ) {
-            $data['content'] .= ' ' . sanitize_text_field( wp_unslash( $_POST['phone'] ) );
+        $phone = sanitize_text_field( self::post_scalar( 'phone' ) );
+        if ( '' !== $phone ) {
+            $data['content'] .= ' ' . $phone;
         }
-        if ( ! empty( $_POST['project_description'] ) ) {
-            $data['content'] .= ' ' . wp_kses_post( wp_unslash( $_POST['project_description'] ) );
+        $description = wp_kses_post( self::post_scalar( 'project_description' ) );
+        if ( '' !== $description ) {
+            $data['content'] .= ' ' . $description;
         }
 
         /* honeypot check */
@@ -227,6 +249,20 @@ final class Gabochie_Antispam_Hooks {
 
     private function log_entry( $data, $score, $verdict, $reasons, $ai ) {
         $db = Gabochie_Antispam_DB::instance();
+
+        /*
+         * Storage-abuse guard. The guarded actions are unauthenticated, so
+         * without a cap a bot can append unlimited rows (each holding an
+         * email, an IP and LONGTEXT content) just by POSTing. Only the audit
+         * row is dropped once the cap is hit: spam is still blocked and ham
+         * still passes, so real visitors are never affected.
+         */
+        $settings = gabochie_antispam_settings();
+        $cap = (int) apply_filters( 'gabochie_antispam_log_cap_hour', max( 0, (int) ( $settings['log_cap_hour'] ?? 20 ) ) );
+        if ( $cap > 0 && $db->count_recent_by_ip( (string) ( $data['ip'] ?? '' ), 1 ) >= $cap ) {
+            return 0;
+        }
+
         return $db->log( array(
             'source'  => $data['source'],
             'name'    => $data['name'],
