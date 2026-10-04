@@ -83,3 +83,43 @@ function gabochie_crm_delete_contact( $id ) {
 function gabochie_crm_update_contact( $id, array $data = array() ) {
 	return Gabochie_Crm::update_contact( $id, $data );
 }
+
+/**
+ * Completed-order totals per billing email, keyed by lowercase email.
+ *
+ * @return array
+ */
+function gabochie_crm_order_stats() {
+	if ( ! class_exists( 'Gabochie_Crm_Purchases' ) ) {
+		return array();
+	}
+	return Gabochie_Crm_Purchases::order_stats();
+}
+
+/**
+ * Customers for the admin view: contacts joined to completed-order totals.
+ *
+ * @param array $args search, per_page, page.
+ * @return array{total:int,items:array}
+ */
+function gabochie_crm_customers( array $args = array() ) {
+	if ( ! class_exists( 'Gabochie_Crm_Purchases' ) ) {
+		return array(
+			'total' => 0,
+			'items' => array(),
+		);
+	}
+	return Gabochie_Crm_Purchases::customers( $args );
+}
+
+/**
+ * Manually capture a completed order as a customer (backfill / repair).
+ *
+ * @param int $order_id WooCommerce order id.
+ * @return void
+ */
+function gabochie_crm_capture_order( $order_id ) {
+	if ( class_exists( 'Gabochie_Crm_Purchases' ) ) {
+		Gabochie_Crm_Purchases::on_order_completed( $order_id );
+	}
+}

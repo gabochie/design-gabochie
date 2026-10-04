@@ -376,6 +376,29 @@ class Gabochie_Crm {
 	}
 
 	/**
+	 * Fetch a single contact row by email.
+	 *
+	 * Purchase capture needs this to read the existing tag set before merging
+	 * (upsert_contact is merge-only, so tags must be passed complete) and to
+	 * tell a brand new contact from an existing one.
+	 *
+	 * @param  string $email Contact email.
+	 * @return array|null Associative row, or null when missing.
+	 */
+	public static function get_contact_by_email( $email ) {
+		global $wpdb;
+		$email = strtolower( trim( sanitize_email( (string) $email ) ) );
+		if ( '' === $email || ! is_email( $email ) || ! self::ready() ) {
+			return null;
+		}
+		$row = $wpdb->get_row(
+			$wpdb->prepare( 'SELECT * FROM %i WHERE email = %s', self::table(), $email ),
+			ARRAY_A
+		);
+		return is_array( $row ) ? $row : null;
+	}
+
+	/**
 	 * Search / list contacts with filters and pagination.
 	 *
 	 * @param array $args {

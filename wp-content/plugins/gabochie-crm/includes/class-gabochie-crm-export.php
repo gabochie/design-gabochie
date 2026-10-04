@@ -201,11 +201,36 @@ class Gabochie_Crm_Export {
 	 * @return never
 	 */
 	public static function admin_export() {
+		$tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'contacts'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		// The Customers tab is a different row shape (contact fields joined to
+		// completed-order totals), so it exports through its own path.
+		if ( 'customers' === $tab ) {
+			$rows = array();
+			foreach ( Gabochie_Crm_Purchases::customers_for_export( isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '' ) as $r ) {
+				$stat   = isset( $r['stats'] ) && is_array( $r['stats'] ) ? $r['stats'] : array();
+				$rows[] = array(
+					'email'       => isset( $r['email'] ) ? $r['email'] : '',
+					'first_name'  => isset( $r['first_name'] ) ? $r['first_name'] : '',
+					'last_name'   => isset( $r['last_name'] ) ? $r['last_name'] : '',
+					'phone'       => isset( $r['phone'] ) ? $r['phone'] : '',
+					'orders'      => isset( $stat['orders'] ) ? (int) $stat['orders'] : 0,
+					'spend'       => isset( $stat['spend'] ) ? number_format( (float) $stat['spend'], 2, '.', '' ) : '0.00',
+					'currency'    => isset( $stat['currency'] ) ? $stat['currency'] : '',
+					'first_order' => isset( $stat['first_at'] ) ? $stat['first_at'] : '',
+					'last_order'  => isset( $stat['last_at'] ) ? $stat['last_at'] : '',
+					'newsletter'  => isset( $r['status'] ) ? $r['status'] : '',
+					'tags'        => isset( $r['tags'] ) ? $r['tags'] : '',
+				);
+			}
+			self::stream_customers_csv( $rows );
+		}
+
 		// The newsletter tab lists status=subscribed by default even without an
 		// explicit status filter — mirror that so "Export CSV" there exports
 		// exactly what the tab shows.
 		$status = isset( $_GET['status'] ) ? sanitize_key( wp_unslash( $_GET['status'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( '' === $status && isset( $_GET['tab'] ) && 'newsletter' === sanitize_key( wp_unslash( $_GET['tab'] ) ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( '' === $status && 'newsletter' === $tab ) {
 			$status = 'subscribed';
 		}
 		self::stream_csv(
@@ -219,6 +244,34 @@ class Gabochie_Crm_Export {
 				)
 			)
 		);
+	}
+
+	/**
+	 * Stream customer rows as a CSV download. Always exits.
+	 *
+	 * @param array $rows Customer rows.
+	 * @return never
+	 */
+	public static function stream_customers_csv( array $rows ) {
+		$filename = 'gabochie-customers-' . gmdate( 'Y-m-d' ) . '.csv';
+		nocache_headers();
+		header( 'Content-Type: text/csv; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename=' . $filename );
+		$fh = fopen( 'php://output', 'w' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+		fputcsv( $fh, array( 'email', 'first_name', 'last_name', 'phone', 'orders', 'spend', 'currency', 'first_order', 'last_order', 'newsletter', 'tags' ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fputcsv
+		foreach ( $rows as $r ) {
+			fputcsv(
+				$fh,
+				array_map(
+					static function ( $v ) {
+						return (string) $v;
+					},
+					$r
+				)
+			); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fputcsv
+		}
+		fclose( $fh ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+		exit;
 	}
 
 	/**

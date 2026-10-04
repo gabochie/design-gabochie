@@ -2,8 +2,8 @@
 /**
  * Plugin Name: Gabochie CRM
  * Plugin URI:  https://gabochiedesign.com
- * Description: In-house contact store for gabochiedesign.com. Owns the gab_contacts table: the single subscriber/lead source for the newsletter, lead hub and command center. Replaces FluentCRM as the audience store with a tiny first-party table. Ships a Contacts admin (Contacts + Newsletter tabs: list table, edit, bulk actions, add-to-newsletter), CSV export and GDPR export/erase.
- * Version:     1.2.0
+ * Description: In-house contact store for gabochiedesign.com. Owns the gab_contacts table: the single subscriber/lead source for the newsletter, lead hub and command center. Replaces FluentCRM as the audience store with a tiny first-party table. Ships a Contacts admin (Contacts + Newsletter + Customers tabs: list table, edit, bulk actions, add-to-newsletter), CSV export and GDPR export/erase. Captures WooCommerce purchases into the store as customers.
+ * Version:     1.3.0
  * Requires PHP: 8.0
  * Author:      Gabochie Design Studio
  * Author URI:  https://gabochiedesign.com
@@ -12,13 +12,15 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'GABOCHIE_CRM_VERSION', '1.2.0' );
+define( 'GABOCHIE_CRM_VERSION', '1.3.0' );
 define( 'GABOCHIE_CRM_PATH', plugin_dir_path( __FILE__ ) );
 
 require_once GABOCHIE_CRM_PATH . 'includes/class-gabochie-crm.php';
 require_once GABOCHIE_CRM_PATH . 'functions.php';
+require_once GABOCHIE_CRM_PATH . 'includes/class-gabochie-crm-purchases.php';
 require_once GABOCHIE_CRM_PATH . 'includes/class-gabochie-crm-export.php';
 require_once GABOCHIE_CRM_PATH . 'includes/class-gabochie-crm-list-table.php';
+require_once GABOCHIE_CRM_PATH . 'includes/class-gabochie-crm-customers-table.php';
 require_once GABOCHIE_CRM_PATH . 'includes/class-gabochie-crm-admin.php';
 
 /**
@@ -29,6 +31,18 @@ add_action(
 	function () {
 		Gabochie_Crm::ensure_schema();
 	}
+);
+
+/**
+ * Purchase capture. Runs on plugins_loaded so WooCommerce is loaded first, and
+ * is a no-op when WooCommerce is absent.
+ */
+add_action(
+	'plugins_loaded',
+	static function () {
+		Gabochie_Crm_Purchases::register();
+	},
+	11
 );
 
 /**

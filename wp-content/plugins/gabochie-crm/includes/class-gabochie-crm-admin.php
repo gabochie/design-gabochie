@@ -22,6 +22,13 @@ class Gabochie_Crm_Admin {
 	const PAGE = 'gabochie-crm';
 
 	/**
+	 * Valid admin sub-tabs. Kept as a single source of truth because two places
+	 * collapse an unknown tab to "contacts" - adding a tab without adding it
+	 * here makes it silently unreachable.
+	 */
+	const TABS = array( 'contacts', 'newsletter', 'customers' );
+
+	/**
 	 * Wire hooks.
 	 */
 	public static function register() {
@@ -104,9 +111,7 @@ class Gabochie_Crm_Admin {
 		}
 
 		$tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'contacts'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( 'newsletter' !== $tab ) {
-			$tab = 'contacts';
-		}
+		$tab = in_array( $tab, self::TABS, true ) ? $tab : 'contacts';
 
 		// CSV export (list-table tablenav button).
 		if ( isset( $_GET['export_csv'] ) && check_admin_referer( 'bulk-contacts' ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -279,7 +284,7 @@ class Gabochie_Crm_Admin {
 	 */
 	public static function render_page() {
 		$tab     = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'contacts'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$tab     = 'newsletter' === $tab ? 'newsletter' : 'contacts';
+		$tab     = in_array( $tab, self::TABS, true ) ? $tab : 'contacts';
 		$edit_id = isset( $_GET['edit'] ) ? (int) $_GET['edit'] : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
 		echo '<div class="wrap">';
@@ -296,8 +301,40 @@ class Gabochie_Crm_Admin {
 			echo '</div>';
 			return;
 		}
+		if ( 'customers' === $tab ) {
+			self::render_customers();
+			echo '</div>';
+			return;
+		}
 		self::render_list();
 		echo '</div>';
+	}
+
+	/**
+	 * Render the Customers view: buyers with their completed-order totals.
+	 */
+	private static function render_customers() {
+		if ( ! Gabochie_Crm_Purchases::woo_active() ) {
+			echo '<div class="notice notice-warning"><p>';
+			echo esc_html__( 'WooCommerce is not active, so purchase capture is paused.', 'gabochie-crm' );
+			echo '</p></div>';
+			return;
+		}
+
+		$table = new Gabochie_Crm_Customers_Table();
+		$table->prepare_items();
+		?>
+		<p class="description">
+			<?php esc_html_e( 'Everyone who has completed a purchase, with what they have spent. Recorded automatically when WooCommerce marks an order completed.', 'gabochie-crm' ); ?>
+		</p>
+		<?php
+		// No wrapping <form> here: the table's search_box() emits its own, which
+		// also carries the page + tab hidden fields. Nesting them is invalid
+		// markup and browsers drop the inner form on parse.
+		$table->search_box( __( 'Search customers', 'gabochie-crm' ), 'gab-crm-customer-search' );
+		$table->display();
+		?>
+		<?php
 	}
 
 	/**
@@ -309,6 +346,7 @@ class Gabochie_Crm_Admin {
 		$tabs = array(
 			'contacts'   => __( 'Contacts', 'gabochie-crm' ),
 			'newsletter' => __( 'Newsletter', 'gabochie-crm' ),
+			'customers'  => __( 'Customers', 'gabochie-crm' ),
 		);
 		echo '<nav class="nav-tab-wrapper wp-clearfix">';
 		foreach ( $tabs as $key => $label ) {
