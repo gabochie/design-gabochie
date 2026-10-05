@@ -254,7 +254,7 @@ class Gabochie_SEO_Admin {
             $priority = $p->post_type === 'page' && $p->post_parent === 0 ? '0.9' : '0.7';
             $xml .= '  <url>';
             $xml .= '<loc>' . esc_url(get_permalink($p->ID)) . '</loc>';
-            $xml .= '<lastmod>' . get_the_modified_date('c', $p->ID) . '</lastmod>';
+            $xml .= '<lastmod>' . esc_xml( get_the_modified_date( 'c', $p->ID ) ) . '</lastmod>';
             $xml .= '<priority>' . $priority . '</priority>';
             $xml .= '</url>' . "\n";
         }
