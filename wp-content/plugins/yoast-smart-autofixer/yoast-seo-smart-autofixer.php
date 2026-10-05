@@ -377,9 +377,17 @@ class YoastSmartAutoFixer {
     }
 
     private function fix_slug($post_id, $post, $focuskw) {
+        // Rewriting a published post's slug breaks every existing inbound URL,
+        // so it is opt-in only. Default off: the "kw_not_in_slug" recommendation
+        // stays advisory and canonical slugs are never rewritten automatically.
+        if ('1' !== (string) get_option('yaf_allow_slug_rewrite', '0')) {
+            return 0;
+        }
         $new_slug = $this->slugify($focuskw);
         if (!empty($new_slug) && $new_slug !== $post->post_name) {
+            $old_slug = $post->post_name;
             wp_update_post(array('ID' => $post_id, 'post_name' => $new_slug));
+            $this->log_change($post_id, 'post_name', $old_slug, $new_slug);
             return 1;
         }
         return 0;
@@ -2781,9 +2789,9 @@ class YoastSmartAutoFixer {
                 'type' => 'seo',
                 'severity' => 'info',
                 'title' => 'Keyphrase not in URL slug',
-                'description' => 'The focus keyphrase "' . esc_html($focuskw) . '" does not appear in the URL.',
-                'fixable' => true,
-                'fix_action' => 'fix_slug',
+                'description' => 'The focus keyphrase "' . esc_html($focuskw) . '" does not appear in the URL. Advisory only: changing a published slug breaks existing links, so this is never auto-fixed.',
+                'fixable' => false,
+                'fix_action' => 'manual',
                 'category' => 'seo',
             );
         }
@@ -3167,9 +3175,9 @@ class YoastSmartAutoFixer {
             $fixed += $this->fix_seo_title_length($post_id, $post, $focuskw);
         }
 
-        // Fix slug
+        // Fix slug (opt-in only via yaf_allow_slug_rewrite; never rewrites by default)
         $slug = $post->post_name;
-        if (!empty($focuskw) && !empty($slug) && stripos($slug, $this->slugify($focuskw)) === false) {
+        if ('1' === (string) get_option('yaf_allow_slug_rewrite', '0') && !empty($focuskw) && !empty($slug) && stripos($slug, $this->slugify($focuskw)) === false) {
             $fixed += $this->fix_slug($post_id, $post, $focuskw);
         }
 
@@ -3330,8 +3338,8 @@ class YoastSmartAutoFixer {
                 return true;
 
             case 'kw_not_in_slug':
-                $this->fix_slug($post_id, $post, $focuskw);
-                return true;
+                // Advisory only - rewrite requires the yaf_allow_slug_rewrite opt-in.
+                return $this->fix_slug($post_id, $post, $focuskw) ? true : false;
 
             case 'kw_not_in_intro':
                 $this->fix_kw_intro($post_id, $post, $focuskw);
