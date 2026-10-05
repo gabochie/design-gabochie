@@ -150,8 +150,8 @@ if ($current_level) {
     </div>
     <div class="d2-stat">
         <div class="d2-stat-label">Progress</div>
-        <div class="d2-stat-value" style="color:var(--gold)"><?php echo $stats['progress']; ?>%</div>
-        <div class="d2-progress"><div class="d2-progress-fill" style="width:<?php echo $stats['progress']; ?>%"></div></div>
+        <div class="d2-stat-value" style="color:var(--gold)"><?php echo esc_html( (string) max( 0, min( 100, (int) $stats['progress'] ) ) ); ?>%</div>
+        <div class="d2-progress"><div class="d2-progress-fill" style="width:<?php echo esc_attr( (string) max( 0, min( 100, (int) $stats['progress'] ) ) ); ?>%"></div></div>
     </div>
     <div class="d2-stat">
         <div class="d2-stat-label">Budget</div>
@@ -266,7 +266,7 @@ if ($current_level) {
             <span class="d2-badge teal"><?php echo $stats['progress']; ?>% Complete</span>
         </div>
         <div class="d2-section-body">
-            <div class="d2-progress" style="margin-top:0"><div class="d2-progress-fill" style="width:<?php echo $stats['progress']; ?>%"></div></div>
+            <div class="d2-progress" style="margin-top:0"><div class="d2-progress-fill" style="width:<?php echo esc_attr( (string) max( 0, min( 100, (int) $stats['progress'] ) ) ); ?>%"></div></div>
             <div class="d2-timeline" id="d2-timeline">
                 <?php
                 $current_stage = get_post_meta($latest->ID, 'project_stage', true) ?: 'Discovery';
@@ -362,7 +362,7 @@ if ($current_level) {
                 <span class="d2-badge <?php echo $coverage >= 80 ? 'green' : ($coverage >= 50 ? 'orange' : 'red'); ?>"><?php echo $coverage; ?>%</span>
             </div>
             <div class="d2-section-body">
-                <div class="d2-progress" style="margin-top:0"><div class="d2-progress-fill" style="width:<?php echo $coverage; ?>%"></div></div>
+                <div class="d2-progress" style="margin-top:0"><div class="d2-progress-fill" style="width:<?php echo esc_attr( (string) max( 0, min( 100, (int) $coverage ) ) ); ?>%"></div></div>
                 <?php
                 $missing = array();
                 foreach ($all_doc_types as $key => $label) {
@@ -487,13 +487,13 @@ if ($current_level) {
                 <?php
                 $colors = array('land'=>'#0D5C52','design'=>'#2980B9','permits'=>'#27AE60','site_prep'=>'#E67E22','foundation'=>'#8E44AD','finishes'=>'#C9A96E','m&e'=>'#C0392B','exterior'=>'#1ABC9C','furniture'=>'#34495E','contingency'=>'#95A5A6','other'=>'#BDC3C7');
                 foreach ($cat_totals as $cat => $amt) : ?>
-                <div class="d2-cost-seg" style="width:<?php echo $grand > 0 ? round(($amt/$grand)*100) : 0; ?>%;background:<?php echo $colors[$cat] ?? '#BDC3C7'; ?>" title="<?php echo esc_attr(($stats['currency'] ?? 'GHS') . ' ' . number_format($amt)); ?>"></div>
+                <div class="d2-cost-seg" style="width:<?php echo esc_attr( (string) ( $grand > 0 ? max( 0, min( 100, round( ( $amt / $grand ) * 100 ) ) ) : 0 ) ); ?>%;background:<?php echo esc_attr( $colors[ $cat ] ?? '#BDC3C7' ); ?>" title="<?php echo esc_attr( ( $stats['currency'] ?? 'GHS' ) . ' ' . number_format( $amt ) ); ?>"></div>
                 <?php endforeach; ?>
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:1rem;margin-top:.75rem;font-size:.78rem">
                 <?php foreach ($cat_totals as $cat => $amt) : ?>
                 <div style="display:flex;align-items:center;gap:.35rem">
-                    <div style="width:10px;height:10px;border-radius:2px;background:<?php echo $colors[$cat] ?? '#BDC3C7'; ?>"></div>
+                    <div style="width:10px;height:10px;border-radius:2px;background:<?php echo esc_attr( $colors[ $cat ] ?? '#BDC3C7' ); ?>"></div>
                     <span style="color:var(--mist)"><?php echo esc_html(ucwords(str_replace('_',' ',$cat))); ?>:</span>
                     <strong><?php echo esc_html(number_format($amt)); ?></strong>
                 </div>
