@@ -92,6 +92,21 @@ final class Gabochie_Voice_Rest {
 		$history    = isset( $params['history'] ) && is_array( $params['history'] ) ? $params['history'] : array();
 		$session_id = isset( $params['session_id'] ) ? sanitize_text_field( (string) $params['session_id'] ) : '';
 
+		// Bound the outbound payload: the whole history is billed as prompt tokens.
+		$message = substr( $message, 0, 2000 );
+		$history = array_slice( $history, -20 );
+		foreach ( $history as $index => $turn ) {
+			if ( ! is_array( $turn ) ) {
+				unset( $history[ $index ] );
+				continue;
+			}
+			foreach ( array( 'text', 'content' ) as $field ) {
+				if ( isset( $turn[ $field ] ) && is_scalar( $turn[ $field ] ) ) {
+					$history[ $index ][ $field ] = substr( (string) $turn[ $field ], 0, 2000 );
+				}
+			}
+		}
+
 		if ( empty( $message ) ) {
 			return new WP_Error(
 				'gva_empty_message',
@@ -121,6 +136,15 @@ final class Gabochie_Voice_Rest {
 				);
 			}
 			set_transient( $rate_key, $chat_count + 1, 600 );
+		}
+
+		// Rate limit: 60 messages per IP per 10 minutes, always applied.
+		// The session cap above is caller-controlled (session_id is supplied by
+		// the client), so without this an anonymous caller could mint unlimited
+		// session ids and spend the site's Gemini quota.
+		$ip_limit = $this->rate_limit_ip( 60, 600 );
+		if ( is_wp_error( $ip_limit ) ) {
+			return $ip_limit;
 		}
 
 		$reply = $this->call_gemini( $message, $history, $api_key );
@@ -300,6 +324,48 @@ final class Gabochie_Voice_Rest {
 			);
 		}
 		set_transient( $key, $used + 1, HOUR_IN_SECONDS );
+		return true;
+	}
+
+	/**
+	 * Resolve the caller IP for rate limiting.
+	 *
+	 * Prefers the left-most X-Forwarded-For entry (Cloudflare appends the real
+	 * client IP there), falling back to REMOTE_ADDR.
+	 *
+	 * @return string
+	 */
+	private function client_ip() {
+		$ip = '';
+		if ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
+			$parts = explode( ',', sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) );
+			$ip    = trim( $parts[0] );
+		}
+		if ( '' === $ip && ! empty( $_SERVER['REMOTE_ADDR'] ) ) {
+			$ip = trim( sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) );
+		}
+		$ip = substr( preg_replace( '/[^0-9a-fA-F:. ]/', '', $ip ), 0, 45 );
+		return '' === $ip ? 'unknown' : $ip;
+	}
+
+	/**
+	 * Per-IP request cap, independent of any client-supplied identifier.
+	 *
+	 * @param int $max     Requests allowed in the window.
+	 * @param int $seconds Window length in seconds.
+	 * @return true|WP_Error
+	 */
+	private function rate_limit_ip( $max, $seconds ) {
+		$key  = 'gva_rl_ip_' . md5( $this->client_ip() );
+		$used = (int) get_transient( $key );
+		if ( $used >= $max ) {
+			return new WP_Error(
+				'gva_rate_limited_ip',
+				__( 'Too many requests from your connection. Please wait a moment.', 'gabochie-voice-agent' ),
+				array( 'status' => 429 )
+			);
+		}
+		set_transient( $key, $used + 1, $seconds );
 		return true;
 	}
 
