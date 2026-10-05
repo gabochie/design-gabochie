@@ -36,5 +36,5 @@ Gabochie_Antispam_Admin::instance();
  * Convenience accessor for plugin settings.
  */
 function gabochie_antispam_settings() {
-    return get_option( 'gabochie_antispam_settings', Gabochie_Antispam_DB::default_settings() );
+	return get_option( 'gabochie_antispam_settings', Gabochie_Antispam_DB::default_settings() );
 }
