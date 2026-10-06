@@ -3,14 +3,14 @@
  * Gabochie Value Theme Functions
  *
  * @package Gabochie_Value
- * @version 1.11.3
+ * @version 1.11.4
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GABOCHIE_VALUE_VERSION', '1.11.3' );
+define( 'GABOCHIE_VALUE_VERSION', '1.11.4' );
 define( 'GABOCHIE_VALUE_DIR', get_template_directory() );
 define( 'GABOCHIE_VALUE_URI', get_template_directory_uri() );
 
@@ -30,6 +30,43 @@ add_action(
 remove_action( 'woocommerce_before_main_content', 'woocommerce_breadcrumb', 20 );
 remove_action( 'woocommerce_before_shop_loop', 'woocommerce_result_count', 20 );
 remove_action( 'woocommerce_before_shop_loop', 'woocommerce_catalog_ordering', 30 );
+
+/* ============================================
+	CLOUDFLARE EMAIL — keep the email_off/email_on markers
+	LiteSpeed's HTML minifier strips HTML comments by default,
+	which silently drops the Cloudflare email-protection opt-out
+	markers in footer.php/header.php. Without them Cloudflare
+	obfuscates the plain `mailto:` links at the edge, so the raw
+	fallback is lost. Seed LiteSpeed's "HTML Keep Comments" list so
+	the markers survive minification and any DB reset/reimport.
+	Litespeed config options are autoloaded, so the check is a
+	cached read; the write only happens when the markers are absent.
+	============================================ */
+add_action(
+	'after_setup_theme',
+	function () {
+		if ( ! defined( 'LSCWP_V' ) ) {
+			return;
+		}
+
+		$keep = get_option( 'litespeed.conf.optm-html_skip_comment' );
+		if ( ! is_string( $keep ) || '' === $keep ) {
+			$keep = '';
+		}
+
+		if ( false === strpos( $keep, 'email_off' ) || false === strpos( $keep, 'email_on' ) ) {
+			$decoded = json_decode( $keep, true );
+			if ( ! is_array( $decoded ) || ! $decoded ) {
+				$decoded = array();
+			}
+
+			$decoded = array_values( array_unique( array_merge( array( 'email_off', 'email_on' ), $decoded ) ) );
+
+			update_option( 'litespeed.conf.optm-html_skip_comment', wp_json_encode( $decoded ) );
+		}
+	},
+	20
+);
 
 /* ============================================
 	MODULAR INCLUDES
