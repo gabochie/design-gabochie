@@ -66,7 +66,20 @@ $social_svgs = array(
 		</ul>
 	</div>
 
-	<!-- Company + Contact -->
+	<!-- Explore -->
+	<div class="foot-col">
+		<p class="foot-heading">Explore</p>
+		<ul>
+		<li><a href="<?php echo esc_url( home_url( '/building-cost-board/' ) ); ?>">Ghana Build Price Board</a></li>
+		<li><a href="<?php echo esc_url( home_url( '/building-cost-calculator/' ) ); ?>">Build Cost Calculator</a></li>
+		<li><a href="<?php echo esc_url( home_url( '/development-quiz/' ) ); ?>">Development Readiness Quiz</a></li>
+		<li><a href="<?php echo esc_url( home_url( '/project-recovery/' ) ); ?>">Project Recovery Library</a></li>
+		<li><a href="<?php echo esc_url( home_url( '/product/project-recovery-diagnostic/' ) ); ?>">Recovery Diagnostic &mdash; &#8373;1,500</a></li>
+		<li><a href="<?php echo esc_url( home_url( '/thesis/' ) ); ?>">Thesis</a></li>
+		</ul>
+	</div>
+
+	<!-- Company -->
 	<div class="foot-col">
 		<p class="foot-heading">Company</p>
 		<ul>
@@ -78,6 +91,13 @@ $social_svgs = array(
 		<li><a href="<?php echo esc_url( home_url( '/marketplace/' ) ); ?>">Marketplace</a></li>
 		<li><a href="<?php echo esc_url( home_url( '/membership-levels/' ) ); ?>">Membership &mdash; from &#8373;2,000/yr</a></li>
 		<li><a href="<?php echo esc_url( home_url( '/login/' ) ); ?>">Client Portal</a></li>
+		</ul>
+	</div>
+
+	<!-- Contact -->
+	<div class="foot-col">
+		<p class="foot-heading">Contact</p>
+		<ul>
 		<li class="foot-contact foot-contact-first">
 			<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
 			<a href="tel:<?php echo esc_attr( $phone_tel ); ?>"><?php echo esc_html( $phone ); ?></a>
