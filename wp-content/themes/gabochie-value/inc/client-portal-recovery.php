@@ -278,6 +278,81 @@ function gabochie_recovery_seed( $project_id, $blockers = array() ) {
 }
 
 /**
+ * Ensure a WP account exists for a recovery order.
+ *
+ * Guests pay at the WooCommerce checkout with no WordPress account; the
+ * workspace provisioner must attach the project to a real account, otherwise
+ * fulfillment silently returns 0. Create a subscriber on the fly (temporary
+ * password sent to the buyer) and transfer the order to the new customer id.
+ *
+ * @param string   $email Buyer's billing email address.
+ * @param WC_Order $order Order object (used for customer name and ownership).
+ * @return array{user_id:int,password:string} user_id 0 on failure; password is empty when the account already existed.
+ */
+function gabochie_recovery_ensure_account( $email, $order ) {
+	if ( ! is_email( $email ) ) {
+		return array(
+			'user_id'  => 0,
+			'password' => '',
+		);
+	}
+
+	$existing = get_user_by( 'email', $email );
+	if ( $existing ) {
+		return array(
+			'user_id'  => (int) $existing->ID,
+			'password' => '',
+		);
+	}
+
+	$first = method_exists( $order, 'get_billing_first_name' ) ? $order->get_billing_first_name() : '';
+	$last  = method_exists( $order, 'get_billing_last_name' ) ? $order->get_billing_last_name() : '';
+
+	$base  = sanitize_user( strstr( $email, '@', true ), true );
+	$login = '' !== $base ? $base : 'recovery';
+	if ( username_exists( $login ) ) {
+		$login = $base . '_' . wp_rand( 100, 999 );
+		if ( username_exists( $login ) ) {
+			$login = $base . '_' . wp_rand( 1000, 9999 );
+		}
+	}
+
+	$password = wp_generate_password( 20, true, true );
+	$display  = trim( $first . ' ' . $last );
+	$user_id  = wp_insert_user(
+		array(
+			'user_login'   => $login,
+			'user_pass'    => $password,
+			'user_email'   => $email,
+			'first_name'   => $first,
+			'last_name'    => $last,
+			'display_name' => '' !== $display ? $display : $email,
+			'role'         => 'subscriber',
+		)
+	);
+	if ( is_wp_error( $user_id ) || ! $user_id ) {
+		return array(
+			'user_id'  => 0,
+			'password' => '',
+		);
+	}
+
+	update_user_meta( $user_id, 'gabochie_account_created_by_order', (string) $order->get_id() );
+	update_user_meta( $user_id, 'gabochie_must_reset_password', '1' );
+
+	// Transfer the order to the new account so re-runs match by id.
+	if ( method_exists( $order, 'set_customer_id' ) ) {
+		$order->set_customer_id( $user_id );
+		$order->save();
+	}
+
+	return array(
+		'user_id'  => (int) $user_id,
+		'password' => $password,
+	);
+}
+
+/**
  * Provision recovery workspace after diagnostic purchase.
  *
  * @param int $order_id Order ID.
@@ -290,10 +365,12 @@ function gabochie_recovery_provision( $order_id, $project_id = 0 ) {
 		return 0;
 	}
 	$user_id = $order->get_customer_id();
-	if ( ! $user_id ) {
-		$email = $order->get_billing_email();
-		$user  = $email ? get_user_by( 'email', $email ) : null;
-		$user_id = $user ? $user->ID : 0;
+	$email    = $order->get_billing_email();
+	$new_pass = '';
+	if ( ! $user_id && is_email( $email ) ) {
+		$account  = gabochie_recovery_ensure_account( $email, $order );
+		$user_id  = (int) $account['user_id'];
+		$new_pass = (string) $account['password'];
 	}
 	if ( ! $user_id ) {
 		return 0;
@@ -353,18 +430,58 @@ function gabochie_recovery_provision( $order_id, $project_id = 0 ) {
 	}
 
 	// Email owner.
-	$user = get_userdata( $user_id );
+	$site_name = get_bloginfo( 'name' );
+	$dash_url  = home_url( '/dashboard/?project=' . $project_id . '#recovery' );
+
+	$user       = get_userdata( $user_id );
+	$user_email = ( $user && $user->user_email ) ? $user->user_email : $email;
+
+	$login_note = '';
+	if ( $new_pass ) {
+		$login_note =
+			"\n\nYour sign-in details:\n" .
+			'Sign in: ' . esc_url( home_url( '/login/' ) ) . "\n" .
+			'Email: ' . $user_email . "\n" .
+			'Temporary password: ' . $new_pass . "\n" .
+			"Please change it after your first sign-in (Dashboard → Your account).\n";
+	}
+
 	if ( $user && $user->user_email ) {
-		$site_name = get_bloginfo( 'name' );
-		$dash_url  = home_url( '/dashboard/?project=' . $project_id . '#recovery' );
+		$display = $user->display_name ? $user->display_name : $user->user_login;
+		$body =
+			'Hi ' . $display . ",\n\n" .
+			"Your Project Recovery Diagnostic is confirmed. Your step-by-step Recovery Workspace is now active.\n\n" .
+			"Open your workspace:\n" . esc_url( $dash_url ) . "\n" .
+			$login_note .
+			"\n\nPick up at Triage — work through Evidence → Plan → Execution with your facilitator.\n" .
+			'— The ' . $site_name . ' Team';
 		wp_mail(
 			$user->user_email,
 			'Your Recovery Workspace is ready — ' . $site_name,
-			"Hi " . ( $user->display_name ?: $user->user_login ) . ",\n\n" .
-			"Your Project Recovery Diagnostic is confirmed. Your step-by-step Recovery Workspace is now active.\n\n" .
-			"Open your workspace:\n" . esc_url( $dash_url ) . "\n\n" .
-			"Pick up at Triage — work through Evidence → Plan → Execution with your facilitator.\n" .
-			"— The " . $site_name . " Team",
+			$body,
+			array( 'Content-Type: text/plain; charset=UTF-8' )
+		);
+	}
+
+	// Notify the fulfillment team so triage starts promptly (email → gabochie-email → Brevo).
+	$team_to = get_option( 'gabochie_team_notify_email', '' );
+	if ( ! is_email( $team_to ) ) {
+		$team_to = (string) get_option( 'admin_email' );
+	}
+	if ( is_email( $team_to ) ) {
+		$cust       = get_userdata( $user_id );
+		$cust_email = $cust ? $cust->user_email : $email;
+		$cust_name  = $cust ? ( $cust->display_name ? $cust->display_name : $cust->user_login ) : '—';
+		$phone      = method_exists( $order, 'get_billing_phone' ) ? $order->get_billing_phone() : '';
+		wp_mail(
+			$team_to,
+			'PAID Recovery Diagnostic — Order #' . $order_id . ' ready for triage',
+			"Paid order ready for triage.\n\n" .
+			'Order: #' . $order_id . "\n" .
+			'Customer: ' . $cust_name . ' <' . $cust_email . ">\n" .
+			( $phone ? 'Phone: ' . $phone . "\n" : '' ) .
+			'Workspace: ' . esc_url( $dash_url ) . "\n\n" .
+			'Open the workspace, review the Uploaded Evidence, and start the Recovery Diagnostic report.',
 			array( 'Content-Type: text/plain; charset=UTF-8' )
 		);
 	}

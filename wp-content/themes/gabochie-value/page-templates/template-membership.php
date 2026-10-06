@@ -19,17 +19,20 @@ if (function_exists('pmpro_getAllLevels')) {
 /* Curated benefit lists (balanced with level descriptions) */
 $gv_benefits = array(
     1 => array('Private project portal & document vault', 'Development Readiness Score', 'AI consultation tools (Ama)', 'Community Q&A access', 'Free initial consultation'),
-    2 => array('Everything in Free Discovery', 'Full project dashboard', 'Document vault & secure messaging', 'Design review & feedback rounds', 'Cost tracking & budget tools', 'Priority consultant support'),
+    2 => array('Everything in Free Discovery', 'Full project dashboard', 'Document vault & secure messaging', 'Design review & feedback rounds', 'Cost tracking & budget tools', 'Member-only Advisory Library', 'Priority consultant support'),
+    3 => array('Everything in Annual Advisory', 'Dedicated consultant on monthly calls', 'Advisory Library — full member toolkit', 'Quarterly project health review', 'Priority recovery triage', 'Fast-track design & review queue'),
 );
 
 $gv_icons = array(
     1 => '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><circle cx="24" cy="24" r="18"/><path d="M12 24h24M24 12v24"/></svg>',
     2 => '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="6" width="32" height="36" rx="3"/><line x1="14" y1="14" x2="34" y2="14"/><line x1="14" y1="22" x2="28" y2="22"/><path d="M14 30h20M14 36h12"/></svg>',
+    3 => '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 32V16h6l4-6h4l4 6h6v16z"/><path d="M24 20v8M20 24h8"/></svg>',
 );
 
 $gv_badges = array(
     1 => 'Free Discovery',
     2 => 'Annual Advisory',
+    3 => 'Premium',
 );
 
 function gv_level_price($l) {
@@ -309,7 +312,7 @@ body.pmpro-levels { display: block; }
                 $gv_order[$gv_l->id] = $gv_l;
             }
             /* Present levels by id; Annual Advisory (2) featured */
-            $gv_sequence = array(1, 2);
+            $gv_sequence = array(1, 2, 3);
             foreach ($gv_sequence as $gv_lid) :
                 if (!isset($gv_order[$gv_lid])) continue;
                 $gv_l = $gv_order[$gv_lid];
@@ -319,7 +322,7 @@ body.pmpro-levels { display: block; }
             <div class="gv-mem-card<?php echo $gv_f ? ' gv-mem-card--featured' : ''; ?>">
                 <?php if ($gv_f) : ?><div class="gv-mem-ribbon">Most Popular</div><?php endif; ?>
 
-                <div class="gv-mem-tier"><span class="gv-mem-tier-<?php echo $gv_lid === 1 ? 'free' : 'active'; ?>"><?php echo esc_html($gv_badges[$gv_lid]); ?></span></div>
+                <div class="gv-mem-tier"><span class="gv-mem-tier-<?php echo $gv_lid === 1 ? 'free' : ( $gv_lid === 3 ? 'premium' : 'active' ); ?>"><?php echo esc_html($gv_badges[$gv_lid]); ?></span></div>
 
                 <div class="gv-mem-ico"><?php echo $gv_icons[$gv_lid]; ?></div>
 
@@ -381,7 +384,7 @@ body.pmpro-levels { display: block; }
 
             <div class="gv-faq-item">
                 <button class="gv-faq-q" type="button"><span>Which plan is right for me?</span><span class="gv-faq-chev">▾</span></button>
-                <div class="gv-faq-a"><div class="gv-faq-a-inner">Start with Free Discovery — it gives you your private portal and Development Readiness Score at no cost. If you're building this year, Annual Advisory (₵2,000/year) unlocks the full dashboard, design collaboration, budget tools, and priority consultant support.</div></div>
+                <div class="gv-faq-a"><div class="gv-faq-a-inner">Start with Free Discovery — it gives you your private portal and Development Readiness Score at no cost. If you're building this year, Annual Advisory (₵2,000/year) unlocks the full dashboard, design collaboration, budget tools, the member-only Advisory Library, and priority consultant support. For larger or stalled projects, Premium (₵4,800/year) adds a dedicated consultant on monthly calls and fast-track recovery triage.</div></div>
             </div>
 
             <div class="gv-faq-item">
