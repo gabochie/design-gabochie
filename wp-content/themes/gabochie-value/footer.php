@@ -23,7 +23,7 @@ $social_svgs = array(
 	<!-- Brand + Trust -->
 	<div class="foot-brand">
 		<a class="logo-link" href="<?php echo esc_url( home_url( '/' ) ); ?>">
-		<svg class="logo-hex" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><polygon points="26,4 47,15 47,37 26,48 5,37 5,15" fill="#072E28" stroke="#C9A96E" stroke-width="2"/><text x="26" y="29" text-anchor="middle" font-family="Georgia,serif" font-size="17" font-weight="700" fill="#C9A96E">GD</text></svg>
+		<svg class="logo-hex" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><polygon points="26,4 47,15 47,37 26,48 5,37 5,15" fill="#072E28" stroke="#C9A96E" stroke-width="2"/><text x="26" y="29" text-anchor="middle" font-family="Georgia,serif" font-size="17" font-weight="700" fill="#C9A96E">GD</text></svg>
 		<span class="logo-text"><span class="logo-name">GABOCHIE DESIGN</span><span class="logo-tag">Design. Value. Transformation.</span></span>
 		</a>
 		<p>From first idea to completed project and beyond &mdash; we help you make better decisions at every stage of your building journey.</p>
