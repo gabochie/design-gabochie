@@ -906,9 +906,3 @@ img.alignleft, img.alignright, img.aligncenter { display: block; }
 .gv-toc li::marker { color: var(--gold); font-weight: 600; }
 .gv-toc a { color: inherit; text-decoration: none; border-bottom: 1px dotted rgba(13,92,82,0.35); }
 .gv-toc a:hover { color: var(--teal); border-bottom-color: var(--teal); }
-@media (max-width: 768px) {
-	.gabochie-voice-widget {
-		bottom: calc(72px + 1rem + env(safe-area-inset-bottom));
-		z-index: 99998;
-	}
-}
