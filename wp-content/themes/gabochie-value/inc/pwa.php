@@ -25,8 +25,7 @@ function gabochie_value_pwa_maybe_serve() {
 	if ( ! isset( $_SERVER['REQUEST_URI'] ) || empty( $_SERVER['REQUEST_URI'] ) ) {
 		return;
 	}
-	// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized,WordPress.Security.ValidatedSanitizedInput.MissingUnslash
-	$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '';
+	$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
 	$path        = wp_parse_url( $request_uri, PHP_URL_PATH );
 	if ( null === $path ) {
 		return;
@@ -49,7 +48,7 @@ function gabochie_value_pwa_maybe_serve() {
 			litespeed_control_set_nocache( 'pwa-manifest' );
 		}
 		header( 'Content-Type: application/manifest+json; charset=utf-8' );
-		echo file_get_contents( GABOCHIE_VALUE_DIR . '/assets/manifest.webmanifest' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo file_get_contents( GABOCHIE_VALUE_DIR . '/assets/manifest.webmanifest' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.WP.AlternativeFunctions.file_system_read_file_get_contents
 		exit;
 	}
 	if ( '/offline.html' === $path ) {
@@ -59,7 +58,7 @@ function gabochie_value_pwa_maybe_serve() {
 			litespeed_control_set_nocache( 'pwa-offline' );
 		}
 		header( 'Content-Type: text/html; charset=utf-8' );
-		echo file_get_contents( GABOCHIE_VALUE_DIR . '/offline.html' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo file_get_contents( GABOCHIE_VALUE_DIR . '/offline.html' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.WP.AlternativeFunctions.file_system_read_file_get_contents
 		exit;
 	}
 }
@@ -68,7 +67,7 @@ add_action( 'init', 'gabochie_value_pwa_maybe_serve', 1 );
 function gabochie_value_pwa_head() {
 	echo '<link rel="manifest" href="' . esc_url( home_url( '/manifest.webmanifest' ) ) . '">' . "\n";
 	echo '<meta name="apple-mobile-web-app-capable" content="yes">' . "\n";
-	echo '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">' . "\n";
+	echo '<meta name="apple-mobile-web-app-status-bar-style" content="default">' . "\n";
 	echo '<link rel="apple-touch-icon" href="' . esc_url( GABOCHIE_VALUE_URI . '/assets/images/pwa/icon-192.png' ) . '">' . "\n";
 }
 add_action( 'wp_head', 'gabochie_value_pwa_head', 1 );

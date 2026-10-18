@@ -59,10 +59,10 @@
   .fab:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(13,92,82,0.55); }\
   .fab:active { transform: translateY(0); }\
   .fab.listening { animation: pulse 1.5s infinite; }\
-  @media (max-width: 768px) {\
-    .fab { bottom: calc(72px + 1rem + env(safe-area-inset-bottom)); }\
-    .panel { bottom: calc(72px + 88px + env(safe-area-inset-bottom)); }\
-  }\
+   @media (max-width: 768px) {\
+     .fab { bottom: calc(72px + 1rem + env(safe-area-inset-bottom)); }\
+     .panel { bottom: calc(72px + 88px + env(safe-area-inset-bottom)); max-height: calc(100vh - 176px); max-height: calc(100dvh - 176px); }\
+   }\
   @keyframes pulse {\
     0%, 100% { box-shadow: 0 4px 16px rgba(13,92,82,0.45); }\
     50% { box-shadow: 0 4px 24px rgba(201,169,110,0.6); }\

@@ -1,6 +1,10 @@
 {
   "name": "Gabochie Design",
   "short_name": "Gabochie",
+  "id": "/",
+  "description": "Development intelligence platform for Ghana — build cost, recovery and advisory services.",
+  "lang": "en",
+  "dir": "ltr",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

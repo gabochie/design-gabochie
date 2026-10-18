@@ -37,8 +37,8 @@
 
   /* ---------- mobile menu ---------- */
   var tgl = $('#navToggle'), mm = $('#mobileMenu'), barTgl = $('#barMenuBtn');
-  function closeMenu() { if (mm) { mm.style.display = 'none'; } if (tgl) { tgl.setAttribute('aria-expanded', 'false'); tgl.classList.remove('open'); } if (barTgl) { barTgl.setAttribute('aria-expanded', 'false'); } document.body.style.overflow = ''; }
-  function toggleMenu() { if (!mm) return; var open = mm.style.display === 'flex'; mm.style.display = open ? 'none' : 'flex'; if (tgl) { tgl.setAttribute('aria-expanded', open ? 'false' : 'true'); tgl.classList.toggle('open', !open); } if (barTgl) { barTgl.setAttribute('aria-expanded', open ? 'false' : 'true'); } document.body.style.overflow = open ? '' : 'hidden'; }
+function closeMenu() { if (mm) { mm.style.display = 'none'; } if (tgl) { tgl.setAttribute('aria-expanded', 'false'); tgl.classList.remove('open'); } if (barTgl) { barTgl.setAttribute('aria-expanded', 'false'); barTgl.setAttribute('aria-label', 'Open menu'); } document.body.style.overflow = ''; }
+function toggleMenu() { if (!mm) return; var open = mm.style.display === 'flex'; mm.style.display = open ? 'none' : 'flex'; if (tgl) { tgl.setAttribute('aria-expanded', open ? 'false' : 'true'); tgl.classList.toggle('open', !open); } if (barTgl) { barTgl.setAttribute('aria-expanded', open ? 'false' : 'true'); barTgl.setAttribute('aria-label', open ? 'Open menu' : 'Close menu'); } document.body.style.overflow = open ? '' : 'hidden'; }
   if (mm) {
     if (tgl) tgl.addEventListener('click', toggleMenu);
     if (barTgl) barTgl.addEventListener('click', toggleMenu);
@@ -643,14 +643,11 @@
     }
   /* ---------- bottom bar active ---------- */
   (function(){
-    if (window.innerWidth <= 768) {
-      var path = location.pathname.replace(/\/$/, '');
-      var bar = document.querySelectorAll('.bb-item[data-bb]');
-      bar.forEach(function(b){ b.classList.remove('is-active'); });
-      if (path === '' || path === '/') { var h = document.querySelector('.bb-item[data-bb="home"]'); if (h) h.classList.add('is-active'); }
-      else if (location.pathname.indexOf('/onboarding') !== -1) { var s = document.querySelector('.bb-item[data-bb="start"]'); if (s) s.classList.add('is-active'); }
-      else if (location.pathname.indexOf('#services') !== -1 || document.querySelector('section#services')) { /* keep simple */ }
-    }
+    var path = location.pathname.replace(/\/$/, '');
+    var bar = document.querySelectorAll('.bb-item[data-bb]');
+    bar.forEach(function(b){ b.classList.remove('is-active'); });
+    if (path === '' || path === '/') { var h = document.querySelector('.bb-item[data-bb="home"]'); if (h) h.classList.add('is-active'); }
+    else if (location.pathname.indexOf('/onboarding') !== -1) { var s = document.querySelector('.bb-item[data-bb="start"]'); if (s) s.classList.add('is-active'); }
   })();
 
   })();
