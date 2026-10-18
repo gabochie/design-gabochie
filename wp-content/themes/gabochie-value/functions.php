@@ -166,6 +166,7 @@ add_action(
 			'3d-visualization'               => 'section:services',
 			'ai-consultation'                => '/onboarding/',
 			'diaspora-guide'                 => 'section:diaspora',
+			'log-in'                         => '/login/',
 		);
 
 		$slug = $page->post_name;

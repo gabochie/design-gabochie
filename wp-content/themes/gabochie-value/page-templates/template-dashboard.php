@@ -6,6 +6,12 @@
 
 if (!is_user_logged_in()) { wp_redirect(home_url('/login/')); exit; }
 
+// Prevent dashboard from being indexed (private client area)
+add_filter( 'wp_head', function () {
+	echo '<meta name="robots" content="noindex, nofollow">' . "\n";
+	return '';
+}, 1 );
+
 get_header();
 $user = wp_get_current_user();
 $is_admin = in_array('administrator', $user->roles);
