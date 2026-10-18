@@ -3,14 +3,14 @@
  * Gabochie Value Theme Functions
  *
  * @package Gabochie_Value
- * @version 1.11.4
+ * @version 1.12.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GABOCHIE_VALUE_VERSION', '1.11.4' );
+define( 'GABOCHIE_VALUE_VERSION', '1.12.0' );
 define( 'GABOCHIE_VALUE_DIR', get_template_directory() );
 define( 'GABOCHIE_VALUE_URI', get_template_directory_uri() );
 
@@ -106,6 +106,8 @@ require_once GABOCHIE_VALUE_DIR . '/inc/client-portal-verify.php';
 	PROJECT RECOVERY WORKSPACE (MVP)
 	============================================ */
 require_once GABOCHIE_VALUE_DIR . '/inc/client-portal-recovery.php';
+require_once GABOCHIE_VALUE_DIR . '/inc/pwa.php';
+
 
 /* ============================================
 	MEMBERSHIP — Client Login & Redirects
