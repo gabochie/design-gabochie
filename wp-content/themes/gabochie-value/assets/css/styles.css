@@ -876,9 +876,10 @@ button.bb-item { background: none; border: 0; font: inherit; color: inherit; cur
    .bb-cta .bb-chip { width: 28px; height: 28px; border-radius: 50%; background: var(--gold); color: var(--teal-dark); display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 18px rgba(201,169,110,0.35); }
    .bb-cta .bb-chip svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; }
    .bb-cta span { color: var(--gold); }
-   body { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
-   .back-to-top { right: 1rem; bottom: calc(72px + 1rem + env(safe-area-inset-bottom)); z-index: 1050; }
-   .bottom-bar { display: grid; }
+body { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+    .back-to-top { right: 1rem; bottom: calc(72px + 1rem + env(safe-area-inset-bottom)); z-index: 1050; }
+    .bottom-bar { display: grid; }
+    .mobile-menu { padding-bottom: calc(72px + env(safe-area-inset-bottom) + 1.5rem); }
    .whatsapp-fab { display: none; }
    .mobile-menu { padding-bottom: calc(72px + env(safe-area-inset-bottom) + 1.5rem); }
 }
@@ -886,7 +887,7 @@ button.bb-item { background: none; border: 0; font: inherit; color: inherit; cur
   .choice-grid { grid-template-columns: 1fr; }
   .choice.notsure { grid-column: span 1; }
   .guide-form { flex-direction: column; }
-  .exit-popup { padding: 1.75rem; }
+  .exit-popup { padding: 1.75rem; max-height: calc(100vh - 2rem); overflow-y: auto; }
   .exit-popup-form { flex-direction: column; }
   .pricing-card-price { font-size: 1.5rem; }
   .pricing-cta-price { font-size: 1.8rem; }
