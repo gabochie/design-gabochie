@@ -1,0 +1,198 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PHP_VERSION: "8.3"
+  IN_HOUSE_PATHS: >-
+    wp-content/plugins/gabochie-*
+    wp-content/plugins/includes
+    wp-content/plugins/boq-construction-suite.php
+    wp-content/plugins/boq-silence-rest-output
+    wp-content/plugins/wp-ai-emergency-recovery
+    wp-content/plugins/tests
+    wp-content/themes/gabochie-value
+
+jobs:
+  php-syntax:
+    name: PHP syntax
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          coverage: none
+          tools: none
+
+      - name: Lint in-house plugins and theme
+        shell: bash
+        run: |
+          set -uo pipefail
+          mapfile -d '' files < <(
+            # shellcheck disable=SC2086
+            find $IN_HOUSE_PATHS \
+              -type f -name '*.php' \
+              -not -path '*/vendor/*' -not -path '*/node_modules/*' \
+              -print0 2>/dev/null
+          )
+          echo "Linting ${#files[@]} PHP files"
+          failed=0
+          for f in "${files[@]}"; do
+            if ! out="$(php -l "$f" 2>&1)"; then
+              echo "::error file=$f::${out//$'\n'/ }"
+              failed=1
+            fi
+          done
+          [ "$failed" -eq 0 ] || { echo "PHP syntax check failed"; exit 1; }
+          echo "All PHP files pass php -l"
+
+      - name: Lint deploy webhook
+        run: php -l deploy/webhook.php
+
+  shell-lint:
+    name: Deploy scripts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: bash -n
+        run: |
+          set -euo pipefail
+          for f in deploy/*.sh deploy/lib/*.sh; do
+            bash -n "$f"
+            echo "OK $f"
+          done
+
+      - name: Install shellcheck
+        run: sudo apt-get update -qq && sudo apt-get install -y shellcheck
+
+      - name: shellcheck (errors block)
+        run: shellcheck -x -S error deploy/*.sh deploy/lib/*.sh
+
+      - name: shellcheck (warnings, advisory)
+        continue-on-error: true
+        run: shellcheck -x -S warning -f gcc deploy/*.sh deploy/lib/*.sh
+
+  hygiene:
+    name: Repo hygiene
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: No committed secrets or environment files
+        shell: bash
+        run: |
+          set -euo pipefail
+          failed=0
+
+          blocked="$(git ls-files | grep -E '(^|/)(\.env|wp-config\.php|wp-config-local\.php|.*\.pem|.*\.key|id_rsa|id_ed25519)$' || true)"
+          if [ -n "$blocked" ]; then
+            echo "::error::Secret-bearing files are tracked:"; echo "$blocked"; failed=1
+          fi
+
+          if git grep -nI -E 'gabochie-deploy-2026|BEGIN (RSA|OPENSSH|EC) PRIVATE KEY' -- . ':!*.md' ':!deploy/secrets/*.example'; then
+            echo "::error::Known secret literal or private key found in tracked files"
+            failed=1
+          fi
+
+          [ "$failed" -eq 0 ] || exit 1
+          echo "No tracked secrets detected"
+
+      - name: Plugin headers
+        shell: bash
+        run: |
+          set -euo pipefail
+          failed=0
+          shopt -s nullglob
+          for dir in wp-content/plugins/gabochie-*; do
+            [ -d "$dir" ] || continue
+            main="$(grep -rl -m1 -E '^\s*\*?\s*Plugin Name:' "$dir" --include='*.php' --exclude-dir=vendor | head -1 || true)"
+            if [ -z "$main" ]; then
+              echo "::error file=$dir::No WordPress plugin header (Plugin Name:) found"
+              failed=1
+            fi
+          done
+          [ "$failed" -eq 0 ] || exit 1
+          echo "All in-house plugins declare a header"
+
+      - name: Deploy scripts must be LF
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git grep -lI $'\r' -- 'deploy/*.sh' 'deploy/lib/*.sh' 'deploy/*.php'; then
+            echo "::error::CRLF line endings found in deploy scripts"
+            exit 1
+          fi
+          echo "Line endings OK"
+
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          coverage: none
+          tools: composer
+
+      - name: Cache Composer downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/composer
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Run PHPUnit
+        run: php vendor/phpunit/phpunit/phpunit -c wp-content/plugins/tests/phpunit.xml --colors=never
+
+  phpcs:
+    name: PHPCS (advisory)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          coverage: none
+          tools: composer
+
+      - name: Install standards
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Run PHPCS
+        run: |
+          # shellcheck disable=SC2086
+          vendor/bin/phpcs --standard=phpcs.xml.dist \
+            --extensions=php --report=summary --report-width=120 \
+            $IN_HOUSE_PATHS

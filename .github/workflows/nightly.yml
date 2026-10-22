@@ -1,0 +1,169 @@
+name: Nightly
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+    inputs:
+      run_backup:
+        description: "Run a fresh database + uploads backup"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: nightly
+  cancel-in-progress: false
+
+env:
+  DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+  DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+  DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+
+jobs:
+  health:
+    name: Health probe
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure SSH
+        uses: ./.github/actions/configure-ssh
+        with:
+          private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known-hosts: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
+
+      - name: Run healthcheck
+        run: |
+          set -euo pipefail
+          SSH_CMD=(ssh -i ~/.ssh/deploy_key -p "$DEPLOY_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes "$DEPLOY_USER@$DEPLOY_HOST")
+          set +e
+          OUT="$("${SSH_CMD[@]}" health 2>&1)"
+          rc=$?
+          set -e
+          printf '%s\n' "$OUT"
+          printf '%s\n' "$OUT" > health.json
+          {
+            echo "## Healthcheck"
+            echo '```json'
+            printf '%s\n' "$OUT"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          [ "$rc" -eq 0 ] || { echo "::error::Healthcheck reported critical failures"; exit 1; }
+
+      - name: Upload health report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: health-${{ github.run_id }}
+          path: health.json
+          retention-days: 30
+
+  backup:
+    name: Backups
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure SSH
+        uses: ./.github/actions/configure-ssh
+        with:
+          private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known-hosts: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
+
+      - name: Create backup when requested
+        if: github.event.inputs.run_backup == 'true'
+        run: |
+          set -euo pipefail
+          SSH_CMD=(ssh -i ~/.ssh/deploy_key -p "$DEPLOY_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes "$DEPLOY_USER@$DEPLOY_HOST")
+          "${SSH_CMD[@]}" backup
+
+      - name: Verify newest backup is current
+        run: |
+          set -euo pipefail
+          SSH_CMD=(ssh -i ~/.ssh/deploy_key -p "$DEPLOY_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes "$DEPLOY_USER@$DEPLOY_HOST")
+          set +e
+          RESULT="$("${SSH_CMD[@]}" backup-status 2>&1)"
+          rc=$?
+          set -e
+          printf '%s\n' "$RESULT"
+          {
+            echo "## Backups"
+            echo '```'
+            printf '%s\n' "$RESULT"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::Backup verification failed (exit $rc)"
+            exit 1
+          fi
+
+  smoke:
+    name: Live + staging smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Live
+        run: bash deploy/lib/smoke-test.sh live
+
+      - name: Staging
+        run: bash deploy/lib/smoke-test.sh staging
+
+  updates:
+    name: WordPress update report
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure SSH
+        uses: ./.github/actions/configure-ssh
+        with:
+          private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known-hosts: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
+
+      - name: Collect pending updates
+        run: |
+          set -euo pipefail
+          SSH_CMD=(ssh -i ~/.ssh/deploy_key -p "$DEPLOY_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes "$DEPLOY_USER@$DEPLOY_HOST")
+          "${SSH_CMD[@]}" updates > updates.txt || true
+          cat updates.txt
+          {
+            echo "## Pending WordPress updates (staging)"
+            echo '```'
+            cat updates.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  notify:
+    name: Report failures
+    needs: [health, backup, smoke]
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Open or update an ops issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          RESULTS: ${{ join(needs.*.result, ', ') }}
+        run: |
+          set -euo pipefail
+          TITLE="🚨 Nightly operations check failed"
+          BODY=$(printf 'Run: %s\n\nJob results: %s\n\nSee the workflow summary for details.' "$RUN_URL" "$RESULTS")
+          existing="$(gh issue list --label ops --state open --search "$TITLE in:title" --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$BODY"
+          else
+            gh issue create --title "$TITLE" --label ops --body "$BODY" || \
+              gh issue create --title "$TITLE" --body "$BODY"
+          fi

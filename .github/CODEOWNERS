@@ -1,0 +1,11 @@
+# Default owner for everything in the repository.
+* @gabochie
+
+# Deploy engine and CI/CD: changes here affect production.
+/deploy/ @gabochie
+/.github/ @gabochie
+
+# Payment, membership and checkout code needs an explicit review.
+/wp-content/plugins/paid-memberships-pro/ @gabochie
+/wp-content/plugins/woocommerce/ @gabochie
+/wp-content/themes/gabochie-value/inc/client-portal-verify.php @gabochie

@@ -1,0 +1,32 @@
+{
+  "name": "gabochie/gabochie-design",
+  "description": "WordPress site, in-house plugins and gabochie-value theme for gabochiedesign.com",
+  "type": "project",
+  "license": "proprietary",
+  "require-dev": {
+    "squizlabs/php_codesniffer": "^3.10",
+    "wp-coding-standards/wpcs": "^3.1",
+    "phpcompatibility/phpcompatibility-wp": "^2.1",
+    "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+    "phpstan/phpstan": "^1.12",
+    "szepeviktor/phpstan-wordpress": "^1.3",
+    "phpunit/phpunit": "^10.5"
+  },
+  "config": {
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    },
+    "sort-packages": true
+  },
+  "scripts": {
+    "lint": "phpcs --standard=phpcs.xml.dist",
+    "lint:summary": "phpcs --standard=phpcs.xml.dist --report=summary",
+    "lint:fix": "phpcbf --standard=phpcs.xml.dist",
+    "analyse": "phpstan analyse --memory-limit=1G --no-progress",
+    "test": "phpunit -c wp-content/plugins/tests/phpunit.xml",
+    "check": [
+      "@lint",
+      "@test"
+    ]
+  }
+}

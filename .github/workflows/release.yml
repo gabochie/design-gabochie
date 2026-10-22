@@ -1,0 +1,176 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+      - "auto-*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to create from main (for example v3.22.5)"
+        required: true
+        type: string
+      reason:
+        description: "Why this release is being promoted (recorded in the audit log)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+  DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+  DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+
+jobs:
+  promote:
+    name: Create release tag
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    steps:
+      - name: Configure SSH
+        uses: ./.github/actions/configure-ssh
+        with:
+          private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known-hosts: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
+
+      - name: Refuse to reuse an existing tag
+        env:
+          TAG: ${{ github.event.inputs.tag }}
+        run: |
+          set -euo pipefail
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][A-Za-z0-9]+)*$ ]]; then
+            echo "::error::Tag '$TAG' must look like v3.22.5"
+            exit 1
+          fi
+          if git ls-remote --tags "https://github.com/$GITHUB_REPOSITORY.git" "refs/tags/$TAG" | grep -q .; then
+            echo "::error::Tag $TAG already exists. Release a new version instead of moving a published tag."
+            exit 1
+          fi
+
+      - name: Create the tag from the QA-passed commit on main
+        env:
+          TAG: ${{ github.event.inputs.tag }}
+        run: |
+          set -euo pipefail
+          SSH_CMD=(ssh -i ~/.ssh/deploy_key -p "$DEPLOY_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes "$DEPLOY_USER@$DEPLOY_HOST")
+          "${SSH_CMD[@]}" "promote '$TAG'"
+
+  verify:
+    name: Verify production
+    needs: promote
+    if: always() && (github.event_name == 'push' || needs.promote.result == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+    steps:
+      - name: Checkout default branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Resolve tag
+        id: tag
+        env:
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+          REF_NAME: ${{ github.ref_name }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" = "workflow_dispatch" ]; then TAG="$INPUT_TAG"; else TAG="$REF_NAME"; fi
+          if ! [[ "$TAG" =~ ^(v[0-9][A-Za-z0-9._-]*|auto-[0-9]{8}-[0-9]{6})$ ]]; then
+            echo "::error::Unexpected tag '$TAG'"
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Verifying $TAG"
+
+      - name: Configure SSH
+        uses: ./.github/actions/configure-ssh
+        with:
+          private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known-hosts: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
+
+      - name: Wait for the deploy webhook to finish
+        id: wait
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -uo pipefail
+          SSH_CMD=(ssh -i ~/.ssh/deploy_key -p "$DEPLOY_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes "$DEPLOY_USER@$DEPLOY_HOST")
+          set +e
+          OUT="$("${SSH_CMD[@]}" "verify-tag '$TAG'" 2>&1)"
+          rc=$?
+          set -e
+          printf '%s\n' "$OUT"
+          case "$rc" in
+            0) echo "result=deployed" >> "$GITHUB_OUTPUT" ;;
+            2) echo "result=blocked" >> "$GITHUB_OUTPUT"; echo "::error::Production deploy was blocked by the staging QA gate." ;;
+            3) echo "result=checkout-failed" >> "$GITHUB_OUTPUT"; echo "::error::The server could not check out tag $TAG." ;;
+            4) echo "result=timeout" >> "$GITHUB_OUTPUT"; echo "::error::Timed out waiting for the production deploy." ;;
+            *) echo "result=error" >> "$GITHUB_OUTPUT"; echo "::error::verify-tag failed with exit code $rc." ;;
+          esac
+          exit "$rc"
+
+      - name: Smoke test production
+        id: smoke
+        continue-on-error: true
+        run: bash deploy/lib/smoke-test.sh live
+
+      - name: Roll back when production is unhealthy
+        if: steps.wait.outputs.result == 'deployed' && steps.smoke.outcome == 'failure'
+        run: |
+          set -euo pipefail
+          SSH_CMD=(ssh -i ~/.ssh/deploy_key -p "$DEPLOY_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes "$DEPLOY_USER@$DEPLOY_HOST")
+          echo "Smoke test failed - rolling production back to the previous tag"
+          "${SSH_CMD[@]}" "rollback" || echo "::warning::Rollback reported a failure; check production manually."
+
+      - name: Summarise
+        if: always()
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+          RESULT: ${{ steps.wait.outputs.result }}
+          SMOKE: ${{ steps.smoke.outcome }}
+        run: |
+          {
+            echo "## Release $TAG"
+            echo ""
+            echo "| Step | Result |"
+            echo "| --- | --- |"
+            echo "| Deploy | ${RESULT:-unknown} |"
+            echo "| Smoke test | ${SMOKE:-not run} |"
+            echo "| Production | https://gabochiedesign.com |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Record failure as an ops issue
+        if: steps.smoke.outcome == 'failure' || steps.wait.outputs.result != 'deployed'
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+          RESULT: ${{ steps.wait.outputs.result }}
+          SMOKE: ${{ steps.smoke.outcome }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TITLE="🚨 Production verification failed for $TAG"
+          BODY=$(printf 'Deploy result: `%s`\n\nSmoke test: `%s`\n\nRun: %s/%s/actions/runs/%s\n\nCheck https://gabochiedesign.com and `~/deploy/deploy-live.log`.' \
+            "${RESULT:-unknown}" "${SMOKE:-not run}" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID")
+          existing="$(gh issue list --label ops --state open --search "$TITLE in:title" --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$BODY"
+          else
+            gh issue create --title "$TITLE" --label ops --body "$BODY" || \
+              gh issue create --title "$TITLE" --body "$BODY"
+          fi
+
+      - name: Fail the run
+        if: steps.smoke.outcome == 'failure' || steps.wait.outputs.result != 'deployed'
+        run: exit 1

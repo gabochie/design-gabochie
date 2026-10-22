@@ -1,0 +1,15 @@
+{
+  "name": "gabochie-design",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local verification helpers for the gabochie-design deploy pipeline",
+  "scripts": {
+    "check": "npm run lint:shell && npm run lint:php",
+    "lint:shell": "bash -n deploy/*.sh && bash -n deploy/lib/*.sh",
+    "lint:php": "php -l deploy/webhook.php",
+    "smoke:staging": "bash deploy/lib/smoke-test.sh staging",
+    "smoke:live": "bash deploy/lib/smoke-test.sh live",
+    "deploy:check": "bash deploy/sync-to-server.sh --check",
+    "deploy:sync": "bash deploy/sync-to-server.sh"
+  }
+}

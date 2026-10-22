@@ -1,0 +1,11 @@
+# Deploy scripts, CI config and PHP hooks must keep LF endings on every
+# platform. A CRLF shebang breaks `#!/bin/bash` on the web host.
+*.sh text eol=lf
+*.bash text eol=lf
+deploy/** text eol=lf
+.github/** text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Keep diffs readable for the deploy engine.
+deploy/** diff=shell

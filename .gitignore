@@ -29,9 +29,19 @@ wp-content/object-cache.php
 .well-known/
 cgi-bin/
 
-# Deploy infrastructure (server-side only; webhook.php holds the deploy secret)
-deploy.sh
-webhook.php
+# Deploy infrastructure
+# The versioned deploy scripts live in /deploy/ and ARE tracked. The legacy
+# root-level entrypoints are server-only and must never be committed.
+/deploy.sh
+/webhook.php
+
+# Secrets: never commit real environment values. Examples are tracked.
+/deploy/secrets/*.env
+!/deploy/secrets/*.env.example
+/deploy/backups/
+*.pem
+*.key
+!deploy/secrets/*.example
 
 # Live-site keepers (preserved across deploys; NOT repo content)
 /ads.txt
@@ -48,6 +58,14 @@ wp-content/plugins/gabochie-deploy-local/
 
 # Local debug endpoint (xdebug_info() — never ship)
 local-xdebuginfo.php
+
+# Tooling caches / dependencies
+/vendor/
+/node_modules/
+/.phpunit.result.cache
+/.phpcs.cache
+/.phpstan.cache/
+/build/
 
 # OS junk
 .DS_Store
