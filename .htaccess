@@ -1,3 +1,11 @@
+# BEGIN old-domain 301 redirect (gabochiedesign.com -> design.gabochie.com)
+# Must stay ABOVE the WordPress rewrite block so it always wins.
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteCond %{HTTP_HOST} ^(www\.)?gabochiedesign\.com$ [NC]
+RewriteRule ^(.*)$ https://design.gabochie.com/$1 [R=301,L]
+</IfModule>
+# END old-domain 301 redirect
 # BEGIN LSCACHE
 ## LITESPEED WP CACHE PLUGIN - Do not edit the contents of this block! ##
 <IfModule mod_rewrite.c>
