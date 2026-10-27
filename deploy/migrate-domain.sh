@@ -48,6 +48,11 @@ if [ -f "$LIVE_DOCROOT/wp-config.php" ]; then
   cur="$(wp option get siteurl --path="$LIVE_DOCROOT" --format=json 2>/dev/null || echo '?')"
   echo "live siteurl: $cur"
   if [ "$APPLY" = "1" ]; then
+    # Safety: dump the DB before touching it.
+    dump="$BASE/deploy/backups/pre-domain-$(date +%Y%m%d-%H%M%S).sql"
+    mkdir -p "$(dirname "$dump")"
+    wp db export --path="$LIVE_DOCROOT" --skip-themes --skip-plugins "$dump" \
+      && chmod 600 "$dump" && echo "ok: DB dump saved to $dump" || die "db dump failed — aborting"
     sed -i "s|define( *'WP_HOME'.*|define( 'WP_HOME', 'https://design.gabochie.com' );|" \
       "$LIVE_DOCROOT/wp-config.php" || true
     sed -i "s|define( *'WP_SITEURL'.*|define( 'WP_SITEURL', 'https://design.gabochie.com' );|" \
