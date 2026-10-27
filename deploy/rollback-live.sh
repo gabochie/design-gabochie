@@ -133,5 +133,5 @@ fi
 log "smoke: FAIL after rollback to $TARGET — production needs manual attention"
 deploy_status_write live "rollback_fail" "{\"tag\":\"$TARGET\",\"commit\":\"$TARGET_COMMIT\",\"time\":\"$(date -u '+%Y-%m-%dT%H:%M:%SZ')\"}"
 _deploy_send_email "[Gabochie Deploy] ROLLBACK FAILED smoke test" \
-  "Rollback to $TARGET completed but the smoke test failed. Check https://gabochiedesign.com immediately. Pre-rollback snapshot: $SNAP"
+  "Rollback to $TARGET completed but the smoke test failed. Check https://design.gabochie.com immediately. Pre-rollback snapshot: $SNAP"
 exit 1

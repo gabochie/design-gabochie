@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       Gabochie Email
- * Plugin URI:        https://gabochiedesign.com
+ * Plugin URI:        https://design.gabochie.com
  * Description:       In-house transactional email delivery for Gabochie Design. Routes wp_mail through the Brevo Transactional API (SMTP deliverability, no local send), with an automatic fallback to the core wp_mail()/PHPMailer path when Brevo is unavailable or misconfigured. HTML messages are delivered as authored HTML (Content-Type: text/html). API key is stored as a WordPress option and is editable from Settings → Gabochie Email.
  * Version:           1.1.0
  * Requires at least: 6.0

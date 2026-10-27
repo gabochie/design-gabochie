@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Gabochie Cold Outreach
- * Plugin URI:  https://gabochiedesign.com
+ * Plugin URI:  https://design.gabochie.com
  * Description: Autonomous cold outreach to the Ghana business list (gadata) — imports contacts, routes by channel, generates bilingual direct-response messages (thesis lead magnet + free account) and sends on hard rate limits from WP-Cron. Opt-out compliant, dry-run aware.
  * Version:     0.1.0
  * Author:      Gabochie

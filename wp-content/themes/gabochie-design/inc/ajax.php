@@ -74,7 +74,7 @@ function gabochie_ai_chat_handler() {
         $ai = Gabochie_AI_Engine::instance();
         $ai->refresh_config();
         if ($ai->is_configured()) {
-            $system_prompt = "You are GD Assistant, the official AI architecture guide for Gabochie Design, an AI-powered residential architecture firm serving Ghana and the African diaspora. Answer questions about our services, pricing, process, and diaspora support. Be conversational, helpful, and reference Ghana-specific building knowledge. Keep responses concise (3-5 paragraphs max). Current date: " . date('F j, Y') . ".\n\nKey facts:\n- Concept Design from \$800, Full Design from \$2,500, Complete from \$5,000\n- Interior Design add-on \$1,800\n- Project Management 8-12% of build cost\n- Based in Sakumono, Tema, Ghana. Phone: +233 26 824 8970\n- Email: admin@gabochiedesign.com\n- Services: Architectural Design, Interior Design, 3D Visualization, Project Management, Cost Calculator, Diaspora Support\n- Over 60% of clients build from abroad (UK, USA, Canada)\n- AI-accelerated process: 4-6 weeks from concept to construction\n\nCurrent user context:\n$user_context";
+            $system_prompt = "You are GD Assistant, the official AI architecture guide for Gabochie Design, an AI-powered residential architecture firm serving Ghana and the African diaspora. Answer questions about our services, pricing, process, and diaspora support. Be conversational, helpful, and reference Ghana-specific building knowledge. Keep responses concise (3-5 paragraphs max). Current date: " . date('F j, Y') . ".\n\nKey facts:\n- Concept Design from \$800, Full Design from \$2,500, Complete from \$5,000\n- Interior Design add-on \$1,800\n- Project Management 8-12% of build cost\n- Based in Sakumono, Tema, Ghana. Phone: +233 26 824 8970\n- Email: admin@design.gabochie.com\n- Services: Architectural Design, Interior Design, 3D Visualization, Project Management, Cost Calculator, Diaspora Support\n- Over 60% of clients build from abroad (UK, USA, Canada)\n- AI-accelerated process: 4-6 weeks from concept to construction\n\nCurrent user context:\n$user_context";
             $response = $ai->chat(
                 array(array('role' => 'user', 'content' => $user_message)),
                 $system_prompt,
@@ -105,7 +105,7 @@ function gabochie_ai_chat_handler() {
         ),
         'contact' => array(
             'keywords' => array('contact', 'email', 'phone', 'whatsapp', 'call', 'consult'),
-            'response' => "<strong>Email</strong> admin@gabochiedesign.com\n<strong>Phone</strong> +233 26 824 8970\n<strong>WhatsApp</strong> <a href='https://wa.me/233268248970'>Chat now</a>\n<strong>Office</strong> Sakumono, Tema, Ghana\n\n<a href='/contact'>Book a free consultation</a>"
+            'response' => "<strong>Email</strong> admin@design.gabochie.com\n<strong>Phone</strong> +233 26 824 8970\n<strong>WhatsApp</strong> <a href='https://wa.me/233268248970'>Chat now</a>\n<strong>Office</strong> Sakumono, Tema, Ghana\n\n<a href='/contact'>Book a free consultation</a>"
         ),
     );
 
@@ -228,7 +228,7 @@ function gabochie_contact_form_handler() {
         wp_send_json_error(array('message' => 'Please enter a valid email address.'));
     }
 
-    $to = get_theme_mod('company_email', 'admin@gabochiedesign.com');
+    $to = get_theme_mod('company_email', 'admin@design.gabochie.com');
     $subject = sprintf('New Contact Form Submission from %s — %s', $name, $service ?: 'General Inquiry');
     $headers = array(
         'Content-Type: text/html; charset=UTF-8',

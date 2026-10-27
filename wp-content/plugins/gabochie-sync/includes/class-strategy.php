@@ -93,7 +93,7 @@ class Gabochie_Strategy {
 
                 <h2>Domain Strategy</h2>
                 <div class="gs-domain-grid">
-                    <div class="gs-domain"><strong>gabochiedesign.com</strong><br><span>Brand, company, content, consulting, portfolio</span><br><span class="gs-status-live">Live — WordPress</span></div>
+                    <div class="gs-domain"><strong>design.gabochie.com</strong><br><span>Brand, company, content, consulting, portfolio</span><br><span class="gs-status-live">Live — WordPress</span></div>
                     <div class="gs-domain"><strong>aec.gabochie.com</strong><br><span>AI platform for Architecture, Engineering &amp; Construction</span><br><span class="gs-status-planned">Phase 2</span></div>
                     <div class="gs-domain"><strong>academy.gabochie.com</strong><br><span>Training, certification, AI for AEC professionals</span><br><span class="gs-status-planned">Phase 3</span></div>
                     <div class="gs-domain"><strong>labs.gabochie.com</strong><br><span>Experimental AI tools, prototypes, beta features</span><br><span class="gs-status-future">Phase 3</span></div>
@@ -298,14 +298,14 @@ class Gabochie_Strategy {
 
             <!-- WORDPRESS -->
             <div class="gs-panel" id="gs-wordpress">
-                <h2>WordPress Plan — gabochiedesign.com</h2>
+                <h2>WordPress Plan — design.gabochie.com</h2>
                 <p class="gs-subtitle">Block theme, minimal plugins, agentic integrations. WordPress as the front office.</p>
 
                 <div class="gs-two-col">
                     <div class="gs-card">
                         <h3>&#128225; Current State</h3>
                         <table class="gs-info-table">
-                            <tr><td>Domain</td><td>gabochiedesign.com (Namecheap)</td></tr>
+                            <tr><td>Domain</td><td>design.gabochie.com (Namecheap)</td></tr>
                             <tr><td>DNS</td><td>Cloudflare (SSL + CDN)</td></tr>
                             <tr><td>Hosting</td><td>Shared (cPanel)</td></tr>
                             <tr><td>WordPress</td><td>26 posts + 18 pages live</td></tr>

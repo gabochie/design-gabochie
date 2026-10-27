@@ -451,7 +451,7 @@ class Gab_Auto_Executor {
 		$cta_urls  = isset( $cta['urls'] ) ? (array) $cta['urls'] : array();
 		$cta_links = implode( ', ', array_filter( array_map( 'trim', $cta_urls ) ) );
 
-		$prompt  = "Write a complete, ready-to-publish blog post for gabochiedesign.com.\n\n";
+		$prompt  = "Write a complete, ready-to-publish blog post for design.gabochie.com.\n\n";
 		$prompt .= "TITLE (use verbatim): {$bank_post['title']}\n";
 		$prompt .= "Focus keyphrase: {$bank_post['focuskw']}\n";
 		$prompt .= "Category: {$bank_post['category']} ({$bank_post['cluster']}, {$bank_post['month']} theme: {$bank_post['theme']})\n";

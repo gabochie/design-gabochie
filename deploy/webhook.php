@@ -3,9 +3,9 @@
  * Deploy webhook for gabochie/gabochie-design.
  *
  * Routing:
- *   refs/heads/main        -> STAGING (wp.gabochiedesign.com)  via deploy-staging.sh
- *   refs/tags/vX.Y.Z       -> LIVE    (gabochiedesign.com)     via deploy-live.sh <tag>
- *   refs/tags/auto-*       -> LIVE    (gabochiedesign.com)     via deploy-live.sh <tag>
+ *   refs/heads/main        -> STAGING (wp.design.gabochie.com)  via deploy-staging.sh
+ *   refs/tags/vX.Y.Z       -> LIVE    (design.gabochie.com)     via deploy-live.sh <tag>
+ *   refs/tags/auto-*       -> LIVE    (design.gabochie.com)     via deploy-live.sh <tag>
  *
  * Requests are verified with X-Hub-Signature-256 (HMAC-SHA256).
  *

@@ -126,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             gs_invite_team_member($email);
             /* Attempt real email — silent on failure, the meta save is what matters */
             $from_name = get_option('gs_from_name', 'Gabochie SaaS');
-            $from_email = get_option('gs_from_email', 'noreply@tools.gabochiedesign.com');
+            $from_email = get_option('gs_from_email', 'noreply@tools.gabochie.com');
             $subject = sprintf('[Gabochie SaaS] %s has invited you to join their team', $cu->display_name);
             $message = sprintf(
                 "Hi,\n\n%s has invited you to join their team on Gabochie SaaS.\n\nClick here to accept: %s\n\n– %s",
@@ -456,7 +456,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div class="pf-row">
         <label for="gs_email">Email</label>
         <input type="email" id="gs_email" value="<?php echo esc_attr($cu->user_email); ?>" disabled style="opacity:.5">
-        <div style="font-size:11px;color:var(--text-muted);margin-top:3px">To change your email, contact <a href="mailto:<?php echo esc_attr(get_option('gs_support_email', 'support@gabochiedesign.com')); ?>" style="color:var(--gs-300)"><?php echo esc_html(get_option('gs_support_email', 'support@gabochiedesign.com')); ?></a>.</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:3px">To change your email, contact <a href="mailto:<?php echo esc_attr(get_option('gs_support_email', 'support@gabochie.com')); ?>" style="color:var(--gs-300)"><?php echo esc_html(get_option('gs_support_email', 'support@gabochie.com')); ?></a>.</div>
       </div>
       <div class="pf-row"><label for="gs_firm">Firm / Company</label><input type="text" id="gs_firm" name="gs_firm" value="<?php echo esc_attr(get_user_meta($cu->ID, '_gs_firm', true)); ?>" placeholder="e.g. Kwame Architecture Studio"></div>
       <div class="pf-row"><label for="gs_title">Professional Title</label><input type="text" id="gs_title" name="gs_title" value="<?php echo esc_attr(get_user_meta($cu->ID, '_gs_title', true)); ?>" placeholder="e.g. Principal Architect"></div>

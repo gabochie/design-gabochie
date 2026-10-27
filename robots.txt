@@ -2,4 +2,4 @@ User-agent: *
 Disallow: /wp-admin/
 Allow: /wp-admin/admin-ajax.php
 
-Sitemap: https://gabochiedesign.com/sitemap_index.xml
+Sitemap: https://design.gabochie.com/sitemap_index.xml

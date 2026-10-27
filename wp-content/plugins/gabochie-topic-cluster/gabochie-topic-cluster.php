@@ -1,12 +1,12 @@
 <?php
 /**
  * Plugin Name:  Gabochie Topic Cluster Map
- * Plugin URI:   https://gabochiedesign.com
+ * Plugin URI:   https://design.gabochie.com
  * Description:  Internal-linking automation built around topical-authority silos. Maps every published page against AEC/property/tiling/ecosystem segments, flags orphaned pages, and suggests contextual internal links.
  * Version:      1.0.0
  * Requires PHP: 8.0
  * Author:       Gabochie Design Studio
- * Author URI:   https://gabochiedesign.com
+ * Author URI:   https://design.gabochie.com
  * Text Domain:  gabochie-topic-cluster
  */
 

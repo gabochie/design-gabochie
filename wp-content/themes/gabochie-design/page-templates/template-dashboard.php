@@ -146,7 +146,7 @@ $user = wp_get_current_user();
             <div style="background:var(--ivory);padding:2rem;border-radius:var(--r-lg);border:1px solid var(--border-light)">
                 <h3 style="font-size:1.2rem;margin-bottom:1.5rem">Quick Actions</h3>
                 <div style="display:flex;flex-direction:column;gap:0.75rem">
-                    <a href="mailto:<?php echo esc_attr(get_theme_mod('company_email', 'admin@gabochiedesign.com')); ?>?subject=Project%20Question" style="display:flex;align-items:center;gap:0.75rem;padding:0.85rem 1rem;background:var(--cream);border-radius:var(--r-sm);text-decoration:none;color:var(--charcoal);font-size:0.9rem;transition:background 0.2s">
+                    <a href="mailto:<?php echo esc_attr(get_theme_mod('company_email', 'admin@design.gabochie.com')); ?>?subject=Project%20Question" style="display:flex;align-items:center;gap:0.75rem;padding:0.85rem 1rem;background:var(--cream);border-radius:var(--r-sm);text-decoration:none;color:var(--charcoal);font-size:0.9rem;transition:background 0.2s">
                         <span style="font-size:1.2rem">✉️</span>
                         <span>Message Your Design Team</span>
                     </a>
@@ -171,7 +171,7 @@ $user = wp_get_current_user();
         <div style="margin-top:3rem;background:linear-gradient(135deg,var(--teal-dark),#0d3d3d);padding:2.5rem;border-radius:var(--r-lg);text-align:center;color:#FAF7F2">
             <h3 style="font-size:1.5rem;margin-bottom:0.75rem;color:#FAF7F2">Know Someone Building Their Dream Space?</h3>
             <p style="font-size:0.95rem;opacity:0.9;margin-bottom:1.5rem;max-width:600px;margin-left:auto;margin-right:auto">Refer a friend and both receive <strong style="color:var(--gold)">10% off</strong> your next project phase.</p>
-            <a href="mailto:<?php echo esc_attr(get_theme_mod('company_email', 'admin@gabochiedesign.com')); ?>?subject=Referral%20from%20<?php echo esc_attr($user->display_name ?: $user->user_login); ?>" style="display:inline-block;padding:0.85rem 2.5rem;background:var(--gold);color:var(--teal-dark);text-decoration:none;border-radius:var(--r-sm);font-weight:600;font-size:0.85rem;letter-spacing:0.05em">Refer a Friend</a>
+            <a href="mailto:<?php echo esc_attr(get_theme_mod('company_email', 'admin@design.gabochie.com')); ?>?subject=Referral%20from%20<?php echo esc_attr($user->display_name ?: $user->user_login); ?>" style="display:inline-block;padding:0.85rem 2.5rem;background:var(--gold);color:var(--teal-dark);text-decoration:none;border-radius:var(--r-sm);font-weight:600;font-size:0.85rem;letter-spacing:0.05em">Refer a Friend</a>
         </div>
 
     </div>

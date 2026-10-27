@@ -56,7 +56,7 @@ while (have_posts()) : the_post();
     <div class="container">
         <h2>Want a project like <em>this</em>?</h2>
         <p>Book a free consultation to discuss your vision.</p>
-        <a href="mailto:<?php echo esc_attr(get_theme_mod('company_email', 'admin@gabochiedesign.com')); ?>?subject=Book%20Consultation" class="btn-gold">Book Free Consultation</a>
+        <a href="mailto:<?php echo esc_attr(get_theme_mod('company_email', 'admin@design.gabochie.com')); ?>?subject=Book%20Consultation" class="btn-gold">Book Free Consultation</a>
     </div>
 </section>
 

@@ -27,7 +27,7 @@
     </div>
     <div class="footer-col">
       <h4>Company</h4>
-      <a href="https://gabochiedesign.com">Gabochie Design</a>
+      <a href="https://design.gabochie.com">Gabochie Design</a>
       <a href="/about/">About</a>
       <a href="/contact/">Contact</a>
     </div>

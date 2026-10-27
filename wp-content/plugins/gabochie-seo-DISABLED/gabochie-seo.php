@@ -1,12 +1,12 @@
 <?php
 /**
  * Plugin Name:  Gabochie Agentic SEO
- * Plugin URI:   https://gabochiedesign.com
+ * Plugin URI:   https://design.gabochie.com
  * Description:  AI-powered SEO plugin for Ghana AEC industry — content analysis, schema markup, keyphrase optimization, OG tags, and XML sitemaps. Integrates with Gabochie AI Engine for intelligent suggestions.
  * Version:      1.0.0
  * Requires PHP: 8.0
  * Author:       Gabochie Design Studio
- * Author URI:   https://gabochiedesign.com
+ * Author URI:   https://design.gabochie.com
  * Text Domain:  gabochie-seo
  */
 

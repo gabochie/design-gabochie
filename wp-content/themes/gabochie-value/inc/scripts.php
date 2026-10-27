@@ -20,7 +20,7 @@ function gabochie_value_scripts() {
 		1
 	);
 
-	// Brand fonts (gabochiedesign.com typography) — font-display:swap prevents FOIT
+	// Brand fonts (design.gabochie.com typography) — font-display:swap prevents FOIT
 	wp_enqueue_style(
 		'gabochie-value-fonts',
 		'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap',

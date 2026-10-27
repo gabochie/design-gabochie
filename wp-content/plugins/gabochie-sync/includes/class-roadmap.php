@@ -22,7 +22,7 @@ class Gabochie_Roadmap {
                 's1_11' => 'Build Maintenance Mode plugin for live site',
                 's1_12' => 'Deploy maintenance mode to live (activated during build)',
                 's1_13' => 'Deploy theme + plugins to live via fixer script',
-                's1_14' => 'Set Cloudflare DNS + SSL for gabochiedesign.com',
+                's1_14' => 'Set Cloudflare DNS + SSL for design.gabochie.com',
                 's1_15' => 'Fix template assignments on live (About, Services, Contact, Portfolio)',
                 's1_16' => 'Create local dev content sync workflow (localhost → live)',
             ),

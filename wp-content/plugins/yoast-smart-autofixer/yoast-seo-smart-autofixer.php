@@ -94,7 +94,7 @@ class YoastSmartAutoFixer {
             ),
             'key_placeholder' => 'sk-or-...',
             'key_pattern' => '/^sk-or-/',
-            'extra_headers' => array('HTTP-Referer' => 'https://gabochiedesign.com', 'X-Title' => 'Yoast Auto-Fixer'),
+            'extra_headers' => array('HTTP-Referer' => 'https://design.gabochie.com', 'X-Title' => 'Yoast Auto-Fixer'),
         ),
         'gemini' => array(
             'name' => 'Google Gemini',
@@ -115,7 +115,7 @@ class YoastSmartAutoFixer {
             'name' => 'OmniRoute (AI Gateway)',
             'icon' => 'dashicons-admin-links',
             'format' => 'openai',
-            'endpoint' => 'https://ai.gabochiedesign.com/v1/chat/completions',
+            'endpoint' => 'https://ai.gabochie.com/v1/chat/completions',
             'models' => array(
                 'auto/best-free'    => 'Best Free (auto-routes, free)',
                 'auto/best-fast'    => 'Best Fast (auto-routes)',
@@ -720,7 +720,7 @@ class YoastSmartAutoFixer {
             case 'split_sentences':
                 return "Split these long sentences into shorter ones (under 20 words each). Keep the same meaning. Return ONLY the improved sentences separated by spaces.\n\nSentences: $text_short";
             case 'internal_links':
-                return "Based on this content from gabochiedesign.com, suggest exactly 2 relevant internal pages to link to. For each, provide a URL path and natural anchor text. Format: [URL] anchor text\n\nContent: $text_short\n\nSuggested pages (use real site paths like /services/, /portfolio/, /about/, /contact/, /blog/, or specific service pages):";
+                return "Based on this content from design.gabochie.com, suggest exactly 2 relevant internal pages to link to. For each, provide a URL path and natural anchor text. Format: [URL] anchor text\n\nContent: $text_short\n\nSuggested pages (use real site paths like /services/, /portfolio/, /about/, /contact/, /blog/, or specific service pages):";
             case 'external_links':
                 return "Based on this content about \"$context\", suggest exactly 2 authoritative external sources to link to for credibility. For each, provide a URL and natural anchor text. Format: [URL] anchor text\n\nContent: $text_short:";
             default:
@@ -2314,7 +2314,7 @@ class YoastSmartAutoFixer {
                 . "Include:\n1. Target audience (who is searching for this?)\n2. Search intent (informational/commercial/transactional)\n"
                 . "3. Suggested title (SEO-optimized, under 60 chars)\n4. Meta description (under 155 chars)\n"
                 . "5. Outline with 5-7 H2 headings\n6. Related keywords/LSI terms (5-10)\n"
-                . "7. Internal link suggestions (pages on gabochiedesign.com to link to)\n"
+                . "7. Internal link suggestions (pages on design.gabochie.com to link to)\n"
                 . "8. External link suggestions (authoritative sites to reference)\n"
                 . "9. Tone recommendations\n10. Target word count\n\n"
                 . "Format with clear section headers. Be specific to the architecture/design industry if applicable.";

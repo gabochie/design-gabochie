@@ -1,12 +1,12 @@
 <?php
 /**
  * Plugin Name:  Gabochie SaaS Tools
- * Plugin URI:   https://tools.gabochiedesign.com
+ * Plugin URI:   https://tools.gabochie.com
  * Description:  Production AI engine + SaaS platform — real LLM integration (Claude/GPT-4o), AI document generation, document vault, team management, subscription billing, usage tracking. Powers the tools ecosystem.
  * Version:      2.0.0
  * Requires PHP: 8.0
  * Author:       Gabochie Design Studio
- * Author URI:   https://gabochiedesign.com
+ * Author URI:   https://design.gabochie.com
  * Text Domain:  gabochie-saas-tools
  */
 

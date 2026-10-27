@@ -68,7 +68,7 @@ get_header(); ?>
     <div class="container">
         <h2>Ready to build something <em>beautiful</em> in Ghana?</h2>
         <p>No commitment &middot; 30 minutes &middot; Any time zone</p>
-        <a href="mailto:<?php echo esc_attr(get_theme_mod('company_email', 'admin@gabochiedesign.com')); ?>?subject=Book%20Consultation" class="btn-gold">Book Free Consultation</a>
+        <a href="mailto:<?php echo esc_attr(get_theme_mod('company_email', 'admin@design.gabochie.com')); ?>?subject=Book%20Consultation" class="btn-gold">Book Free Consultation</a>
     </div>
 </section>
 

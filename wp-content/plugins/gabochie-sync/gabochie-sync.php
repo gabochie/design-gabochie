@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Gabochie Sync
- * Plugin URI: https://gabochiedesign.com
+ * Plugin URI: https://design.gabochie.com
  * Description: Push/pull content and code between local development and live production.
  * Version: 1.0.0
  * Author: Gabochie Design

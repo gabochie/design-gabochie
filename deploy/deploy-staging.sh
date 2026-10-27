@@ -1,5 +1,5 @@
 #!/bin/bash
-# deploy-staging.sh — deploy main branch to STAGING (wp.gabochiedesign.com).
+# deploy-staging.sh — deploy main branch to STAGING (wp.design.gabochie.com).
 # Called by webhook.php on refs/heads/main pushes. Uses dedicated staging clone.
 # Keeper files excluded so rsync --delete never wipes them.
 # After the deploy it runs the QA gate (run-qa.sh) which records the deploy token.
@@ -9,7 +9,7 @@ export HOME=/home/gabozvqd
 
 BASE=/home/gabozvqd
 CLONE="$BASE/gabochie-deploy-staging"
-DOCROOT="$BASE/wp.gabochiedesign.com"
+DOCROOT="$BASE/wp.design.gabochie.com"
 LOG="$BASE/deploy/deploy-staging.log"
 LOCK="$BASE/deploy/deploy-staging.lock"
 

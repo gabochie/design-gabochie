@@ -1,12 +1,12 @@
 <?php
 /**
  * Plugin Name: Gabochie Lead Hub
- * Plugin URI:  https://gabochiedesign.com
- * Description: Single lead pipeline for gabochiedesign.com. Every capture point fires the `gabochie/lead/captured` action; this plugin routes each lead into the Gabochie CRM table (tagged by source), safely waits when the CRM is unavailable, and replays the backlog.
+ * Plugin URI:  https://design.gabochie.com
+ * Description: Single lead pipeline for design.gabochie.com. Every capture point fires the `gabochie/lead/captured` action; this plugin routes each lead into the Gabochie CRM table (tagged by source), safely waits when the CRM is unavailable, and replays the backlog.
  * Version:     1.1.0
  * Requires PHP: 8.0
  * Author:      Gabochie Design Studio
- * Author URI:  https://gabochiedesign.com
+ * Author URI:  https://design.gabochie.com
  * Text Domain: gabochie-lead-hub
  */
 

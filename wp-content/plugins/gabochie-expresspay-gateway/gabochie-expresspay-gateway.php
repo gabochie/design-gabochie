@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Gabochie ExpressPay Gateway for PMPro
- * Plugin URI:  https://gabochiedesign.com
+ * Plugin URI:  https://design.gabochie.com
  * Description: PMPro payment gateway for ExpressPay Ghana. Supports Visa, Mastercard, Mobile Money, GhanaPay, and more via ExpressPay's hosted checkout.
  * Version:     1.0.0
  * Author:      Gabochie Design

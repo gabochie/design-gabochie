@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: Gabochie DeFi & Crypto Payment Gateway
- * Plugin URI: https://gabochiedesign.com
+ * Plugin URI: https://design.gabochie.com
  * Description: Direct self-custodial Web3 & DeFi payment gateway for WooCommerce. Accepts USDT, USDC, ETH, SOL, MATIC, and BNB across Polygon, Base, Arbitrum, BSC, Ethereum, and Solana with automated on-chain transaction verification.
  * Version: 1.0.0
  * Author: Gabochie Design
- * Author URI: https://gabochiedesign.com
+ * Author URI: https://design.gabochie.com
  * Text Domain: gabochie-defi
  * WC requires at least: 6.0
  * WC tests up to: 10.9

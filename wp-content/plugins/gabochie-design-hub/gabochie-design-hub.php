@@ -1,12 +1,12 @@
 <?php
 /**
  * Plugin Name:  Gabochie Design Hub
- * Plugin URI:   https://gabochiedesign.com
+ * Plugin URI:   https://design.gabochie.com
  * Description:  Command center for the Gabochie Design platform build. Smart launch checklist that auto-detects what is configured and what still needs a human hand.
  * Version:      1.0.0
  * Requires PHP: 8.0
  * Author:       Gabochie Design Studio
- * Author URI:   https://gabochiedesign.com
+ * Author URI:   https://design.gabochie.com
  * Text Domain:  gabochie-design-hub
  */
 

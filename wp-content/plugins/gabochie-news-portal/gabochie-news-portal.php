@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       Gabochie News Portal
- * Plugin URI:        https://gabochiedesign.com
+ * Plugin URI:        https://design.gabochie.com
  * Description:       Curated AEC / built-environment / property news for Ghana with editorial "Gabochie take" briefs and a daily digest feeding the newsletter.
  * Version:           1.0.0
  * Author:            Gabochie Design

@@ -1,12 +1,12 @@
 <?php
 /**
  * Plugin Name:  Gabochie Content Pipeline
- * Plugin URI:   https://gabochiedesign.com
+ * Plugin URI:   https://design.gabochie.com
  * Description:  AI-assisted drafting pipeline with mandatory human editorial gate. Takes topics/keywords and produces structured first drafts using Ghana AEC data. Every draft lands in a "Needs Review" queue — nothing auto-publishes.
  * Version:      1.0.0
  * Requires PHP: 8.0
  * Author:       Gabochie Design Studio
- * Author URI:   https://gabochiedesign.com
+ * Author URI:   https://design.gabochie.com
  * Text Domain:  gabochie-content-pipeline
  */
 

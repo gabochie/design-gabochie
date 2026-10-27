@@ -29,11 +29,11 @@ for arg in "$@"; do
   esac
 done
 
-STAGING_ROOT=/home/gabozvqd/wp.gabochiedesign.com
+STAGING_ROOT=/home/gabozvqd/wp.design.gabochie.com
 LIVE_ROOT=/home/gabozvqd/public_html
 case "$TARGET" in
-  staging) DOCROOT="${DOCROOT:-$STAGING_ROOT}"; SITE_URL="${SITE_URL:-https://wp.gabochiedesign.com}" ;;
-  live)    DOCROOT="${DOCROOT:-$LIVE_ROOT}";    SITE_URL="${SITE_URL:-https://gabochiedesign.com}" ;;
+  staging) DOCROOT="${DOCROOT:-$STAGING_ROOT}"; SITE_URL="${SITE_URL:-https://wp.design.gabochie.com}" ;;
+  live)    DOCROOT="${DOCROOT:-$LIVE_ROOT}";    SITE_URL="${SITE_URL:-https://design.gabochie.com}" ;;
   *) echo "Unknown --target=$TARGET (staging|live)"; exit 2 ;;
 esac
 

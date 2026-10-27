@@ -310,7 +310,7 @@ $hero_img = get_theme_mod('hero_image', 'https://images.unsplash.com/photo-16006
     <div class="cta-content">
         <h2>Ready to Build Your <em>Dream Home</em> in Ghana?</h2>
         <p class="cta-sub">Book a free 30-minute consultation. No commitment, any time zone.</p>
-        <a href="mailto:<?php echo esc_attr(get_theme_mod('company_email', 'admin@gabochiedesign.com')); ?>?subject=Book%20Consultation" class="btn-ivory">Book Free Consultation</a>
+        <a href="mailto:<?php echo esc_attr(get_theme_mod('company_email', 'admin@design.gabochie.com')); ?>?subject=Book%20Consultation" class="btn-ivory">Book Free Consultation</a>
     </div>
 </div>
 

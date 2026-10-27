@@ -865,7 +865,7 @@ class Gabochie_Content_Importer {
 <h2>Data Security</h2>
 <p>We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.</p>
 <h2>Contact Us</h2>
-<p>If you have questions about this Privacy Policy, please contact us at admin@gabochiedesign.com.</p>'),
+<p>If you have questions about this Privacy Policy, please contact us at admin@design.gabochie.com.</p>'),
             array('title' => 'Terms of Service', 'slug' => 'terms-of-service', 'template' => '', 'content' => '<p>Effective Date: January 1, 2025</p>
 <h2>1. Acceptance of Terms</h2>
 <p>By accessing and using the Gabochie Design website and services, you accept and agree to be bound by the terms and provision of this agreement.</p>
@@ -878,7 +878,7 @@ class Gabochie_Content_Importer {
 <h2>5. Limitation of Liability</h2>
 <p>Gabochie Design shall not be liable for any indirect, incidental, or consequential damages arising from the use of our services or website.</p>
 <h2>Contact</h2>
-<p>For questions about these Terms, contact admin@gabochiedesign.com.</p>'),
+<p>For questions about these Terms, contact admin@design.gabochie.com.</p>'),
         );
 
         foreach ($pages as $page_data) {

@@ -25,7 +25,7 @@
 <p class="has-gold-color has-text-color" style="font-size:0.9rem">+233 26 824 8970</p>
 <!-- /wp:paragraph -->
 <!-- wp:paragraph {"textColor":"mist","style":{"typography":{"fontSize":"0.85rem"}}} -->
-<p class="has-mist-color has-text-color" style="font-size:0.85rem">admin@gabochiedesign.com</p>
+<p class="has-mist-color has-text-color" style="font-size:0.85rem">admin@design.gabochie.com</p>
 <!-- /wp:paragraph -->
 <!-- wp:paragraph {"textColor":"mist","style":{"typography":{"fontSize":"0.85rem"}}} -->
 <p class="has-mist-color has-text-color" style="font-size:0.85rem">Sakumono Tema, Ghana</p>

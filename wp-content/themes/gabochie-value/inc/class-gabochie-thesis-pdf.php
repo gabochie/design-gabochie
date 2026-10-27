@@ -1246,7 +1246,7 @@ function gabochie_value_thesis_pdf( $reader_number = 0 ) {
 	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
 	$pdf->set_size( 7.4 );
 	$pdf->set_color( 'cream' );
-	$pdf->text( $m + 16, $y0 + 39, 'gabochiedesign.com/development-quiz' );
+	$pdf->text( $m + 16, $y0 + 39, 'design.gabochie.com/development-quiz' );
 	$chip2 = '5 MIN · 8 DIMENSIONS';
 	$w2    = $pdf->measure( $chip2 ) + 22;
 	$pdf->rect( $page_w - $m - $w2 - 14, $y0 + 9, $w2, 28, 'teal_deep' );
@@ -1563,7 +1563,7 @@ function gabochie_value_thesis_pdf( $reader_number = 0 ) {
 	$pdf->set_font( Gabochie_Thesis_Pdf::FONT_REGULAR );
 	$pdf->set_size( 7.6 );
 	$pdf->set_color( 'cream' );
-	$pdf->text( $m + 16, $y + 44, 'gabochiedesign.com/development-quiz' );
+	$pdf->text( $m + 16, $y + 44, 'design.gabochie.com/development-quiz' );
 	$pill = 'FREE · 5 MIN · 8 DIMENSIONS';
 	$pw   = $pdf->measure( $pill ) + 22;
 	$pdf->rect( $page_w - $m - $pw - 16, $y + 18, $pw, 26, 'teal' );

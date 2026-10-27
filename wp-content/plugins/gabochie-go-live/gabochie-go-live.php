@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Gabochie Go Live
- * Description: Push staging (wp.gabochiedesign.com) to production (gabochiedesign.com) via the server-side promote.sh engine. Staging site only.
+ * Description: Push staging (wp.design.gabochie.com) to production (design.gabochie.com) via the server-side promote.sh engine. Staging site only.
  * Version: 1.3.0
  * Author: Gabochie Design
  * License: GPL-2.0+
@@ -20,7 +20,7 @@ class Gabochie_Go_Live {
 
     public static function is_staging() {
         $home = home_url();
-        if (strpos($home, 'wp.gabochiedesign.com') !== false) {
+        if (strpos($home, 'wp.design.gabochie.com') !== false) {
             return true;
         }
         if (function_exists('wp_get_environment_type')) {
@@ -238,11 +238,11 @@ class Gabochie_Go_Live {
                 array('id' => 'ps-cache', 'text' => 'LiteSpeed Cache: purge + verify caching works on staging.', 'done' => 0),
                 array('id' => 'ps-backup', 'text' => 'Backups: full staging backup/DB export saved before Go Live.', 'done' => 0),
                 array('id' => 'ps-security', 'text' => 'Security: strong admin passwords, two-factor, login protection.', 'done' => 0),
-                array('id' => 'ps-dns', 'text' => 'DNS/Email deliverability: SPF/DKIM for no-reply@gabochiedesign.com in cPanel.', 'done' => 0),
+                array('id' => 'ps-dns', 'text' => 'DNS/Email deliverability: SPF/DKIM for no-reply@design.gabochie.com in cPanel.', 'done' => 0),
                 array('id' => 'cpanel-db', 'text' => 'cPanel: create DB gabozvqd_gaboch_live + user gabozvqd_gaboch_live in MySQL Databases, grant ALL PRIVILEGES — preflight blocks until done.', 'done' => 0),
-                array('id' => 'cpanel-mailbox', 'text' => 'cPanel: create email account no-reply@gabochiedesign.com so transactional mail has a real mailbox.', 'done' => 0),
-                array('id' => 'cpanel-dns', 'text' => 'cPanel: add SPF + DKIM + DMARC records for gabochiedesign.com (SPF include server178.web-hosting.com).', 'done' => 0),
-                array('id' => 'cpanel-ssl', 'text' => 'cPanel: confirm AutoSSL/HTTPS is active for gabochiedesign.com.', 'done' => 0),
+                array('id' => 'cpanel-mailbox', 'text' => 'cPanel: create email account no-reply@design.gabochie.com so transactional mail has a real mailbox.', 'done' => 0),
+                array('id' => 'cpanel-dns', 'text' => 'cPanel: add SPF + DKIM + DMARC records for design.gabochie.com (SPF include server178.web-hosting.com).', 'done' => 0),
+                array('id' => 'cpanel-ssl', 'text' => 'cPanel: confirm AutoSSL/HTTPS is active for design.gabochie.com.', 'done' => 0),
                 array('id' => 'cpanel-php', 'text' => 'cPanel: confirm PHP 8.3 version on the live docroot matches staging.', 'done' => 0),
                 array('id' => 'cpanel-backup', 'text' => 'cPanel: take a full account backup before Go Live.', 'done' => 0),
             );
@@ -253,7 +253,7 @@ class Gabochie_Go_Live {
             array('id' => 'maint', 'text' => 'Maintenance-mode plugin deactivated on staging so it cannot auto-activate on live.', 'done' => 1),
             array('id' => 'db', 'text' => 'Create live DB gabozvqd_gaboch_live + user gabozvqd_gaboch_live in cPanel (MySQL Databases) — preflight blocks until done.', 'done' => 0),
             array('id' => 'ghbckey', 'text' => 'Verify GhBC API key: GhBC Settings → LLM Settings → Test Connection (provider is Claude).', 'done' => 0),
-            array('id' => 'spf', 'text' => 'Optional: configure SPF/DKIM for no-reply@gabochiedesign.com so PMPro/transactional email delivers.', 'done' => 0),
+            array('id' => 'spf', 'text' => 'Optional: configure SPF/DKIM for no-reply@design.gabochie.com so PMPro/transactional email delivers.', 'done' => 0),
             array('id' => 'dry', 'text' => 'Run Go Live → Dry run and review the preflight report.', 'done' => 0),
             array('id' => 'golive', 'text' => 'Run Go Live now (backs up live files + DB, syncs staging DB + code + uploads, smoke-tests live).', 'done' => 0),
             array('id' => 'verify', 'text' => 'Verify live smoke test passed and homepage/blog images load.', 'done' => 0),
@@ -452,8 +452,8 @@ class Gabochie_Go_Live {
         if ($zoho) {
             $recs[] = array(
                 'severity' => 'info',
-                'title' => 'Email for gabochiedesign.com is hosted on Zoho',
-                'detail' => 'MX points to Zoho, not cPanel. Create no-reply@gabochiedesign.com as a Zoho mailbox (or a transactional service like Brevo) and keep SPF/DKIM on Zoho + Cloudflare. A cPanel mailbox will not receive mail.',
+                'title' => 'Email for design.gabochie.com is hosted on Zoho',
+                'detail' => 'MX points to Zoho, not cPanel. Create no-reply@design.gabochie.com as a Zoho mailbox (or a transactional service like Brevo) and keep SPF/DKIM on Zoho + Cloudflare. A cPanel mailbox will not receive mail.',
             );
         }
 
@@ -616,7 +616,7 @@ class Gabochie_Go_Live {
     }
 
     public static function compare_data() {
-        $live_url = 'https://gabochiedesign.com';
+        $live_url = 'https://design.gabochie.com';
         $rows = array();
 
         $idx = self::http_json($live_url . '/wp-json/');
@@ -720,7 +720,7 @@ class Gabochie_Go_Live {
     public static function render_compare() {
         if (!current_user_can('manage_options')) return;
         $staging_url = home_url();
-        $live_url = 'https://gabochiedesign.com';
+        $live_url = 'https://design.gabochie.com';
         ?>
         <div class="wrap">
             <?php echo self::tabs('compare'); ?>
@@ -789,7 +789,7 @@ class Gabochie_Go_Live {
         <div class="wrap">
             <?php echo self::tabs('qa'); ?>
             <h1>Release QA &mdash; Enterprise-Grade Test Roadmap</h1>
-            <p>Comprehensive testing plan mirrored from <code>enterpris grade testing.txt</code>, for <strong><?php echo esc_html($staging_url); ?></strong> before promotion to production (<code>https://gabochiedesign.com</code>). Work the phases in order (1&rarr;10), then confirm each quality gate passes before running Go Live.</p>
+            <p>Comprehensive testing plan mirrored from <code>enterpris grade testing.txt</code>, for <strong><?php echo esc_html($staging_url); ?></strong> before promotion to production (<code>https://design.gabochie.com</code>). Work the phases in order (1&rarr;10), then confirm each quality gate passes before running Go Live.</p>
 
             <table class="widefat striped" style="max-width:720px;">
                 <tbody>
@@ -868,7 +868,7 @@ class Gabochie_Go_Live {
         if (!current_user_can('manage_options')) return;
 
         if (!self::is_staging()) {
-            echo '<div class="wrap"><h1>Go Live</h1><div class="notice notice-warning"><p>This button belongs on the <strong>staging</strong> site (wp.gabochiedesign.com). It has been disabled here.</p></div></div>';
+            echo '<div class="wrap"><h1>Go Live</h1><div class="notice notice-warning"><p>This button belongs on the <strong>staging</strong> site (wp.design.gabochie.com). It has been disabled here.</p></div></div>';
             return;
         }
 
@@ -888,7 +888,7 @@ class Gabochie_Go_Live {
         <div class="wrap">
             <?php echo self::tabs('golive'); ?>
             <h1>Go Live &mdash; Push Staging to Production</h1>
-            <p>Copies <strong>staging</strong> (<code><?php echo esc_html($staging_url); ?></code>) to <strong>production</strong> (<code>https://gabochiedesign.com</code>): code + database, with backups and an automatic smoke test.</p>
+            <p>Copies <strong>staging</strong> (<code><?php echo esc_html($staging_url); ?></code>) to <strong>production</strong> (<code>https://design.gabochie.com</code>): code + database, with backups and an automatic smoke test.</p>
 
             <table class="widefat striped" style="max-width:720px;">
                 <tbody>
@@ -1038,7 +1038,7 @@ class Gabochie_Go_Live {
 
             $('#gol-dry').on('click', function () { launch('dry'); });
             $('#gol-real').on('click', function () {
-                if (!window.confirm('This pushes staging code + database to gabochiedesign.com (with backups). Continue?')) return;
+                if (!window.confirm('This pushes staging code + database to design.gabochie.com (with backups). Continue?')) return;
                 launch('real');
             });
             loadChecklist('launch');

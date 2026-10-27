@@ -44,7 +44,7 @@ function gs_register_settings() {
                 'gs_smtp_encryption' => ['label' => 'Encryption', 'type' => 'select', 'options' => ['tls' => 'TLS (587)', 'ssl' => 'SSL (465)', 'none' => 'None (25)'], 'hint' => 'TLS recommended for most providers.'],
                 'gs_smtp_username'  => ['label' => 'SMTP Username', 'type' => 'text', 'hint' => 'Usually the full email address.'],
                 'gs_smtp_password'  => ['label' => 'SMTP Password', 'type' => 'password', 'hint' => 'App password or SMTP password (not your regular login).'],
-                'gs_from_email'     => ['label' => 'From Email', 'type' => 'email', 'default' => 'noreply@tools.gabochiedesign.com', 'hint' => 'Address users see in their inbox. Must be allowed by your SMTP provider.'],
+                'gs_from_email'     => ['label' => 'From Email', 'type' => 'email', 'default' => 'noreply@tools.gabochie.com', 'hint' => 'Address users see in their inbox. Must be allowed by your SMTP provider.'],
                 'gs_from_name'      => ['label' => 'From Name', 'type' => 'text', 'default' => 'Gabochie SaaS', 'hint' => 'e.g. "Gabochie SaaS" or "Gabochie Design Studio"'],
             ],
         ],
@@ -53,7 +53,7 @@ function gs_register_settings() {
             'intro' => 'WhatsApp number used in the hero CTA and final CTA on the landing page.',
             'fields' => [
                 'gs_whatsapp'       => ['label' => 'WhatsApp Number', 'type' => 'text', 'default' => '233XXXXXXXXX', 'hint' => 'Full international format, no + sign. e.g. 233501234567. Used for WhatsApp CTA buttons.'],
-                'gs_support_email'  => ['label' => 'Support Email', 'type' => 'email', 'default' => 'support@gabochiedesign.com', 'hint' => 'Shown in portal footer and error messages.'],
+                'gs_support_email'  => ['label' => 'Support Email', 'type' => 'email', 'default' => 'support@gabochie.com', 'hint' => 'Shown in portal footer and error messages.'],
             ],
         ],
     ];
@@ -159,12 +159,12 @@ function gs_admin_page() {
                         'gs_smtp_encryption' => ['label' => 'Encryption', 'type' => 'select', 'options' => ['tls' => 'TLS (587)', 'ssl' => 'SSL (465)', 'none' => 'None (25)'], 'hint' => 'TLS recommended.'],
                         'gs_smtp_username'  => ['label' => 'SMTP Username', 'type' => 'text', 'hint' => 'Usually the full email address.'],
                         'gs_smtp_password'  => ['label' => 'SMTP Password', 'type' => 'password', 'hint' => 'App password or SMTP password (not your regular login).'],
-                        'gs_from_email'     => ['label' => 'From Email', 'type' => 'email', 'hint' => 'Must be allowed by your SMTP provider.', 'default' => 'noreply@tools.gabochiedesign.com'],
+                        'gs_from_email'     => ['label' => 'From Email', 'type' => 'email', 'hint' => 'Must be allowed by your SMTP provider.', 'default' => 'noreply@tools.gabochie.com'],
                         'gs_from_name'      => ['label' => 'From Name', 'type' => 'text', 'hint' => 'Appears as the sender name in recipients\' inboxes.', 'default' => 'Gabochie SaaS'],
                     ],
                     'gs_contact' => [
                         'gs_whatsapp'      => ['label' => 'WhatsApp Number', 'type' => 'text', 'hint' => 'Full international format, no +. e.g. 233501234567', 'default' => '233XXXXXXXXX'],
-                        'gs_support_email' => ['label' => 'Support Email', 'type' => 'email', 'hint' => 'Shown in portal footer and error messages.', 'default' => 'support@gabochiedesign.com'],
+                        'gs_support_email' => ['label' => 'Support Email', 'type' => 'email', 'hint' => 'Shown in portal footer and error messages.', 'default' => 'support@gabochie.com'],
                     ],
                 ];
 

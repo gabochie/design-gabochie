@@ -1,12 +1,12 @@
 <?php
 /**
  * Plugin Name:  Gabochie Rank Gap Tracker
- * Plugin URI:   https://gabochiedesign.com
+ * Plugin URI:   https://design.gabochie.com
  * Description:  Keyword rank tracker + content-gap finder vs. Ghana AEC competitors. Tracks rankings for target keyword clusters and identifies topics competitors cover that you don't. Feeds INT-01 ContentPipeline with real content targets.
  * Version:      1.0.0
  * Requires PHP: 8.0
  * Author:       Gabochie Design Studio
- * Author URI:   https://gabochiedesign.com
+ * Author URI:   https://design.gabochie.com
  * Text Domain:  gabochie-rank-gap
  */
 

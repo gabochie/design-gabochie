@@ -109,7 +109,7 @@ function gabochie_chat_build_response($message, $context) {
 
     // Contact / human
     if (preg_match('/\b(human|talk|speak|call|contact|real person)\b/', $msg)) {
-        return "No problem! You can reach our team directly:\n• Email: admin@gabochiedesign.com\n• Phone: +233 26 824 8970\n• WhatsApp: https://wa.me/233268248970\n\nOr use the contact form at " . home_url('/contact/');
+        return "No problem! You can reach our team directly:\n• Email: admin@design.gabochie.com\n• Phone: +233 26 824 8970\n• WhatsApp: https://wa.me/233268248970\n\nOr use the contact form at " . home_url('/contact/');
     }
 
     // Dashboard / account

@@ -1,13 +1,13 @@
 <?php
 /**
  * Plugin Name: Gabochie AI Agentic REST API Bridge
- * Plugin URI: https://gabochiedesign.com
+ * Plugin URI: https://design.gabochie.com
  * Description: Dedicated REST API & MCP Server Connector plugin for Google Gemini 2.5 Flash, Application Password Auth validation, and AI Agent Studio bridge.
  * Version: 2.5.0-Bridge
  * Requires at least: 6.7
  * Requires PHP: 8.3
  * Author: Gabochie Design
- * Author URI: https://gabochiedesign.com
+ * Author URI: https://design.gabochie.com
  * License: GPL-2.0-or-later
  * Text Domain: gabochie-ai-agentic-bridge
  */

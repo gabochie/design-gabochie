@@ -1,6 +1,6 @@
 #!/bin/bash
 # review-probe.sh - read-only snapshot of staging + live for the pre-Go-Live review.
-P=/home/gabozvqd/wp.gabochiedesign.com
+P=/home/gabozvqd/wp.design.gabochie.com
 L=/home/gabozvqd/public_html
 
 echo "########## OPTIONS ON STAGING CONTAINING localhost ##########"

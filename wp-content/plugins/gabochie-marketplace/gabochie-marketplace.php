@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       Gabochie Marketplace
- * Plugin URI:        https://gabochiedesign.com
+ * Plugin URI:        https://design.gabochie.com
  * Description:       Property + development marketplace for Ghana: curated listings with AI-generated property intelligence reports, enquiry funnel to the CRM + Command Center.
  * Version:           1.0.0
  * Author:            Gabochie Design

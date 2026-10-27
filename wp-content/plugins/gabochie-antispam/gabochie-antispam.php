@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       Gabochie Anti-Spam
- * Plugin URI:        https://gabochiedesign.com
+ * Plugin URI:        https://design.gabochie.com
  * Description:       In-house Akismet replacement for Gabochie Design. Hybrid protection: honeypot + heuristic rules + optional AI second opinion (GhBC LLM) on borderline submissions. Covers comments and the lead-capture/onboarding AJAX forms, with a reviewable spam log.
  * Version:           1.0.1
  * Requires at least: 6.0

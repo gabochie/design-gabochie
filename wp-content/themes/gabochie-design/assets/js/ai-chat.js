@@ -53,7 +53,7 @@
                 if (res.success) {
                     addMessage(res.data.message, 'bot');
                 } else {
-                    addMessage("I'm sorry, I'm having trouble responding right now. Please try again or contact us at admin@gabochiedesign.com", 'bot');
+                    addMessage("I'm sorry, I'm having trouble responding right now. Please try again or contact us at admin@design.gabochie.com", 'bot');
                 }
             },
             error: function() {

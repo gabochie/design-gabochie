@@ -1,6 +1,6 @@
 {
   "name": "gabochie/gabochie-design",
-  "description": "WordPress site, in-house plugins and gabochie-value theme for gabochiedesign.com",
+  "description": "WordPress site, in-house plugins and gabochie-value theme for design.gabochie.com",
   "type": "project",
   "license": "proprietary",
   "require-dev": {

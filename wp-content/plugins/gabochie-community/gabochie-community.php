@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       Gabochie Community
- * Plugin URI:        https://gabochiedesign.com
+ * Plugin URI:        https://design.gabochie.com
  * Description:       Public Q&A community for Gabochie Design — journey-tagged questions, AI classification and lead detection. Renders the community on the /community/ page via [gabochie_community].
  * Version:           1.0.0
  * Requires at least: 6.0

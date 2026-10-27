@@ -2,7 +2,7 @@
 /**
  * Gabochie News Portal core.
  *
- * Owns the gnp news vertical on gabochiedesign.com: a `news` post type plus
+ * Owns the gnp news vertical on design.gabochie.com: a `news` post type plus
  * `news_category` taxonomy for AEC / built-environment / property headlines in
  * Ghana, curated from RSS sources. Ships the sources registry, the SimplePie
  * fetch + relevance filter (each item lands as a DRAFT in the editorial review

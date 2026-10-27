@@ -367,7 +367,7 @@ class Gabochie_Newsletter {
 <p style="margin:0 0 18px 0;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#a8843c;">Daily brief from Gabochie Design</p>
 ' . $cards . '
 <p style="margin:0 0 26px 0;"><a href="' . esc_url( home_url( '/news/' ) ) . '" style="color:#0e4d45;font-size:13px;">Open the full News Portal &rarr;</a></p>
-<p style="margin:0 0 0 0;font-size:11px;line-height:1.5;color:#8a929b;">Gabochie Design &middot; Development made understandable, measurable, investable. &middot; <a href="' . esc_url( home_url( '/' ) ) . '" style="color:#8a929b;">gabochiedesign.com</a></p>
+<p style="margin:0 0 0 0;font-size:11px;line-height:1.5;color:#8a929b;">Gabochie Design &middot; Development made understandable, measurable, investable. &middot; <a href="' . esc_url( home_url( '/' ) ) . '" style="color:#8a929b;">design.gabochie.com</a></p>
 <p style="margin:0 0 26px 0;font-size:11px;color:#8a929b;"><a href="' . $unsub . '" style="color:#8a929b;">Unsubscribe from future updates</a></p>
 </div>
 ' . $pixel . '
@@ -419,7 +419,7 @@ class Gabochie_Newsletter {
 		$to = ( '' !== $name ) ? $name . ' <' . $email . '>' : $email;
 		$h  = array( 'Content-Type: text/html; charset=UTF-8' );
 		if ( '' !== (string) get_option( 'gabochie_email_api_key', '' ) ) {
-			$h[] = 'Reply-To: no-reply@gabochiedesign.com';
+			$h[] = 'Reply-To: no-reply@design.gabochie.com';
 		} else {
 			$h[] = 'Reply-To: ' . sanitize_email( get_option( 'admin_email', '' ) );
 		}
@@ -480,7 +480,7 @@ class Gabochie_Newsletter {
 <p style="margin:0 0 10px 0;"><a href="' . $click_a . '" style="display:inline-block;background:#0e4d45;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-size:14px;">Read the full article</a></p>
 <p style="margin:0 0 26px 0;"><a href="' . esc_url( home_url( '/project-recovery/' ) ) . '" style="color:#0e4d45;font-size:13px;">Stuck with a half-built house or stalled project? See the project recovery route &rarr;</a></p>
 </div>
-<p style="margin:20px 0 0 0;font-size:11px;line-height:1.5;color:#8a929b;">Gabochie Design &middot; Development made understandable, measurable, investable. &middot; <a href="' . esc_url( home_url( '/' ) ) . '" style="color:#8a929b;">gabochiedesign.com</a></p>
+<p style="margin:20px 0 0 0;font-size:11px;line-height:1.5;color:#8a929b;">Gabochie Design &middot; Development made understandable, measurable, investable. &middot; <a href="' . esc_url( home_url( '/' ) ) . '" style="color:#8a929b;">design.gabochie.com</a></p>
 <p style="margin:0 0 26px 0;font-size:11px;color:#8a929b;"><a href="' . $unsub . '" style="color:#8a929b;">Unsubscribe from future updates</a></p>
 </div>
 ' . $pixel . '
@@ -669,7 +669,7 @@ class Gabochie_Newsletter {
 		$this->stamp( $email );
 		$this->mark_unsubscribed( $email );
 		nocache_headers();
-		echo '<!doctype html><html><head><meta charset="utf-8"><title>Unsubscribed</title><style>body{font-family:Helvetica,Arial,sans-serif;background:#f4f2ee;color:#16232e;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;} .box{max-width:440px;padding:32px;background:#fff;border:1px solid #e4e0d8;border-radius:12px;} h1{font-size:20px;color:#0e4d45;} p{line-height:1.6;} a{color:#0e4d45;}</style></head><body><div class="box"><h1>You are unsubscribed</h1><p>You have been removed from the Gabochie Design newsletter. No further content updates will be emailed to this address.</p><p><a href="' . esc_url( home_url( '/' ) ) . '">Return to gabochiedesign.com</a></p></div></body></html>';
+		echo '<!doctype html><html><head><meta charset="utf-8"><title>Unsubscribed</title><style>body{font-family:Helvetica,Arial,sans-serif;background:#f4f2ee;color:#16232e;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;} .box{max-width:440px;padding:32px;background:#fff;border:1px solid #e4e0d8;border-radius:12px;} h1{font-size:20px;color:#0e4d45;} p{line-height:1.6;} a{color:#0e4d45;}</style></head><body><div class="box"><h1>You are unsubscribed</h1><p>You have been removed from the Gabochie Design newsletter. No further content updates will be emailed to this address.</p><p><a href="' . esc_url( home_url( '/' ) ) . '">Return to design.gabochie.com</a></p></div></body></html>';
 		exit;
 	}
 

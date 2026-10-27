@@ -5,7 +5,7 @@
  */
 $socials = gabochie_get_social_links();
 $phone = get_theme_mod('company_phone', '+233 26 824 8970');
-$email = get_theme_mod('company_email', 'admin@gabochiedesign.com');
+$email = get_theme_mod('company_email', 'admin@design.gabochie.com');
 $address = get_theme_mod('company_address', "P.O.BOX DM SK 2125\nSakumono, Tema, Ghana");
 $whatsapp = get_theme_mod('whatsapp_number', '233268248970');
 ?>

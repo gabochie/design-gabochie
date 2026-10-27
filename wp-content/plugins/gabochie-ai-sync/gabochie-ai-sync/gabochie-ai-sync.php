@@ -1,13 +1,13 @@
 <?php
 /**
  * Plugin Name: Gabochie AI Theme & GitHub Sync Engine
- * Plugin URI: https://gabochiedesign.com
+ * Plugin URI: https://design.gabochie.com
  * Description: Standalone Bi-Directional Theme & GitHub Sync Plugin for WordPress 6.7+ & LocalWP environments. Syncs theme.json, template parts, and block patterns with zero downtime.
  * Version: 2.1.0-Sync
  * Requires at least: 6.7
  * Requires PHP: 8.3
  * Author: Gabochie Design
- * Author URI: https://gabochiedesign.com
+ * Author URI: https://design.gabochie.com
  * License: GPL-2.0-or-later
  * Text Domain: gabochie-ai-sync
  */

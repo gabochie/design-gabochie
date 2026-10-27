@@ -159,10 +159,10 @@ final class Gabochie_Design_Hub {
             array(
                 'id'    => 'go_live',
                 'title' => 'Approve deployment to live',
-                'desc'  => 'The webhook deploy path is ready, but nothing goes to gabochiedesign.com without your explicit go. Trigger the deploy when the local build is approved.',
+                'desc'  => 'The webhook deploy path is ready, but nothing goes to design.gabochie.com without your explicit go. Trigger the deploy when the local build is approved.',
                 'group' => 'Launch',
                 'auto'  => false,
-                'url'   => 'https://gabochiedesign.com/wp-admin/',
+                'url'   => 'https://design.gabochie.com/wp-admin/',
                 'url_label' => 'Live site admin',
             ),
             array(
@@ -171,7 +171,7 @@ final class Gabochie_Design_Hub {
                 'desc'  => 'Only you can do these on the live site: register a fresh test account, confirm the welcome email arrives, post a question as guest vs member.',
                 'group' => 'Launch',
                 'auto'  => false,
-                'url'   => 'https://gabochiedesign.com/',
+                'url'   => 'https://design.gabochie.com/',
                 'url_label' => 'Visit live site',
             ),
         );

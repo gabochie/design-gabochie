@@ -43,7 +43,7 @@ class Gabochie_SEO_Schema {
                 '@type' => 'ImageObject',
                 'url' => get_theme_mod('custom_logo') ? wp_get_attachment_url(get_theme_mod('custom_logo')) : home_url('/wp-content/uploads/2026/07/og-image.jpg'),
             ),
-            'email' => 'admin@gabochiedesign.com',
+            'email' => 'admin@design.gabochie.com',
             'telephone' => '+233 26 824 8970',
             'address' => array(
                 '@type' => 'PostalAddress',
@@ -125,7 +125,7 @@ class Gabochie_SEO_Schema {
             'name' => 'Gabochie Design',
             'url' => home_url('/'),
             'telephone' => '+233 26 824 8970',
-            'email' => 'admin@gabochiedesign.com',
+            'email' => 'admin@design.gabochie.com',
             'address' => array(
                 '@type' => 'PostalAddress',
                 'addressLocality' => 'Sakumono, Tema',

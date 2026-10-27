@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Gabochie Maintenance Mode
- * Plugin URI: https://gabochiedesign.com
+ * Plugin URI: https://design.gabochie.com
  * Description: Branded maintenance page (503) with admin toggle. Keeps wp-admin, login, PMPro login, webhook and cron reachable.
  * Version: 1.1.0
  * Author: Gabochie Design

@@ -26,9 +26,9 @@ if [ -n "$CUSTOM_URL" ]; then
   SITE_URL="${CUSTOM_URL%/}"
   TARGET="custom"
 elif [ "$TARGET" = "staging" ]; then
-  SITE_URL="https://wp.gabochiedesign.com"
+  SITE_URL="https://wp.design.gabochie.com"
 else
-  SITE_URL="https://gabochiedesign.com"
+  SITE_URL="https://design.gabochie.com"
 fi
 
 FAILURES=0

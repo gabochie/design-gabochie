@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Gabochie Moolre Gateway for PMPro
- * Plugin URI:  https://gabochiedesign.com
+ * Plugin URI:  https://design.gabochie.com
  * Description: PMPro payment gateway for Moolre (MTN MoMo). Redirects to Moolre's hosted checkout for mobile money payments, verifies via callback.
  * Version:     1.1.0
  * Author:      Gabochie Design

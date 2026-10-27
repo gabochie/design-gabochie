@@ -24,7 +24,7 @@ function gabochie_value_whatsapp() {
 
 /** Company email */
 function gabochie_value_email() {
-	return get_theme_mod( 'company_email', 'info@gabochiedesign.com' );
+	return get_theme_mod( 'company_email', 'info@design.gabochie.com' );
 }
 
 /** Absolute URL to a front-page section: gabochie_value_section_url('clarity') -> https://site/#clarity */

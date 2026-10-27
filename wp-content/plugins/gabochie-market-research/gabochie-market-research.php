@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       Gabochie Market Research
- * Plugin URI:        https://gabochiedesign.com
+ * Plugin URI:        https://design.gabochie.com
  * Description:       Demand intelligence engine for Gabochie Design: collects internal + external demand signals, scores opportunity niches, drafts a weekly LLM market memo and turns the top opportunities into an approval inbox (human-in-the-loop proposals) for the product factory.
  * Version:           1.0.0
  * Author:            Gabochie Design

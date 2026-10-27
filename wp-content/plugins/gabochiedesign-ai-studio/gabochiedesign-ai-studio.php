@@ -1,13 +1,13 @@
 <?php
 /**
  * Plugin Name: Gabochie Design AI Studio & Pan-African Agentic Enterprise Suite
- * Plugin URI: https://gabochiedesign.com
+ * Plugin URI: https://design.gabochie.com
  * Description: Executive 7-Figure Agentic WordPress Engine & Theme Bridge. Integrates Google Gemini (1.5/2.5 Flash), Pan-African Localization, Artist Micro-Royalties, and Gutenberg Block API v3.
  * Version: 3.0.0-Enterprise
  * Requires at least: 6.7
  * Requires PHP: 8.3
  * Author: Gabochie Design (Accra, Ghana HQ)
- * Author URI: https://gabochiedesign.com
+ * Author URI: https://design.gabochie.com
  * License: GPL-2.0-or-later
  * Text Domain: gabochie-agentic-suite
  */
@@ -35,7 +35,7 @@ if (PHP_VERSION_ID < 80300) {
 final class ExecutiveAgenticEngine {
     private const API_NAMESPACE = 'gabochie-ai/v1';
     public function __construct(
-        private readonly string $appUrl = 'https://gabochiedesign.com',
+        private readonly string $appUrl = 'https://design.gabochie.com',
         private readonly string $version = '3.0.0-Enterprise',
         private readonly string $headquarters = 'Accra, Ghana'
     ) {
@@ -568,7 +568,7 @@ final class ExecutiveAgenticEngine {
                     </div>
                     <div class="ai-form-row">
                         <label>App URL / LocalWP Live Link</label>
-                        <input type="text" name="app_url" value="<?php echo esc_attr($savedAppUrl); ?>" placeholder="https://gabochiedesign.com or https://yoursite.localsite.io" />
+                        <input type="text" name="app_url" value="<?php echo esc_attr($savedAppUrl); ?>" placeholder="https://design.gabochie.com or https://yoursite.localsite.io" />
                     </div>
                     <div class="ai-form-row">
                         <label>Gemini Model</label>

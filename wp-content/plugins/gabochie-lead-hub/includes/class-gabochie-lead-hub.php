@@ -3,7 +3,7 @@
  * Gabochie Lead Hub — core.
  *
  * Listens for `gabochie/lead/captured` (email, data) fired by every capture
- * point on gabochiedesign.com and routes each lead into the Gabochie CRM
+ * point on design.gabochie.com and routes each lead into the Gabochie CRM
  * tuple, tagged by source. When the CRM table is unavailable, leads are stored
  * in a backlog and replayed from the WordPress admin.
  *

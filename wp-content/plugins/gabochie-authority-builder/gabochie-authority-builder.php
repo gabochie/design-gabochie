@@ -1,12 +1,12 @@
 <?php
 /**
  * Plugin Name:  Gabochie Authority Builder
- * Plugin URI:   https://gabochiedesign.com
+ * Plugin URI:   https://design.gabochie.com
  * Description:  Generates and maintains author-bio pages, credential blocks, and real project case studies tied to your real architecture background (BSc Architecture, KNUST).
  * Version:      1.0.0
  * Requires PHP: 8.0
  * Author:       Gabochie Design Studio
- * Author URI:   https://gabochiedesign.com
+ * Author URI:   https://design.gabochie.com
  * Text Domain:  gabochie-authority-builder
  */
 

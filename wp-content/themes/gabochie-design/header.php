@@ -74,7 +74,7 @@
                 <li><a href="<?php echo esc_url(home_url('/contact/')); ?>">Contact</a></li>
                 <li><a href="<?php echo esc_url(home_url('/pricing/')); ?>">Pricing</a></li>
                 <li><a href="<?php echo esc_url(home_url('/services/')); ?>">Services</a></li>
-                <li class="nav-cta-wrap"><a href="mailto:<?php echo esc_attr(get_theme_mod('company_email', 'admin@gabochiedesign.com')); ?>?subject=Book%20Consultation" class="nav-cta">Book Consultation</a></li>
+                <li class="nav-cta-wrap"><a href="mailto:<?php echo esc_attr(get_theme_mod('company_email', 'admin@design.gabochie.com')); ?>?subject=Book%20Consultation" class="nav-cta">Book Consultation</a></li>
             </ul>
         <?php endif; ?>
 

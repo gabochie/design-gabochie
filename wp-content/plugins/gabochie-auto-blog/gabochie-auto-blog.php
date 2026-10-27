@@ -1,12 +1,12 @@
 <?php
 /**
  * Plugin Name:  Gabochie Auto-Blog
- * Plugin URI:   https://gabochiedesign.com
+ * Plugin URI:   https://design.gabochie.com
  * Description:  AI-powered scheduled content generation for Ghana AEC industry. Topic-bank mode drives the editorial calendar (data/topic-bank.json) with per-post SEO metadata, featured images and a QA gate before auto-publish.
  * Version:      1.1.0
  * Requires PHP: 8.0
  * Author:       Gabochie Design Studio
- * Author URI:   https://gabochiedesign.com
+ * Author URI:   https://design.gabochie.com
  * Text Domain:  gabochie-auto-blog
  */
 

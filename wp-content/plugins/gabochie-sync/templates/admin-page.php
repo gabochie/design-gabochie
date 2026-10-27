@@ -134,7 +134,7 @@ $git_status = $git->get_status();
                 <tr>
                     <th><label for="remote_url">Remote Site URL</label></th>
                     <td>
-                        <input type="url" id="remote_url" name="remote_url" value="<?php echo esc_attr($remote_url); ?>" class="regular-text" placeholder="https://gabochiedesign.com" />
+                        <input type="url" id="remote_url" name="remote_url" value="<?php echo esc_attr($remote_url); ?>" class="regular-text" placeholder="https://design.gabochie.com" />
                         <p class="description">The live WordPress site URL.</p>
                     </td>
                 </tr>

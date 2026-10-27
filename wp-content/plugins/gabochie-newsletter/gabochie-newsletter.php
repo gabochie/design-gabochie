@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       Gabochie Newsletter
- * Plugin URI:        https://gabochiedesign.com
+ * Plugin URI:        https://design.gabochie.com
  * Description:       Emails newsletter subscribers (Gabochie CRM table) as soon as a blog post is published. Each send is routed through gabochie-email/Brevo with a per-recipient one-click unsubscribe link, open/click tracking (stamps last_engaged_at on CRM contacts), daily/run caps, a public [gabochie_subscribe] opt-in form (single opt-in + consent), an admin test-send, CRM admin newsletter-list subscribe/unsubscribe helpers, and a send log.
  * Version:           1.4.0
  * Requires at least: 6.0

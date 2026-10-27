@@ -45,7 +45,7 @@ function gabochie_customize_register($wp_customize) {
     $wp_customize->add_setting('company_phone', array('default' => '+233 26 824 8970', 'sanitize_callback' => 'sanitize_text_field'));
     $wp_customize->add_control('company_phone', array('label' => 'Phone Number', 'section' => 'gabochie_company', 'type' => 'text'));
 
-    $wp_customize->add_setting('company_email', array('default' => 'admin@gabochiedesign.com', 'sanitize_callback' => 'sanitize_email'));
+    $wp_customize->add_setting('company_email', array('default' => 'admin@design.gabochie.com', 'sanitize_callback' => 'sanitize_email'));
     $wp_customize->add_control('company_email', array('label' => 'Email', 'section' => 'gabochie_company', 'type' => 'email'));
 
     $wp_customize->add_setting('company_address', array('default' => 'P.O.BOX DM SK 2125, Sakumono, Tema, Ghana', 'sanitize_callback' => 'sanitize_textarea_field'));

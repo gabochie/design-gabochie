@@ -153,7 +153,7 @@ class GRG_Admin {
             </table>
 
             <h2 style="margin-top:28px;">Competitor Keyword Scan</h2>
-            <p style="color:#787c82;">Keywords competitors rank for that gabochiedesign.com may not cover well.</p>
+            <p style="color:#787c82;">Keywords competitors rank for that design.gabochie.com may not cover well.</p>
             <table class="wp-list-table widefat fixed striped">
                 <thead>
                     <tr>

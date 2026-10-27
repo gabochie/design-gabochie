@@ -1,6 +1,6 @@
 === Gabochie Design AI Studio & Pan-African Agentic Enterprise Suite ===
 Contributors: gabochiedesign
-Donate link: https://gabochiedesign.com
+Donate link: https://design.gabochie.com
 Tags: ai, wordpress-7, agentic, enterprise, ghana, pan-african, gemini, gutenberg
 Requires at least: 6.7
 Tested up to: 7.0.1

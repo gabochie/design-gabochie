@@ -2,7 +2,7 @@
 /**
  * Gabochie Marketplace core.
  *
- * Owns the property + development marketplace on gabochiedesign.com: a
+ * Owns the property + development marketplace on design.gabochie.com: a
  * `gd_property` post type plus `gd_property_type` + `gd_property_status`
  * taxonomies, sample-listing seeding, the weekly intelligence-refresh cron,
  * and the helpers both the theme templates and the enquiry funnel read.

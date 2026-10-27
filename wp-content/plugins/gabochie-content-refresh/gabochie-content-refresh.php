@@ -1,12 +1,12 @@
 <?php
 /**
  * Plugin Name:  Gabochie Content Refresh
- * Plugin URI:   https://gabochiedesign.com
+ * Plugin URI:   https://design.gabochie.com
  * Description:  Watches published pages for ranking or traffic decay and queues them for an update pass before they fall further.
  * Version:      1.0.0
  * Requires PHP: 8.0
  * Author:       Gabochie Design Studio
- * Author URI:   https://gabochiedesign.com
+ * Author URI:   https://design.gabochie.com
  * Text Domain:  gabochie-content-refresh
  */
 

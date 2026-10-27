@@ -23,7 +23,7 @@ QA_STATE="$QA_STATE_DIR/qa-state.txt"
 AUTO_PROMOTE_STATE="$QA_STATE_DIR/.auto-promote"
 AUTO_PROMOTE_DELAY="${AUTO_PROMOTE_DELAY:-900}"  # 15 minutes default
 SKIP_LIVE_FILE="$QA_STATE_DIR/skip-live"
-NOTIFY_EMAIL="${DEPLOY_NOTIFY_EMAIL:-admin@gabochiedesign.com}"
+NOTIFY_EMAIL="${DEPLOY_NOTIFY_EMAIL:-admin@design.gabochie.com}"
 
 # Shared secret for POST /wp-json/gabochie/v1/deploy-status (gabochie_deploy_status_permissions
 # in the theme's inc/client-portal-verify.php refuses writes without it).
@@ -276,8 +276,8 @@ Tag: $tag
 Delay: ${mins} minutes
 Scheduled fire: $(date -d "+${delay} seconds" '+%Y-%m-%d %H:%M:%S %Z' 2>/dev/null || date '+%Y-%m-%d %H:%M:%S')
 
-Staging: https://wp.gabochiedesign.com
-Live: https://gabochiedesign.com
+Staging: https://wp.design.gabochie.com
+Live: https://design.gabochie.com
 
 To cancel: touch ~/deploy/skip-live
 Or wait for the next push to main (auto-cancels previous timer)."
@@ -294,7 +294,7 @@ _auto_promote_notify_fire() { # <commit> <tag>
 
 Commit: $short ($commit)
 Tag: $tag
-Live: https://gabochiedesign.com
+Live: https://design.gabochie.com
 
 The tag was pushed to GitHub and the live deploy webhook has been triggered.
 Check ~/deploy/deploy-live.log for deploy status."
@@ -310,7 +310,7 @@ _deploy_send_email() { # <subject> <body>
       \$to = '$NOTIFY_EMAIL';
       \$subj = '$subject';
       \$body = '$(echo "$body" | sed "s/'/\\\\'/g")';
-      \$headers = 'From: deploy@gabochiedesign.com';
+      \$headers = 'From: deploy@design.gabochie.com';
       mail(\$to, \$subj, \$body, \$headers);
     " 2>/dev/null || echo "$body" | mail -s "$subject" "$NOTIFY_EMAIL" 2>/dev/null || true
   else
@@ -331,11 +331,11 @@ _deploy_site_notify() {
     -H "X-Gabochie-Deploy-Secret: $DEPLOY_STATUS_SECRET" \
     -d "{\"version\":\"$ver\",\"tag\":\"$tag\",\"message\":\"$msg\"}" \
     --max-time 5 \
-    "https://gabochiedesign.com/wp-json/gabochie/v1/deploy-status" 2>/dev/null || true
+    "https://design.gabochie.com/wp-json/gabochie/v1/deploy-status" 2>/dev/null || true
   echo "site-notify: deploy $ver posted to live site"
 }
 
-STATUS_FILE="/home/gabozvqd/wp.gabochiedesign.com/deploy-status.json"
+STATUS_FILE="/home/gabozvqd/wp.design.gabochie.com/deploy-status.json"
 
 deploy_status_write() { # <environment> <event> <extra_json>
   local env="$1" event="$2" extra="${3:-{}}"
