@@ -9,6 +9,9 @@
 # The runner can then only invoke the actions below:
 #   ssh ... ping
 #   ssh ... health
+#   ssh ... health --prometheus
+#   ssh ... metrics
+#   ssh ... monitor-status
 #   ssh ... backup
 #   ssh ... qa-state
 #   ssh ... main-sha
@@ -32,7 +35,31 @@ case "$ACTION" in
     echo ok
     ;;
   health)
-    exec bash "$DEPLOY/healthcheck.sh"
+    case "${ARG1:-}" in
+      "")
+        exec bash "$DEPLOY/healthcheck.sh"
+        ;;
+      --prometheus)
+        bash "$DEPLOY/healthcheck.sh" --prometheus || true
+        ;;
+      --human)
+        bash "$DEPLOY/healthcheck.sh" --human || true
+        ;;
+      *)
+        echo "denied: health accepts --prometheus or --human" >&2
+        exit 64
+        ;;
+    esac
+    ;;
+  metrics)
+    if [ -f "$DEPLOY/metrics/health.prom" ]; then
+      cat "$DEPLOY/metrics/health.prom"
+    else
+      bash "$DEPLOY/healthcheck.sh" --prometheus 2>/dev/null || true
+    fi
+    ;;
+  monitor-status)
+    exec bash "$DEPLOY/monitor.sh" --status
     ;;
   backup)
     exec bash "$DEPLOY/backup.sh"
@@ -48,10 +75,10 @@ case "$ACTION" in
     echo "OK"
     ;;
   updates)
-    wp --path="$HOME/wp.gabochiedesign.com" plugin list --update=available \
+    wp --path="$HOME/wp.design.gabochie.com" plugin list --update=available \
       --format=table --allow-root 2>/dev/null
     echo "---CORE---"
-    wp --path="$HOME/wp.gabochiedesign.com" core check-update \
+    wp --path="$HOME/wp.design.gabochie.com" core check-update \
       --format=table --allow-root 2>/dev/null
     ;;
   qa-state)
@@ -76,7 +103,7 @@ case "$ACTION" in
     tail -n "$LINES" "$DEPLOY/deploy-live.log" 2>/dev/null || true
     ;;
   *)
-    echo "denied: allowed actions are ping health backup backup-status updates qa-state main-sha verify-tag promote rollback logs" >&2
+    echo "denied: allowed actions are ping health metrics monitor-status backup backup-status updates qa-state main-sha verify-tag promote rollback logs" >&2
     exit 64
     ;;
 esac

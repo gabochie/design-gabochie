@@ -7,30 +7,52 @@
 # Usage:
 #   bash ~/deploy/healthcheck.sh            # JSON to stdout
 #   bash ~/deploy/healthcheck.sh --human    # readable output
+#   bash ~/deploy/healthcheck.sh --prometheus  # Prometheus text format
 set -uo pipefail
 export HOME=/home/gabozvqd
 BASE=/home/gabozvqd
 DEPLOY="$BASE/deploy"
-STAGING_URL="https://wp.gabochiedesign.com"
-LIVE_URL="https://gabochiedesign.com"
+STAGING_URL="https://wp.design.gabochie.com"
+LIVE_URL="https://design.gabochie.com"
 MAX_BACKUP_AGE_HOURS=36
 MIN_FREE_PCT=10
 
 HUMAN=0
-[ "${1:-}" = "--human" ] && HUMAN=1
+PROMETHEUS=0
+case "${1:-}" in
+  --human) HUMAN=1 ;;
+  --prometheus) PROMETHEUS=1 ;;
+esac
 
 CRITICAL=0
 WARN=0
+TOTAL=0
 FIELDS=""
+PROM_CHECKS=""
+PROM_VALUES=""
 
 add() { # <key> <value> <critical|warn|ok>
   local key="$1" value="$2" level="${3:-ok}"
+  TOTAL=$((TOTAL + 1))
   case "$level" in
     critical) CRITICAL=$((CRITICAL + 1)) ;;
     warn) WARN=$((WARN + 1)) ;;
   esac
   [ -n "$FIELDS" ] && FIELDS="$FIELDS,"
   FIELDS="$FIELDS\"$key\":\"$value\",\"${key}_level\":\"$level\""
+  if [ "$PROMETHEUS" = "1" ]; then
+    [ -n "$PROM_CHECKS" ] && PROM_CHECKS="$PROM_CHECKS
+"
+    PROM_CHECKS="$PROM_CHECKS"$(printf 'gabochie_health_check_level{check="%s",level="%s"} 1' "$key" "$level")
+    case "$value" in
+      ''|*[!0-9.]*) ;;
+      *)
+        [ -n "$PROM_VALUES" ] && PROM_VALUES="$PROM_VALUES
+"
+        PROM_VALUES="$PROM_VALUES"$(printf 'gabochie_health_value{check="%s"} %s' "$key" "$value")
+        ;;
+    esac
+  fi
   if [ "$HUMAN" = "1" ]; then printf '%-6s %-28s %s\n' "[$level]" "$key" "$value"; fi
 }
 
@@ -140,6 +162,28 @@ add wp_core_version "${CORE:-unknown}" ok
 
 if [ "$HUMAN" = "1" ]; then
   printf '\ncritical=%s warn=%s\n' "$CRITICAL" "$WARN"
+elif [ "$PROMETHEUS" = "1" ]; then
+  UP=1; [ "$CRITICAL" -eq 0 ] || UP=0
+  OK=$((TOTAL - CRITICAL - WARN))
+  cat <<EOF
+# HELP gabochie_health_up 1 when no critical checks failed, 0 otherwise.
+# TYPE gabochie_health_up gauge
+gabochie_health_up $UP
+# HELP gabochie_health_critical Number of failed critical checks.
+# TYPE gabochie_health_critical gauge
+gabochie_health_critical $CRITICAL
+# HELP gabochie_health_warn Number of warning checks.
+# TYPE gabochie_health_warn gauge
+gabochie_health_warn $WARN
+# HELP gabochie_health_ok Number of passing checks.
+# TYPE gabochie_health_ok gauge
+gabochie_health_ok $OK
+# HELP gabochie_health_probe_timestamp_seconds Unix time of this probe.
+# TYPE gabochie_health_probe_timestamp_seconds gauge
+gabochie_health_probe_timestamp_seconds $(date +%s)
+$PROM_CHECKS
+$PROM_VALUES
+EOF
 else
   printf '{"generated":"%s","critical":%s,"warn":%s,%s}\n' \
     "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" "$CRITICAL" "$WARN" "$FIELDS"

@@ -35,6 +35,7 @@ FILES=(
   review-probe.sh
   rollback-live.sh
   healthcheck.sh
+  monitor.sh
   ci-ssh.sh
   ci-promote.sh
   ci-verify-tag.sh

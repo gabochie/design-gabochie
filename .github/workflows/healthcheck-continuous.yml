@@ -1,0 +1,125 @@
+name: Continuous Healthcheck
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: healthcheck-continuous
+  cancel-in-progress: true
+
+env:
+  DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+  DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+  DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+  ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+
+jobs:
+  external:
+    name: External reachability
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Probe live + staging + legacy redirect over HTTPS
+        id: probe
+        run: |
+          set -uo pipefail
+          failed=""
+          for target in "live=https://design.gabochie.com/" "staging=https://wp.design.gabochie.com/robots.txt"; do
+            name="${target%%=*}"
+            url="${target#*=}"
+            code="$(curl -s -o /dev/null -w '%{http_code}' -L --max-time 20 "$url" || echo 000)"
+            ttfb="$(curl -s -o /dev/null -w '%{time_starttransfer}' -L --max-time 20 "$url" || echo 0)"
+            echo "$name: http=$code ttfb=${ttfb}s"
+            if [ "$code" != "200" ]; then failed="$failed $name(http=$code)"; fi
+          done
+          # Legacy domain must 301 to the live site (SEO-critical)
+          legacy="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 https://gabochiedesign.com/ || echo 000)"
+          echo "legacy redirect: $legacy"
+          if [ "$legacy" != "301" ]; then failed="$failed legacy-redirect($legacy)"; fi
+          echo "failed=${failed# }" >> "$GITHUB_OUTPUT"
+          [ -z "$failed" ]
+
+      - name: Alert on external failure
+        if: failure()
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          DETAIL: ${{ steps.probe.outputs.failed }}
+        run: |
+          set -euo pipefail
+          if [ -n "${ALERT_WEBHOOK_URL:-}" ]; then
+            payload="$(MSG="[ALERT] External health probe failed: $DETAIL -- $RUN_URL" python3 -c 'import json,os; print(json.dumps({"text": os.environ["MSG"]}))')"
+            curl -sS --max-time 10 -X POST -H 'Content-Type: application/json' -d "$payload" "$ALERT_WEBHOOK_URL" || true
+          fi
+
+  internal:
+    name: Internal health probe
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure SSH
+        uses: ./.github/actions/configure-ssh
+        with:
+          private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known-hosts: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
+
+      - name: Run healthcheck
+        id: health
+        run: |
+          set -uo pipefail
+          SSH_CMD=(ssh -i ~/.ssh/deploy_key -p "$DEPLOY_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 "$DEPLOY_USER@$DEPLOY_HOST")
+          OUT="$("${SSH_CMD[@]}" health 2>&1)"
+          rc=$?
+          printf '%s\n' "$OUT" > health.json
+          printf '%s\n' "$OUT" >> "$GITHUB_STEP_SUMMARY" || true
+          critical="$(printf '%s' "$OUT" | jq -r '.critical // 0' 2>/dev/null || echo 0)"
+          warn="$(printf '%s' "$OUT" | jq -r '.warn // 0' 2>/dev/null || echo 0)"
+          echo "critical=$critical" >> "$GITHUB_OUTPUT"
+          echo "warn=$warn" >> "$GITHUB_OUTPUT"
+          echo "exit_code=$rc" >> "$GITHUB_OUTPUT"
+          echo "output=$OUT" >> "$GITHUB_OUTPUT"
+
+      - name: Upload health report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: health-${{ github.run_id }}
+          path: health.json
+          retention-days: 7
+
+      - name: Alert on critical
+        if: steps.health.outputs.critical != '0'
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          HEALTH: ${{ steps.health.outputs.output }}
+          CRITICAL: ${{ steps.health.outputs.critical }}
+          WARN: ${{ steps.health.outputs.warn }}
+        run: |
+          set -euo pipefail
+          if [ -n "${ALERT_WEBHOOK_URL:-}" ]; then
+            payload="$(MSG="[ALERT] Healthcheck: ${CRITICAL} critical, ${WARN} warn -- $RUN_URL" HEALTH="$HEALTH" python3 -c 'import json,os; print(json.dumps({"text": os.environ["MSG"] + "\n```json\n" + os.environ["HEALTH"] + "\n```"}))')"
+            curl -sS --max-time 10 -X POST -H 'Content-Type: application/json' -d "$payload" "$ALERT_WEBHOOK_URL" || true
+          fi
+
+      - name: Open or update ops issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          title="[OPS] Continuous healthcheck failed"
+          body="Run: $RUN_URL"
+          existing="$(gh issue list --label ops --state open --search "$title in:title" --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$body"
+          else
+            gh issue create --title "$title" --label ops --body "$body" || gh issue create --title "$title" --body "$body"
+          fi
