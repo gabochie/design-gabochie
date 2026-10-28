@@ -47,7 +47,9 @@ Lessons baked into the runbook for next time:
 - `wp search-replace` on `https://…` misses scheme-less strings — run a bare
   domain catch-all pass too.
 
-## Step 4 — Point GitHub webhook at the new domain  ⬜ DO NOW
+## Step 4 — Point GitHub webhook at the new domain  ✅ (2026-10-28)
+
+Repointed in the GitHub UI; latest delivery shows 200 on the new domain.
 
 1. Repo → Settings → Webhooks → edit the existing hook.
 2. Payload URL: `https://design.gabochie.com/webhook.php` (path unchanged).
@@ -55,15 +57,13 @@ Lessons baked into the runbook for next time:
 
 A 301 turns webhook POSTs into GETs, so the POST must hit the final hostname.
 
-## Step 5 — AutoSSL for wp.design.gabochie.com  ⬜ DO NOW
+## Step 5 — AutoSSL for wp.design.gabochie.com  ✅ (2026-10-27)
 
-The staging host currently serves the default `*.web-hosting.com` cert.
-Either:
+AutoSSL run via cPanel; both hostnames serve valid certs. Note: `wp.design`
+stays DNS-only (grey cloud) in Cloudflare permanently — free Universal SSL
+does not cover second-level subdomains.
 
-- cPanel → SSL/TLS Status → Run AutoSSL (covers both new hostnames), or
-- Flip the `wp.design` DNS record to proxied (orange cloud) for an edge cert.
-
-## Step 6 — Push the migration commits  ⬜ DO NOW
+## Step 6 — Push the migration commits  ✅ (2026-10-27)
 
 Commits waiting locally: `912286a2` (90-file migration) and `545c576b`
 (runbook hardening).
@@ -78,7 +78,11 @@ git push origin main          # staging deploy + QA fires automatically
 - Watch: `bash ~/deploy/watchdog.sh --status`, `cat ~/deploy/qa-state.txt`,
   `tail -f ~/deploy/deploy-live.log`.
 
-## Step 7 — Verify production  ⬜ AFTER PUSH
+## Step 7 — Verify production  ✅ (2026-10-27/28)
+
+Smoke test 15/15 PASS; external checks all pass (200 + new canonical, 301
+chains, sitemap 200). Full pipeline ran end-to-end: staging QA PASS →
+auto-promote → live deploy `auto-20261027-194351` → smoke test PASS.
 
 ```bash
 bash ~/deploy/lib/smoke-test.sh live
@@ -101,11 +105,11 @@ Transactional sends (`no-reply@design.gabochie.com`) need SPF/DKIM:
 - DNS TXT for `design.gabochie.com`: `v=spf1 include:<provider> ~all`.
 - The gabochie-go-live plugin checklist tracks these items.
 
-## Step 9 — Cleanup  ⬜ AFTER A VERIFIED WEEK
+## Step 9 — Cleanup  ✅ (2026-10-28)
 
-```bash
-rm -rf ~/wp.gabochiedesign.com        # old staging docroot (kept as fallback)
-```
+Old staging docroot `~/wp.gabochiedesign.com` (278 MB) deleted. Rollback
+insurance that remains: the pre-migration DB dump and `.htaccess` backups in
+`~/deploy/backups/`.
 
 Optional: after search engines absorb the 301s (months), the old domain can
 lapse — redirect equity depends on keeping it active meanwhile.
@@ -114,4 +118,5 @@ lapse — redirect equity depends on keeping it active meanwhile.
 
 - Code: `bash ~/deploy/rollback-live.sh --dry-run` then `rollback-live.sh`
 - DB: `wp db import ~/deploy/backups/pre-domain-20261027-160028.sql`
-- Redirect: restore `.htaccess.pre-domain-migration` (removes the 301)
+- Redirect: the 301 block now ships inside the repo `.htaccess` (top of file);
+  timestamped copies of every intermediate state are in `~/deploy/backups/`
