@@ -39,6 +39,30 @@ class WC_Gateway_Gabochie_DeFi extends WC_Payment_Gateway {
 		add_action( 'woocommerce_email_before_order_table', array( $this, 'email_instructions' ), 10, 3 );
 	}
 
+	private function evm_wallet_is_valid() {
+		$wallet = trim( (string) $this->evm_wallet );
+		if ( '' === $wallet || '0x1234567890123456789012345678901234567890' === strtolower( $wallet ) ) {
+			return false;
+		}
+		return (bool) preg_match( '/^0x[a-f0-9]{40}$/i', $wallet );
+	}
+
+	private function solana_wallet_is_valid() {
+		$wallet = trim( (string) $this->solana_wallet );
+		if ( '' === $wallet ) {
+			return true;
+		}
+		return (bool) preg_match( '/^[1-9A-HJ-NP-Za-km-z]{32,44}$/', $wallet );
+	}
+
+	private function has_configured_wallet() {
+		return $this->evm_wallet_is_valid() && $this->solana_wallet_is_valid();
+	}
+
+	public function is_available() {
+		return parent::is_available() && $this->has_configured_wallet();
+	}
+
 	/**
 	 * Admin settings fields.
 	 */
@@ -163,6 +187,11 @@ class WC_Gateway_Gabochie_DeFi extends WC_Payment_Gateway {
 	 * @return array
 	 */
 	public function process_payment( $order_id ) {
+		if ( ! $this->has_configured_wallet() ) {
+			wc_add_notice( __( 'Crypto payments are not available yet. Please choose another payment method.', 'gabochie-defi' ), 'error' );
+			return array( 'result' => 'fail' );
+		}
+
 		$order = wc_get_order( $order_id );
 		if ( ! $order ) {
 			return array( 'result' => 'fail' );
