@@ -10,7 +10,7 @@ $hero_img_default = GABOCHIE_VALUE_URI . '/assets/images/hero.jpg';
 <head>
 <script>document.documentElement.className += ' js';</script>
 <meta charset="<?php bloginfo( 'charset' ); ?>">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="format-detection" content="telephone=no">
 <meta name="theme-color" content="#072E28">

@@ -31,6 +31,18 @@ function isExcluded(url) {
   return /wp-admin|wp-login|wp-json|wc-api|add-to-cart|\/cart\/|\/checkout\/|\/my-account\/|gab-nl|gabochie-nl|wc-ajax/i.test(url.href);
 }
 
+function isPrivatePage(url) {
+  return /^\/(dashboard|client-portal|portal|login|logout|account|my-account|membership|billing|orders|profile|onboarding|project-recovery)(\/|$)/i.test(url.pathname)
+    || /[?&](nonce|_wpnonce|token|key|password|email)=/i.test(url.search);
+}
+
+function isCacheablePage(res) {
+  if (!res || !res.ok) return false;
+  const cc = (res.headers.get('cache-control') || '').toLowerCase();
+  const vary = (res.headers.get('vary') || '').toLowerCase();
+  return !cc.includes('no-store') && !cc.includes('private') && !vary.includes('cookie');
+}
+
 function isStaticAsset(url) {
   return url.origin === self.location.origin && /\/wp-content\//.test(url.pathname) && !/\/uploads\//.test(url.pathname);
 }
@@ -62,9 +74,13 @@ self.addEventListener('fetch', (event) => {
 
   // Page navigations: network-first, cache visited pages for offline, fall back to offline.html
   if (req.mode === 'navigate') {
+    if (isPrivatePage(url)) {
+      event.respondWith(fetch(req).catch(() => caches.match('/offline.html')));
+      return;
+    }
     event.respondWith(
       fetch(req).then((res) => {
-        if (res && res.ok) {
+        if (isCacheablePage(res)) {
           const clone = res.clone();
           caches.open(PAGES).then((c) => { c.put(req, clone); pruneCache(c, 50); });
         }
