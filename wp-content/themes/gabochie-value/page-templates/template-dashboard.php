@@ -554,7 +554,7 @@ if ($current_level) {
     var pid = app ? app.getAttribute('data-project') : 0;
     var rest = app ? app.getAttribute('data-rest') : '';
     var wpNonce = app ? app.getAttribute('data-nonce') : '';
-    if (!pid || !rest) return;
+    if (!pid || pid === '0' || !rest) return;
 
     function grColor(score) {
         if (score >= 70) return '#27AE60';
@@ -623,7 +623,7 @@ if ($current_level) {
         if (d.upgrade_prompt) {
             document.getElementById('gr-upgrade').style.display = 'block';
         }
-    });
+    }).catch(function(){});
 })();
 
 function d2SendMessage(){
