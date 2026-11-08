@@ -514,17 +514,15 @@ add_action(
 	}
 );
 
-/**
- * Auto-complete Direct Mobile Money Transfer (bacs) orders upon checkout placement.
- * Ensures clients receive instant portal access and digital membership fulfillment.
- */
 add_filter(
-	'woocommerce_bacs_process_payment_order_status',
-	function ( $status, $order ) {
-		return 'completed';
+	'woocommerce_available_payment_gateways',
+	function ( $gateways ) {
+		if ( isset( $gateways['mpwp_moolre_payment_gateway'] ) ) {
+			return array( 'mpwp_moolre_payment_gateway' => $gateways['mpwp_moolre_payment_gateway'] );
+		}
+		return array();
 	},
-	10,
-	2
+	99
 );
 
 /* ============================================
